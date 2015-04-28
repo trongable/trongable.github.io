@@ -1,0 +1,30 @@
+mixin navigation(title, active)
+	nav
+		div.container
+			a#logo-container.brand-logo.center(href="#!")= title
+			a.button-collapse(href="#", data-activates="slide-out")
+				i.mdi-navigation-menu
+
+		ul#slide-out.side-nav.fixed
+			li.logo-container
+				a.logo(href="about.html") 
+					div
+						p Trong Nguyen
+					div
+						img.img-logo(src='images/trong-colored.jpg', width='80', height='80')
+			li
+				a(href="about.html") About Me
+			li
+				a(href="education.html") Education
+			li
+				a(href="experience.html") Experience
+			li
+				a(href="skills.html") Skills
+			li
+				a(href="projects.html") Additional Projects
+			
+		
+
+	div.fixed-action-btn(style="bottom: 30px; right: 30px;")
+		a.btn-floating.btn-large.waves-effect.waves-light.color-accent
+			i.mdi-communication-email

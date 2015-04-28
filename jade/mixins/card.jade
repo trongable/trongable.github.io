@@ -1,0 +1,15 @@
+mixin card(img_url, title, blurb)
+	div.card
+		div.card-image.waves-effect.waves-block.waves-color-accent
+			img.activator(src= img_url)
+		div.card-content
+			span.card-title.activator.grey-text.text-darken-4= title
+					i.mdi-navigation-more-vert.right
+			p= blurb
+		div.card-reveal
+			span.card-title.grey-text.text-darken-4= title
+				i.mdi-navigation-close.right
+			if block
+				block
+			else
+				p No content provided

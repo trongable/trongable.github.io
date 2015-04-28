@@ -1,0 +1,26 @@
+extends ./layout.jade
+
+block content
+	+navigation('Hello!', 'About')
+	div.container.content
+		div.row
+			div.col.l4.m8.offset-m2.s12
+				+card('images/about/trong-tongue-3.jpg', 'Me', 'I\'m 24, and I write code')
+					p  Artificial intelligence and machine learning are my favorite topics
+						| with stochastic optimization being my main area of interest.
+					p These pages were written in Jade and SCSS with styling provided by 
+						a(href='http://materializecss.com/about.html') Materialize
+						| . View the source and check out my 
+						a(href='http://github.com/trongable') GitHub 
+						| here!
+			div.col.l4.m8.offset-m2.s12
+				+card('images/about/corki-3.jpg', 'Cosplay', 'I dress up in costumes for fun')
+					p Corki from League of Legends
+			div.col.l4.m8.offset-m2.s12
+				+card('images/about/ant.jpg', 'Photography', 'I like taking pictures of bugs')
+					p And I'm pretty darn good at writing them. 
+					p Check out my 
+						a(href='http://instagram.com/trongable') Instagram
+						| ! 
+			
+	
