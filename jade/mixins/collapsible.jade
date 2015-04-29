@@ -1,0 +1,14 @@
+mixin collapsible-row(header)
+	li
+		div.collapsible-header.waves-effect.waves-color-accent= header
+		div.collapsible-body
+			if (block)
+				block
+
+mixin collapsible-row-with-icon(icon, header)
+	li
+		div.collapsible-header.waves-effect.waves-color-accent
+			i(class= icon)= header
+		div.collapsible-body
+			if (block)
+				block

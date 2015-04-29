@@ -6,30 +6,106 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
     <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
     <script type="text/javascript" src="js/materialize.min.js"></script>
+    <script type="text/javascript" src="js/velocity.min.js"></script>
+    <script type="text/javascript" src="js/velocity.ui.min.js"></script>
     <script type="text/javascript" src="js/init.js"></script>
   </head>
   <body>
-    <nav>
-      <div class="container"><a id="logo-container" href="#!" class="brand-logo center">Education</a><a href="#" data-activates="slide-out" class="button-collapse"><i class="mdi-navigation-menu"></i></a></div>
-      <ul id="slide-out" class="side-nav fixed">
-        <li class="logo-container"><a href="about.html" class="logo"> 
-            <div>
-              <p>Trong Nguyen</p>
-            </div>
-            <div><img src="images/trong-colored.jpg" width="80" height="80" class="img-logo"/></div></a></li>
-        <li><a href="about.html">About Me</a></li>
-        <li><a href="education.html">Education</a></li>
-        <li><a href="experience.html">Experience</a></li>
-        <li><a href="skills.html">Skills</a></li>
-        <li><a href="projects.html">Additional Projects</a></li>
-      </ul>
-    </nav>
+    <div class="navbar-fixed">
+      <nav>
+        <div class="container"><a id="logo-container" href="#!" class="brand-logo center">Education</a><a href="#" data-activates="slide-out" class="button-collapse"><i class="mdi-navigation-menu"></i></a></div>
+        <ul id="slide-out" class="side-nav fixed">
+          <li class="logo-container"><a href="index.html" class="logo"> 
+              <div>
+                <p>Trong Nguyen</p>
+              </div>
+              <div><img src="images/trong-colored.jpg" width="80" height="80" class="img-logo"/></div></a></li>
+          <li><a href="index.html">About Me</a></li>
+          <li><a href="education.html">Education</a></li>
+          <li><a href="experience.html">Experience</a></li>
+          <li><a href="skills.html">Skills</a></li>
+          <li><a href="projects.html">Additional Projects</a></li>
+        </ul>
+      </nav>
+    </div>
     <div style="bottom: 30px; right: 30px;" class="fixed-action-btn"><a class="btn-floating btn-large waves-effect waves-light color-accent"><i class="mdi-communication-email"></i></a></div>
-    <div class="container">
-      <p>George Mason University</p>
-      <p>B.S, Computer Science</p>
-      <p>Program GPA: 3.36</p>
-      <p>Overall GPA: 3.27</p>
+    <div class="container content">
+      <div class="section">
+        <h5>George Mason University</h5>
+      </div>
+      <div class="divider"></div>
+      <div class="row">
+        <div class="section col s12 m6">
+          <p class="bold">Degree</p>
+          <p>BS Computer Science</p>
+          <p>Program GPA: 3.36</p>
+          <p>Overall GPA: 3.27</p>
+        </div>
+        <div class="section col s12 m6">
+          <p class="bold">Awards</p>
+          <p>Dean's List (Spring 2010, Spring 2013, Fall 2013)</p>
+          <p>VGAP Grant (2012, 2013)</p>
+        </div>
+      </div>
+      <div class="section">
+        <h5>Coursework & Projects</h5>
+      </div>
+      <div class="section">
+        <ul data-collapsible="expandable" class="collapsible popout">
+          <li>
+            <div class="collapsible-header waves-effect waves-color-accent">CS 321 - Software Requirements/Design Modeling</div>
+            <div class="collapsible-body">
+              <P>Math Tutor with Teacher and Student Accounts (Java)</P>
+            </div>
+          </li>
+          <li>
+            <div class="collapsible-header waves-effect waves-color-accent">CS 332 - Object-Oriented Design and Implementation</div>
+            <div class="collapsible-body">
+            </div>
+          </li>
+          <li>
+            <div class="collapsible-header waves-effect waves-color-accent">CS 465 - Computer Systems Architecture</div>
+            <div class="collapsible-body">
+            </div>
+          </li>
+          <li>
+            <div class="collapsible-header waves-effect waves-color-accent">CS 471 - Operating Systems</div>
+            <div class="collapsible-body">
+            </div>
+          </li>
+          <li>
+            <div class="collapsible-header waves-effect waves-color-accent">CS 475 - Concurrent and Distributed Systems</div>
+            <div class="collapsible-body">
+              <p>Concurrent Anagram Solver (Java)</p>
+            </div>
+          </li>
+          <li>
+            <div class="collapsible-header waves-effect waves-color-accent">CS 480 - Introduction to Artificial Intelligence</div>
+            <div class="collapsible-body">
+              <p>Function Solving Genetic Algorithm (Common LISP)</p>
+              <p>Function Solving Neural Network (Common LISP)</p>
+              <p>8-Puzzle Solver (Common LISP)</p>
+              <p>Konane Adverserial Search Game Playing A.I (Common LISP)</p>
+            </div>
+          </li>
+          <li>
+            <div class="collapsible-header waves-effect waves-color-accent">CS 483 - Analysis of Algorithms</div>
+            <div class="collapsible-body">
+            </div>
+          </li>
+          <li>
+            <div class="collapsible-header waves-effect waves-color-accent">CS 484 - Data Mining</div>
+            <div class="collapsible-body">
+              <p>Analysis of Nationwide University Professor Salaries (WEKA)</p>
+            </div>
+          </li>
+          <li>
+            <div class="collapsible-header waves-effect waves-color-accent">CS 499 - Mobile Device Programming</div>
+            <div class="collapsible-body">
+            </div>
+          </li>
+        </ul>
+      </div>
     </div>
   </body>
 </html>
