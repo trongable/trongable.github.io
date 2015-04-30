@@ -1,13 +1,13 @@
 mixin collapsible-row(header)
 	li
-		div.collapsible-header.waves-effect.waves-color-accent= header
+		div.collapsible-header.waves-effect.waves-color-indigo= header
 		div.collapsible-body
 			if (block)
 				block
 
 mixin collapsible-row-with-icon(icon, header)
 	li
-		div.collapsible-header.waves-effect.waves-color-accent
+		div.collapsible-header.waves-effect.waves-color-indigo
 			i(class= icon)= header
 		div.collapsible-body
 			if (block)

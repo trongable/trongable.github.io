@@ -1,9 +1,12 @@
 extends ./layout.jade
 include ./mixins/collapsible
 
+block append scripts
+	script(type="text/javascript", src="js/education.js")
+
 block content
 	+navigation('Education', 'Education')
-	div.container.content
+	div.container.content.display-none
 		div.section
 			h5 George Mason University
 		div.divider
@@ -23,9 +26,9 @@ block content
 			ul.collapsible.popout(data-collapsible='expandable')
 				+collapsible-row('CS 321 - Software Requirements/Design Modeling')
 					P Math Tutor with Teacher and Student Accounts (Java)
-				+collapsible-row('CS 332 - Object-Oriented Design and Implementation')
-				+collapsible-row('CS 465 - Computer Systems Architecture')
 				+collapsible-row('CS 471 - Operating Systems')
+					p Adding a Module to the Linux 2.6 Kernel (C)
+					p Build and Add System Call to the Linux 2.6 Kernel (C)
 				+collapsible-row('CS 475 - Concurrent and Distributed Systems')
 					p Concurrent Anagram Solver (Java)
 				+collapsible-row('CS 480 - Introduction to Artificial Intelligence')
@@ -33,7 +36,7 @@ block content
 					p Function Solving Neural Network (Common LISP)
 					p 8-Puzzle Solver (Common LISP)
 					p Konane Adverserial Search Game Playing A.I (Common LISP)
-				+collapsible-row('CS 483 - Analysis of Algorithms')
 				+collapsible-row('CS 484 - Data Mining')
 					p Analysis of Nationwide University Professor Salaries (WEKA)
 				+collapsible-row('CS 499 - Mobile Device Programming')
+					p Groceroni - Improved Grocery Lists with Insertion by Barcode and Ability to Local Grocery Stores (Android)

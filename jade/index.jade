@@ -1,8 +1,11 @@
 extends ./layout.jade
 
+block append scripts
+	script(type="text/javascript", src="js/index.js")
+
 block content
 	+navigation('Hello!', 'About')
-	div.container.content
+	div.container.content.display-none
 		div.row
 			div.col.l4.m8.offset-m2.s12
 				+card('images/about/trong-tongue-3.jpg', 'Me', 'I\'m 24, and I like writing code')

@@ -2,7 +2,9 @@ $( document ).ready(function(){
 	$(".button-collapse").sideNav();
 
 	$('.collapsible').collapsible();
-
-	$('.container.content').velocity('transition.slideUpIn', 600);
+	
+	$('nav .container').velocity('transition.slideDownIn', { duration: 400 });
+	
+	$('.container.content').velocity('transition.slideUpIn', {duration: 600, delay: 600});
 });
 
