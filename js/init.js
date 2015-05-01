@@ -7,7 +7,3 @@ $(document).ready(function(){
 	
 	$('.container.content').velocity('transition.slideUpIn', { duration: 600, delay: 600 });
 });
-
-$(window).bind('beforeunload', function(){
-
-});
