@@ -6,37 +6,48 @@ block append scripts
 
 block content
 	+navigation('Education', 'Education')
-	div.container.content.display-none
+	div.container.content.education-wrap.display-none
 		div.section
 			h5 George Mason University
+			h6 Graduated Fall 2013
 		div.divider
-		div.row
-			div.section.col.s12.m6
-				p.bold Degree
-				p BS Computer Science
-				p Program GPA: 3.36
-				p Overall GPA: 3.27
-			div.section.col.s12.m6
-				p.bold Awards
-				p Dean's List (Spring 2010, Spring 2013, Fall 2013)
-				p VGAP Grant (2012, 2013)
 		div.section
-			h5 Coursework & Projects
+			div.row
+				div.col.s12.m6
+					h6.bold Degree
+					p BS Computer Science
+					p Program GPA: 3.36
+					p Overall GPA: 3.27
+				div.col.s12.m6
+					h6.bold Awards
+					p Dean's List (Spring 2010, Spring 2013, Fall 2013)
+					p VGAP Grant (2012, 2013)
+		div.section
+			h5 Course Projects
+		div.divider
 		div.section
 			ul.collapsible.popout(data-collapsible='expandable')
-				+collapsible-row('CS 321 - Software Requirements/Design Modeling')
+				+collapsible-row('CS 321 - Software Requirements/Design Modeling', 1)
 					P Math Tutor with Teacher and Student Accounts (Java)
-				+collapsible-row('CS 471 - Operating Systems')
+				+collapsible-row('CS 471 - Operating Systems', 2)
 					p Adding a Module to the Linux 2.6 Kernel (C)
 					p Build and Add System Call to the Linux 2.6 Kernel (C)
-				+collapsible-row('CS 475 - Concurrent and Distributed Systems')
+				+collapsible-row('CS 475 - Concurrent and Distributed Systems', 1)
 					p Concurrent Anagram Solver (Java)
-				+collapsible-row('CS 480 - Introduction to Artificial Intelligence')
+				+collapsible-row('CS 480 - Introduction to Artificial Intelligence', 4)
 					p Function Solving Genetic Algorithm (Common LISP)
 					p Function Solving Neural Network (Common LISP)
 					p 8-Puzzle Solver (Common LISP)
 					p Konane Adverserial Search Game Playing A.I (Common LISP)
-				+collapsible-row('CS 484 - Data Mining')
+				+collapsible-row('CS 484 - Data Mining', 1)
 					p Analysis of Nationwide University Professor Salaries (WEKA)
-				+collapsible-row('CS 499 - Mobile Device Programming')
+				+collapsible-row('CS 499 - Mobile Device Programming', 1)
 					p Groceroni - Improved Grocery Lists with Insertion by Barcode and Ability to Local Grocery Stores (Android)
+					
+		div.section
+			h5 Additional Coursework
+		div.divider
+		div.section
+			p CS-332 - Object-Oriented Design and Implementation
+			p CS-465 - Computer Systems Architecture
+			p CS-483 - Analysis of Algorithms

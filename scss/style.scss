@@ -32,9 +32,9 @@ $color-indigo-trans: rgba(63, 81, 181, 0.7);
 }
 
 /* Navigation */
-nav {
+.navbar-fixed nav {
   background-color: $color-pink;
-
+  
   .brand-logo {
     font-weight: 300;
   }
@@ -43,6 +43,10 @@ nav {
   .brand-logo
   .button-collapse {
     color: #FFFFFF;
+  }
+  
+  .button-collapse {
+    padding: 0 0 0 1rem;
   }
 
   ul.side-nav.fixed {
@@ -74,7 +78,11 @@ nav {
 }
 
 .container.content {
-  padding: 3.5% 0 3.5% 0;
+  padding: 2rem 0 2rem 0;
+}
+
+.container.content p.flow-text:first-child {
+  margin-top: 0.5rem;
 }
 
 .bold {
@@ -85,19 +93,33 @@ nav {
   display: none;
 }
 
+/* Pages */
+.experience-wrap ul {
+  width: 80%;  
+}
+
+.experience-wrap ul li {
+  list-style-type: disc;
+  list-style-position: inside;
+  padding: 0 0 0.3rem 1rem;
+  text-indent: -1rem;
+}
+
+
 /* Mixins */
-.collapsible li.active .collapsible-header {
+.collapsible li.active .collapsible-header,
+.collapsible li.active .collapsible-header .badge {
   color: #FFFFFF;
   background-color: $color-indigo;
 }
 
-.collapsible-body {
-  //background-color: $color-indigo;
+.collapsible li .collapsible-header span:after {
+  content: ' project(s)'
 }
 
 .collapsible li .collapsible-body {
   background-color: #FFFFFF;
-  padding: 5px 0 5px 0;
+  padding: 0.5rem 0 0.5rem 0;
 
   p {
     padding: 1rem;

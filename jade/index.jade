@@ -5,10 +5,15 @@ block append scripts
 
 block content
 	+navigation('Hello!', 'About')
-	div.container.content.display-none
+	div.container.content.index-wrap.display-none
+		div.row
+			div.col.s10.offset-s1
+				p.flow-text.center 
+					| My name is Trong, I'm 24, and I'm a Software Engineer at Alarm.com on the home automation team.
+					| I'm a huge fan of Chicken Fries&#8482, and I constantly worry that they'll leave my life again.
 		div.row
 			div.col.l4.m8.offset-m2.s12
-				+card('images/about/trong-tongue-3.jpg', 'Me', 'I\'m 24, and I like writing code')
+				+card('images/about/trong-tongue-3.jpg', 'Progamming', 'card.OnClickHandler = Expand;')
 					p  Artificial intelligence and machine learning are my favorite topics
 						| with stochastic optimization being my main area of interest.
 					p These pages were written in Jade and SCSS with styling provided by 

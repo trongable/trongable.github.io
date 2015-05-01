@@ -6,9 +6,9 @@ mixin navigation(title, active)
 	div.navbar-fixed
 		nav
 			div.container
-				a#logo-container.brand-logo.center(href="#!")= title
-				a.button-collapse(href="#", data-activates="slide-out")
-					i.mdi-navigation-menu
+				a.brand-logo.center(href="#!")= title
+			a.button-collapse(href="#", data-activates="slide-out")
+				i.mdi-navigation-menu
 
 			ul#slide-out.side-nav.fixed
 				li.logo-container
