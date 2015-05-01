@@ -1,21 +1,17 @@
 mixin collapsible-row(header, badge_num)
 	li
-		if (badge_num > 0)
-			div.collapsible-header.waves-effect.waves-color-indigo= header
-				span.badge= badge_num
-		else
-			div.collapsible-header.waves-effect.waves-color-indigo= header
+		div.collapsible-header.waves-effect.waves-color-indigo= header
+			if (badge_num > 0)
+				span.badge.hide-on-small-only= badge_num
 		div.collapsible-body
 			if (block)
 				block
 
 mixin collapsible-row-with-icon(icon, header, badge_num)
 	li
-		if (badge_num > 0)
-			div.collapsible-header.waves-effect.waves-color-indigo= header
-				span.badge= badge_num
-		else
-			div.collapsible-header.waves-effect.waves-color-indigo= header
+		div.collapsible-header.waves-effect.waves-color-indigo= header
+			if (badge_num > 0)
+				span.badge.hide-on-small-only= badge_num
 		i(class= icon)= header
 		div.collapsible-body
 			if (block)
