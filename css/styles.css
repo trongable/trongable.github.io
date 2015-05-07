@@ -1,76 +1,58 @@
 /* Colors */
-$color-pink: rgba(233, 30, 99, 1);
-$color-pink-trans: rgba(233, 30, 99, 0.7);
-$color-pink-light: #EC407A;
-$color-teal: rgba(0, 229, 255, 1);
-$color-teal-trans: rgba(0, 229, 255, 0.7);
-$color-indigo: rgba(63, 81, 181, 1);
-$color-indigo-trans: rgba(63, 81, 181, 0.7);
-
 .color-pink {
-  color: $color-pink;
+  color: #e91e63;
 }
 
 .waves-effect.waves-color-pink .waves-ripple {
-  background-color: $color-pink-trans;
+  background-color: rgba(233, 30, 99, 0.7);
 }
- 
+
 .color-teal {
-  background-color: $color-teal !important;
+  background-color: #00e5ff !important;
 }
 
 .waves-effect.waves-color-teal .waves-ripple {
-  background-color: $color-teal-trans;
+  background-color: rgba(0, 229, 255, 0.7);
 }
 
 .color-indigo {
-  background-color: $color-indigo;
+  background-color: #3f51b5;
 }
 
 .waves-effect.waves-color-indigo .waves-ripple {
-  background-color: $color-indigo-trans;
+  background-color: rgba(63, 81, 181, 0.7);
 }
 
 /* Navigation */
 .navbar-fixed nav {
-  background-color: $color-pink;
-  
-  .brand-logo {
-    font-weight: 300;
-  }
-
-  ul a,
-  .brand-logo
-  .button-collapse {
-    color: #FFFFFF;
-  }
-  
-  .button-collapse {
-    padding: 0 0 0 1rem;
-  }
-
-  ul.side-nav.fixed {
-    li.logo-container {
-      background-color: $color-pink-light;
-    }
-
-    a.logo {
-      text-align: center;
-      height: 170px;
-    }
-
-    p {
-      color: #FFFFFF;
-      margin: 0 0 0 0;
-    }
-  }
-
-  .img-logo {
-    border-radius: 5px;
-    border: solid 1px #E6E6E6;
-  }
+  background-color: #e91e63;
 }
-
+.navbar-fixed nav .brand-logo {
+  font-weight: 300;
+}
+.navbar-fixed nav ul a,
+.navbar-fixed nav .brand-logo
+.button-collapse {
+  color: #FFFFFF;
+}
+.navbar-fixed nav .button-collapse {
+  padding: 0 0 0 1rem;
+}
+.navbar-fixed nav ul.side-nav.fixed li.logo-container {
+  background-color: #EC407A;
+}
+.navbar-fixed nav ul.side-nav.fixed a.logo {
+  text-align: center;
+  height: 170px;
+}
+.navbar-fixed nav ul.side-nav.fixed p {
+  color: #FFFFFF;
+  margin: 0 0 0 0;
+}
+.navbar-fixed nav .img-logo {
+  border-radius: 5px;
+  border: solid 1px #E6E6E6;
+}
 
 /* General */
 .container {
@@ -81,7 +63,7 @@ $color-indigo-trans: rgba(63, 81, 181, 0.7);
 .collapsible li .collapsible-header {
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;   
+  text-overflow: ellipsis;
 }
 
 .navbar-fixed .container a.brand-logo {
@@ -106,7 +88,7 @@ $color-indigo-trans: rgba(63, 81, 181, 0.7);
 
 /* Pages */
 .experience-wrap ul {
-  width: 80%;  
+  width: 80%;
 }
 
 .education-wrap .collapsible ul li,
@@ -121,12 +103,11 @@ $color-indigo-trans: rgba(63, 81, 181, 0.7);
   padding: 0.5rem 0 0.5rem 2rem;
 }
 
-
 /* Mixins */
 .collapsible li.active .collapsible-header,
 .collapsible li.active .collapsible-header .badge {
   color: #FFFFFF;
-  background-color: $color-indigo;
+  background-color: #3f51b5;
 }
 
 .collapsible ll .collapsible-header .badge {
@@ -134,7 +115,7 @@ $color-indigo-trans: rgba(63, 81, 181, 0.7);
 }
 
 .collapsible li .collapsible-header .badge:after {
-  content: ' project(s)'
+  content: " project(s)";
 }
 
 .collapsible li .collapsible-body {
@@ -142,13 +123,36 @@ $color-indigo-trans: rgba(63, 81, 181, 0.7);
   padding: 0.5rem 0 0.5rem 0;
 }
 
-@media only screen and (min-width : 992px) {
+@media only screen and (min-width: 992px) {
   nav .brand-logo,
   .container.content {
     padding-left: 240px;
   }
 }
+.stack {
+  position: relative;
+  display: inline-block;
+  width: 2em;
+  height: 2em;
+  line-height: 2em;
+  vertical-align: middle;
+}
 
-@media only screen and (max-width : 600px) {
+.stack-inner, .stack-outer {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  text-align: center;
+}
 
+.stack-inner {
+  line-height: inherit;
+}
+
+.stack-outer {
+  left: -50%;
+}
+
+.inverse {
+  color: #FFFFFF;
 }
