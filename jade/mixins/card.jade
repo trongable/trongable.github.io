@@ -4,12 +4,12 @@ mixin card(img_url, title, blurb)
 			img.activator(src= img_url)
 		div.card-content
 			span.card-title.activator.grey-text.text-darken-4= title
-					i.mdi-navigation-more-vert.right
+				i.mdi-navigation-more-vert.right
 			p= blurb
 		div.card-reveal
 			span.card-title.grey-text.text-darken-4= title
 				i.mdi-navigation-close.right
-			if (block)
+			if block
 				block
 			else
 
