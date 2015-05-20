@@ -7,52 +7,52 @@ block append scripts
 block content
 	+navigation('Education', 'Education')
 	div.container.content.education-wrap.display-none
-		div.section
+		div.row.header.white-text.z-depth-1
 			h5 George Mason University
-			h6 Graduated Fall 2013
-		div.divider
-		div.section
-			div.row
-				div.col.s12.m6
-					h6.bold Degree
-					p BS Computer Science
+		div.row
+			div.col.s12.m6
+				+card-header("Degree")
+					p BS Computer Science (Fall 2013)
 					p Program GPA: 3.36
 					p Overall GPA: 3.27
-				div.col.s12.m6
-					h6.bold Awards
+			div.col.s12.m6
+				+card-header("Awards")
 					p Dean's List (Spring 2010, Spring 2013, Fall 2013)
 					p VGAP Grant (2012, 2013)
-		div.section
+		div.row.header.white-text.z-depth-1
 			h5 Course Projects
-		div.divider
-		div.section
-			ul.collapsible.popout(data-collapsible='expandable')
-				+collapsible-row-active('CS 499 - Mobile Device Programming', 1)
-					ul
-						li Groceroni - Improved Grocery Lists with Insertion by Barcode and Locate Nearby Grocery Stores (Android)
-				+collapsible-row-active('CS 484 - Data Mining', 1)
-					ul
-						li Analysis of Nationwide University Professor Salaries (WEKA)
-				+collapsible-row-active('CS 480 - Introduction to Artificial Intelligence', 4)
-					ul
-						li Function Solving Genetic Algorithm (Common LISP)
-						li Function Solving Neural Network (Common LISP)
-						li 8-Puzzle Solver (Common LISP)
-						li Konane Adverserial Search Game Playing A.I (Common LISP)
-				+collapsible-row-active('CS 475 - Concurrent and Distributed Systems', 1)
-					ul
-						li Concurrent Anagram Solver (Java)
-				+collapsible-row-active('CS 471 - Operating Systems', 2)
-					ul
-						li Adding a Module to the Linux 2.6 Kernel (C)
-						li Build and Add System Call to the Linux 2.6 Kernel (C)
-				+collapsible-row-active('CS 321 - Software Requirements/Design Modeling', 1)
-					ul
-						li Math Tutor with Teacher and Student Accounts (Java)
-		div.section
+		div.row
+			div.col.s12
+				ul.collapsible.popout(data-collapsible='expandable')
+					+collapsible-row-active('CS 499 - Mobile Device Programming', 1)
+						ul
+							li Groceroni - Improved Grocery Lists with Insertion by Barcode and Locate Nearby Grocery Stores (Android)
+					+collapsible-row-active('CS 484 - Data Mining', 1)
+						ul
+							li Analysis of Nationwide University Professor Salaries (WEKA)
+					+collapsible-row-active('CS 480 - Introduction to Artificial Intelligence', 4)
+						ul
+							li Function Solving Genetic Algorithm (Common LISP)
+							li Function Solving Neural Network (Common LISP)
+							li 8-Puzzle Solver (Common LISP)
+							li Konane Adverserial Search Game Playing A.I (Common LISP)
+					+collapsible-row-active('CS 475 - Concurrent and Distributed Systems', 1)
+						ul
+							li Concurrent Anagram Solver (Java)
+					+collapsible-row-active('CS 471 - Operating Systems', 2)
+						ul
+							li Adding a Module to the Linux 2.6 Kernel (C)
+							li Build and Add System Call to the Linux 2.6 Kernel (C)
+					+collapsible-row-active('CS 321 - Software Requirements/Design Modeling', 1)
+						ul
+							li Math Tutor with Teacher and Student Accounts (Java)
+					+collapsible-row-active('CS 101 - Preview of Computer Science', 1)
+						ul
+							li Kinect Controlled iRobot Vaccuum (Python)
+		div.row.header.white-text.z-depth-1
 			h5 Additional Coursework
-		div.divider
-		div.section
-			p CS-332 - Object-Oriented Design and Implementation
-			p CS-465 - Computer Systems Architecture
-			p CS-483 - Analysis of Algorithms
+		div.row
+			div.col.s12
+				p CS-332 - Object-Oriented Design and Implementation
+				p CS-465 - Computer Systems Architecture
+				p CS-483 - Analysis of Algorithms

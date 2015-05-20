@@ -4,31 +4,29 @@ block append scripts
 	script(type="text/javascript", src="js/index.js")
 
 block content
-	+navigation('Hello!', 'About')
+	+navigation("Hello!", "About")
 	div.container.content.index-wrap.display-none
 		div.row
 			div.col.s10.offset-s1
 				p.flow-text.center 
-					| My name is Trong, I'm 24, and I'm a Software Engineer at Alarm.com on the home automation team.
-					| I'm a huge fan of Chicken Fries&#8482, and I constantly worry that they'll leave my life again.
+					| My name is Trong, I"m 24, and I"m a Software Engineer at Alarm.com on the home automation team.
+					| I"m a huge fan of Chicken Fries&#8482, and I constantly worry that they"ll leave my life again.
 		div.row
 			div.col.l4.m8.offset-m2.s12
-				+card('images/about/trong-tongue-3.jpg', 'Programming', 'card.OnClickHandler = Expand;')
+				+card("images/about/trong-tongue-3.jpg", "Programming", "card.OnClickHandler = Expand;")
 					p  Artificial intelligence and machine learning are my favorite topics
 						| with stochastic optimization being my main area of interest.
 					p These pages were written in Jade and SCSS with styling provided by 
-						a(href='http://materializecss.com/about.html') Materialize
+						a(href="http://materializecss.com/about.html") Materialize
 						| . View the source and check out my 
-						a(href='http://github.com/trongable') GitHub 
+						a(href="http://github.com/trongable") GitHub 
 						| here!
 			div.col.l4.m8.offset-m2.s12
-				+card('images/about/corki-3.jpg', 'Cosplay', 'I dress up in costumes for fun')
+				+card("images/about/corki-3.jpg", "Cosplay", "I dress up in costumes for fun")
 					p Corki from League of Legends
 			div.col.l4.m8.offset-m2.s12
-				+card('images/about/ant.jpg', 'Photography', 'I like taking pictures of bugs')
-					p And I'm pretty darn good at writing them. 
+				+card("images/about/ant.jpg", "Photography", "I like taking pictures of bugs")
+					p And I"m pretty darn good at writing them. 
 					p Check out my 
-						a(href='http://instagram.com/trongable') Instagram
+						a(href="http://instagram.com/trongable") Instagram
 						| ! 
-			
-	

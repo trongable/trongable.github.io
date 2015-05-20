@@ -1,0 +1,1029 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+			[
+				"margin",
+				"margin-top"
+			],
+			[
+				"ex",
+				"experience-wrap"
+			],
+			[
+				"card-header",
+				"card-header-content"
+			],
+			[
+				"card-",
+				"card-content"
+			],
+			[
+				"col",
+				"color-cyan"
+			],
+			[
+				"sli",
+				"slideout-nav-row"
+			],
+			[
+				"list-st",
+				"list-style-type"
+			],
+			[
+				"co",
+				"collapsible"
+			],
+			[
+				"c",
+				"collapsible"
+			],
+			[
+				"btn-",
+				"btn-floating"
+			],
+			[
+				"op",
+				"opacity"
+			],
+			[
+				"fon",
+				"font-family"
+			],
+			[
+				"pad",
+				"padding-top"
+			],
+			[
+				"im",
+				"img_url"
+			],
+			[
+				"mar",
+				"margin-top"
+			],
+			[
+				"marg",
+				"margin-right"
+			],
+			[
+				"v",
+				"vertical-align"
+			],
+			[
+				"bo",
+				"border-radius"
+			],
+			[
+				"wi",
+				"width"
+			],
+			[
+				"waves-",
+				"waves-effect"
+			],
+			[
+				"t",
+				"text"
+			],
+			[
+				"pa",
+				"parse_document"
+			],
+			[
+				"fr",
+				"freqs"
+			],
+			[
+				"pr",
+				"parse_document"
+			],
+			[
+				"par",
+				"parsed_doc"
+			],
+			[
+				"f",
+				"frequency"
+			]
+		]
+	},
+	"buffers":
+	[
+		{
+			"file": "jade/index.jade",
+			"settings":
+			{
+				"buffer_size": 1386,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "jade/projects.jade",
+			"settings":
+			{
+				"buffer_size": 1288,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "jade/experience.jade",
+			"settings":
+			{
+				"buffer_size": 2495,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "jade/education.jade",
+			"settings":
+			{
+				"buffer_size": 2169,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "jade/mixins/card.jade",
+			"settings":
+			{
+				"buffer_size": 798,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "jade/mixins/collapsible.jade",
+			"settings":
+			{
+				"buffer_size": 1001,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "jade/mixins/slider.jade",
+			"settings":
+			{
+				"buffer_size": 207,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "jade/mixins/navigation.jade",
+			"settings":
+			{
+				"buffer_size": 1540,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "jade/layout.jade",
+			"settings":
+			{
+				"buffer_size": 896,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "scss/styles.scss",
+			"settings":
+			{
+				"buffer_size": 3709,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "css/font-awesome.css",
+			"settings":
+			{
+				"buffer_size": 28812,
+				"line_ending": "Unix"
+			}
+		}
+	],
+	"build_system": "Packages/SASS Build/SASS.sublime-build",
+	"build_system_choices":
+	[
+		[
+			[
+				[
+					"Packages/SASS Build/SASS - Compressed.sublime-build",
+					""
+				],
+				[
+					"Packages/SASS Build/SASS.sublime-build",
+					""
+				]
+			],
+			[
+				"Packages/SASS Build/SASS.sublime-build",
+				""
+			]
+		]
+	],
+	"build_varint": "",
+	"command_palette":
+	{
+		"height": 104.0,
+		"last_filter": "jade",
+		"selected_items":
+		[
+			[
+				"jade",
+				"Set Syntax: Jade"
+			],
+			[
+				"Package Control: remo",
+				"Package Control: Remove Package"
+			],
+			[
+				"pack",
+				"Package Control: Install Package"
+			],
+			[
+				"Package Control: re",
+				"Package Control: Remove Package"
+			],
+			[
+				"install",
+				"Package Control: Install Package"
+			],
+			[
+				"buil",
+				"Build With: Jade"
+			],
+			[
+				"sql",
+				"Set Syntax: SQL"
+			],
+			[
+				"word",
+				"Word Wrap: Toggle"
+			],
+			[
+				"wor",
+				"Word Wrap: Toggle"
+			],
+			[
+				"build",
+				"Build With: Jade"
+			],
+			[
+				"package",
+				"Preferences: Browse Packages"
+			],
+			[
+				"wrap",
+				"Word Wrap: Toggle"
+			],
+			[
+				"json",
+				"Set Syntax: JSON"
+			],
+			[
+				"lisp",
+				"Set Syntax: Lisp"
+			]
+		],
+		"width": 400.0
+	},
+	"console":
+	{
+		"height": 126.0,
+		"history":
+		[
+			"import urllib.request,os,hashlib; h = 'eb2297e1a458f27d836c04bb0cbaf282' + 'd0e7a3098092775ccb37ca9d6b2e4b7d'; pf = 'Package Control.sublime-package'; ipp = sublime.installed_packages_path(); urllib.request.install_opener( urllib.request.build_opener( urllib.request.ProxyHandler()) ); by = urllib.request.urlopen( 'http://packagecontrol.io/' + pf.replace(' ', '%20')).read(); dh = hashlib.sha256(by).hexdigest(); print('Error validating download (got %s instead of %s), please try manual install' % (dh, h)) if dh != h else open(os.path.join( ipp, pf), 'wb' ).write(by)",
+			"exit()",
+			"quit()",
+			"java",
+			"list()",
+			"test",
+			"python"
+		]
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"expanded_folders":
+	[
+		"/C/Users/Trong/Desktop/Landing-Page/jade",
+		"/C/Users/Trong/Desktop/Landing-Page/jade/mixins",
+		"/C/Users/Trong/Desktop/Landing-Page/scss",
+		"/C/Users/Trong/Desktop/Landing-Page/js"
+	],
+	"file_history":
+	[
+		"/C/Users/Trong/Desktop/vertical-timeline/css/style.css",
+		"/C/Users/Trong/Desktop/vertical-timeline/scss/style.scss",
+		"/C/Users/Trong/Desktop/vertical-timeline/css/reset.css",
+		"/C/Users/Trong/Desktop/Landing-Page/scss/styles.scss",
+		"/D/Dropbox/Documents/Win7.txt",
+		"/C/Users/Trong/Desktop/Landing-Page/jade/index.jade",
+		"/C/Users/Trong/Desktop/Landing-Page/jade/layout.jade",
+		"/C/Users/Trong/Desktop/Landing-Page/jade/projects.jade",
+		"/C/Users/Trong/Desktop/Landing-Page/jade/mixins/collapsible.jade",
+		"/C/Users/Trong/Desktop/Landing-Page/jade/education.jade",
+		"/C/Users/Trong/Desktop/Landing-Page/jade/mixins/navigation.jade",
+		"/C/Users/Trong/Desktop/Landing-Page/jade/mixins/card.jade",
+		"/C/Users/Trong/Desktop/Landing-Page/scss/style.scss",
+		"/C/Users/Trong/Desktop/Landing-Page/js/education.js",
+		"/C/Users/Trong/Desktop/Landing-Page/js/init.js",
+		"/C/Users/Trong/Desktop/Landing-Page/js/index.js",
+		"/D/Dropbox/Proggies/CS 465/HW2/phonenum.py",
+		"/D/Dropbox/Proggies/CS 471/HW1/CS471_Proj1.c",
+		"/D/Dropbox/Proggies/CS 471/HW2/hw2_problem9.c",
+		"/D/Dropbox/Proggies/CS 471/HW3/bounded_buffer_pthread.c",
+		"/C/Users/Trong/Desktop/trongable.github.io/jade/index.jade",
+		"/C/GitHub/trongable.github.io/jade/layout.jade",
+		"/C/GitHub/trongable.github.io/jade/index.jade",
+		"/D/GitHub/trongable.github.io/jade/layout.jade",
+		"/D/GitHub/trongable.github.io/jade/index.jade",
+		"/C/Users/Trong/Desktop/Landing.Page/jade/index.jade",
+		"/D/GitHub/trongable.github.io/scss/style.scss",
+		"/D/GitHub/trongable.github.io/jade/projects.jade",
+		"/D/GitHub/trongable.github.io/jade/mixins/navigation.jade",
+		"/D/GitHub/trongable.github.io/jade/mixins/card.jade",
+		"/D/GitHub/trongable.github.io/jade/education.jade",
+		"/D/GitHub/trongable.github.io/prepros.cfg",
+		"/C/Users/Trong/AppData/Roaming/Prepros/DevTools Extensions",
+		"/D/GitHub/trongable.github.io/jade/about.jade",
+		"/D/GitHub/Landing-Page/scss/style.scss",
+		"/D/GitHub/Landing-Page/jade/mixins/card.jade",
+		"/D/GitHub/Landing-Page/jade/mixins/navigation.jade",
+		"/D/GitHub/Landing-Page/jade/layout.jade",
+		"/D/GitHub/Landing-Page/jade/projects.jade",
+		"/D/GitHub/Landing-Page/jade/education.jade",
+		"/D/GitHub/Landing-Page/js/init.js",
+		"/D/GitHub/Landing-Page/jade/about.jade",
+		"/C/Users/Trong/Desktop/Site/scss/style.scss",
+		"/D/GitHub/Landing-Page/css/style.css",
+		"/C/Users/Trong/AppData/Roaming/Sublime Text 3/Packages/User/SublimeOnSaveBuild.sublime-settings",
+		"/D/GitHub/Racial-Recognition/.gitignore",
+		"/D/GitHub/Landing-Page/about.html",
+		"/C/Users/Trong/Desktop/Site/css/materialize.css",
+		"/C/Users/Trong/Desktop/Site/mixins/navigation.jade",
+		"/C/Users/Trong/Desktop/Site/layout.jade",
+		"/C/Users/Trong/Desktop/Site/projects.jade",
+		"/C/Users/Trong/Desktop/Site/education.jade",
+		"/C/Users/Trong/Desktop/Site/mixins/card.jade",
+		"/C/Users/Trong/Desktop/Site/about.jade",
+		"/D/GitHub/Landing-Page/README.md",
+		"/C/Users/Trong/Desktop/Site/about.html",
+		"/C/Users/Trong/Desktop/Site/css/style.scss",
+		"/C/Users/Trong/Desktop/Site/scss/style.css",
+		"/C/Users/Trong/Desktop/Site/js/init.js",
+		"/C/Users/Trong/Desktop/Site/index.jade",
+		"/C/Users/Trong/Desktop/Site/index.html",
+		"/C/Users/Trong/Desktop/Site/nav.jade",
+		"/C/Users/Trong/Desktop/Site/mixins/nav.html",
+		"/C/Users/Trong/AppData/Roaming/Sublime Text 3/Packages/User/Preferences.sublime-settings",
+		"/C/Users/Trong/Desktop/Site/css/style.css",
+		"/D/GitHub/Racial-Recognition/OkScraper/bin/Debug/pending.txt",
+		"/C/Users/Trong/AppData/Roaming/Sublime Text 3/Packages/SublimeOnSaveBuild/SublimeOnSaveBuild.sublime-settings",
+		"/C/Users/Trong/Desktop/parallax-template/js/init.js",
+		"/D/GitHub/Racial-Recognition/OkScraper/bin/Debug/okcupid_data.txt",
+		"/D/GitHub/Racial-Recognition/OkScraper/bin/Debug/visited.txt",
+		"/D/GitHub/Racial-Recognition/OkScraper/bin/Debug/config.txt",
+		"/D/GitHub/Racial-Recognition/OkScraper/config.txt",
+		"/D/GitHub/Racial-Recognition/OkScraper/bin/Debug/visited.txt.old",
+		"/C/Users/Trong/Desktop/parallax-template/index.html",
+		"/C/Users/Trong/Desktop/Site/Home.html",
+		"/C/Users/Trong/Desktop/parallax-template/css/style.css",
+		"/C/Users/Trong/Desktop/Site/Resume.jade",
+		"/D/GitHub/Racial-Recognition/RacialFeatures/output.csv",
+		"/D/GitHub/Racial-Recognition/RacialFeatures/racial_features.py",
+		"/D/GitHub/Racial-Recognition/RacialFeatures/haar_cascades.py",
+		"/D/OkCupid Photos/MainForm.cs",
+		"/D/GitHub/Racial-Recognition/OkScraper/MainForm.cs",
+		"/D/OkCupid Photos/config.txt",
+		"/D/GitHub/Racial-Recognition/scope_settings.xml",
+		"/D/GitHub/Racial-Recognition/vcs.xml",
+		"/D/GitHub/facebook_face_training_set/create_pics_from_facebook.py",
+		"/C/Users/Trong/Desktop/GitHubLog.txt",
+		"/D/GitHub/Racial-Recognition/workspace.xml",
+		"/D/GitHub/Racial-Recognition/RacialFeatures/HelloOpenCV/haarcascade_frontalface_default.xml",
+		"/D/GitHub/SpiderScrape/SpiderScrape/bin/Debug/config.txt",
+		"/D/GitHub/SpiderScrape/SpiderScrape/bin/Debug/okcupid_data.txt",
+		"/C/Users/Trong/Desktop/bugreport-2015-03-08-23-50-17.txt",
+		"/C/Users/Trong/Desktop/VZW_XT1060_4.4.4-KXA21.12-L1.26_CFC_1FF.xml/VZW_XT1060_4.4.4-KXA21.12-L1.26_CFC_1FF.xml",
+		"/C/Program Files (x86)/AutoHotkey/Extras/Scripts/IntelliSense.ahk",
+		"/D/GitHub/SpiderScrape/SpiderScrape/bin/Debug/pending.txt",
+		"/D/GitHub/SpiderScrape/SpiderScrape/bin/Debug/visited.txt",
+		"/C/Users/Trong/Desktop/logcat.log",
+		"/C/Users/Trong/AppData/Roaming/Sublime Text 3/Packages/Default/Preferences.sublime-settings",
+		"/C/Users/Trong/AppData/Roaming/Sublime Text 3/Packages/User/JSON.sublime-settings",
+		"/D/GitHub/SpiderScrape/SpiderScrape/bin/Debug/okcupid_data.txt.old",
+		"/D/GitHub/SpiderScrape/SpiderScrape/config.txt",
+		"/D/GitHub/Mario-Chase-Evolutionary-Strategies/src/de/manualoverri/mariochase/gamelogic/toad/ToadPlayerController.java",
+		"/D/GitHub/scribe-java/src/main/java/org/scribe/builder/api/DefaultApi20.java",
+		"/D/GitHub/scribe-java/README.md",
+		"/D/Dropbox/Proggies/CS 475/ConcurrentAnagrammer/src/Anagrammer.java",
+		"/D/GitHub/Mario-Chase-Evolutionary-Strategies/src/de/manualoverri/mariochase/learning/PopulationImpl.java",
+		"/D/GitHub/Mario-Chase-Evolutionary-Strategies/src/de/manualoverri/mariochase/learning/ToadIndividual.java",
+		"/D/Dropbox/Proggies/CS 310/P2 Anagram/src/AnagramGrouper.java",
+		"/D/GitHub/scribe-java/src/main/java/org/scribe/model/Token.java",
+		"/D/GitHub/scribe-java/src/main/java/org/scribe/oauth/OAuthService.java",
+		"/D/GitHub/Mario-Chase-Evolutionary-Strategies/src/de/manualoverri/mariochase/gamelogic/toad/ToadPlayerImpl.java",
+		"/C/Users/Trong/Desktop/avg.sql",
+		"/D/GitHub/Mario-Chase-Evolutionary-Strategies/test.csv",
+		"/C/Riot Games/League of Legends/RADS/system/locale.cfg",
+		"/C/Riot Games/League of Legends/RADS/solutions/lol_game_client_sln/releases/0.0.1.71/deploy/DATA/cfg/defaults/locale.cfg",
+		"/C/Riot Games/League of Legends/RADS/system/launcher.cfg",
+		"/F/Steam Library/SteamApps/common/Transistor/_CommonRedist/vcredist/2012/installscript.vdf",
+		"/F/Steam Library/SteamApps/common/Fallout New Vegas/Fallout_default.ini",
+		"/D/GitHub/Russian-Teacher/.idea/compiler.xml",
+		"/D/GitHub/Russian-Teacher/.idea/vcs.xml",
+		"/D/GitHub/Russian-Teacher/.idea/project-template.xml",
+		"/D/GitHub/Russian-Teacher/.idea/modules.xml",
+		"/D/GitHub/Russian-Teacher/.idea/misc.xml",
+		"/D/GitHub/Russian-Teacher/.idea/encodings.xml",
+		"/D/GitHub/Russian-Teacher/.idea/description.html",
+		"/D/GitHub/Russian-Teacher/.idea/workspace.xml",
+		"/D/GitHub/Russian-Teacher/.idea/scopes/scope_settings.xml",
+		"/D/GitHub/Russian-Teacher/.idea/dictionaries/Trong.xml"
+	],
+	"find":
+	{
+		"height": 34.0
+	},
+	"find_in_files":
+	{
+		"height": 0.0,
+		"where_history":
+		[
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": false,
+		"find_history":
+		[
+			"header",
+			"large",
+			"1rem",
+			"rem",
+			"compile",
+			"jade",
+			"about",
+			"main",
+			"logo",
+			"color-primary-light",
+			"waves-accent",
+			"waves-teal",
+			"waves-light",
+			"charissa",
+			"cv.",
+			"body-text",
+			"text",
+			"post",
+			"ThefallenRose",
+			"storm-95",
+			"camera",
+			"ethnicity",
+			"count",
+			"300",
+			"count",
+			"signre",
+			"token",
+			"[controls]",
+			"mouse",
+			"accel",
+			"SELECT",
+			"Russian Teacher",
+			"game",
+			"machine",
+			"AI",
+			"ai",
+			"learning",
+			"gaussian-random",
+			"convol",
+			"trovi",
+			"new_tab",
+			"bing",
+			"newtab",
+			"paul",
+			"contact_name=\"Thadius\"",
+			"thadius",
+			"nicole Gasmen",
+			"result",
+			"onActiv",
+			"adapter",
+			"db",
+			"oncreate",
+			"win",
+			"game",
+			"osf1",
+			"wfasl",
+			"#'",
+			"black",
+			"game-over",
+			"set",
+			"lambda",
+			"expand",
+			"spn",
+			"conversions",
+			"wrapper",
+			"implement",
+			"default",
+			"9 2 3\n4 5 6\n7 8 1)))\n",
+			"foreach",
+			"depth",
+			"history",
+			"child",
+			"foreach",
+			"elt ",
+			"elt",
+			"while",
+			"loop",
+			"while",
+			"scroll",
+			"t",
+			"xs",
+			"summary",
+			"display-sum",
+			"display-summar",
+			"*wine*",
+			"*voting-records*",
+			"col-data",
+			"display-sum",
+			"print-all-error",
+			"E ",
+			"display-summar",
+			"mapc ",
+			"mapc",
+			"back-prop",
+			"back",
+			"name",
+			"num_apples",
+			"good",
+			"net-bui",
+			"net-buid"
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": false,
+		"replace_history":
+		[
+			"waves-color-primary",
+			"color-primary-light",
+			"waves-accent",
+			"waves-teal",
+			"Russian-Teacher"
+		],
+		"reverse": false,
+		"show_context": true,
+		"use_buffer2": true,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"selected": 4,
+			"sheets":
+			[
+				{
+					"buffer": 0,
+					"file": "jade/index.jade",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 1386,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								95,
+								95
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Jade/Syntaxes/Jade.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 6,
+					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"file": "jade/projects.jade",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 1288,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								621,
+								621
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Jade/Syntaxes/Jade.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 5,
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "jade/experience.jade",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 2495,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								2012,
+								2151
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Jade/Syntaxes/Jade.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": -0.0,
+						"translation.y": 484.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 3,
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"file": "jade/education.jade",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 2169,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								260,
+								260
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Jade/Syntaxes/Jade.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 2,
+					"type": "text"
+				},
+				{
+					"buffer": 4,
+					"file": "jade/mixins/card.jade",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 798,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								638,
+								638
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Jade/Syntaxes/Jade.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 0,
+					"type": "text"
+				},
+				{
+					"buffer": 5,
+					"file": "jade/mixins/collapsible.jade",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 1001,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								332,
+								336
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Jade/Syntaxes/Jade.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 4,
+					"type": "text"
+				},
+				{
+					"buffer": 6,
+					"file": "jade/mixins/slider.jade",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 207,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								207,
+								207
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Jade/Syntaxes/Jade.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 8,
+					"type": "text"
+				},
+				{
+					"buffer": 7,
+					"file": "jade/mixins/navigation.jade",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 1540,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1265,
+								1265
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Jade/Syntaxes/Jade.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 30.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 7,
+					"type": "text"
+				},
+				{
+					"buffer": 8,
+					"file": "jade/layout.jade",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 896,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								694,
+								694
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Jade/Syntaxes/Jade.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 9,
+					"type": "text"
+				}
+			]
+		},
+		{
+			"selected": 0,
+			"sheets":
+			[
+				{
+					"buffer": 9,
+					"file": "scss/styles.scss",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 3709,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								2036,
+								2036
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Sass/Syntaxes/Sass.tmLanguage",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 1,
+					"type": "text"
+				},
+				{
+					"buffer": 10,
+					"file": "css/font-awesome.css",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 28812,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								897,
+								897
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/CSS/CSS.tmLanguage",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 10,
+					"type": "text"
+				}
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 23.0
+	},
+	"input":
+	{
+		"height": 0.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			],
+			[
+				1,
+				0,
+				2,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			0.5,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.exec":
+	{
+		"height": 233.0
+	},
+	"output.find_results":
+	{
+		"height": 0.0
+	},
+	"pinned_build_system": "",
+	"project": "landingpage.sublime-project",
+	"replace":
+	{
+		"height": 62.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+			[
+				"coll",
+				"jade\\mixins\\collapsible.jade"
+			],
+			[
+				"card",
+				"jade\\mixins\\card.jade"
+			],
+			[
+				"sty",
+				"scss\\styles.scss"
+			],
+			[
+				"",
+				"C:\\Users\\Trong\\Desktop\\Assignment5.lisp"
+			]
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 500.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 380.0
+	},
+	"select_symbol":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"selected_group": 0,
+	"settings":
+	{
+	},
+	"show_minimap": false,
+	"show_open_files": false,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 188.0,
+	"status_bar_visible": true,
+	"template_settings":
+	{
+	}
+}

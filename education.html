@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <link type="text/css" rel="stylesheet" href="css/materialize.min.css" media="screen,projection"/>
-    <link type="text/css" rel="stylesheet" href="font-awesome-4.3.0/css/font-awesome.min.css" media="screen,projection"/>
+    <link type="text/css" rel="stylesheet" href="css/font-awesome.min.css" media="screen,projection"/>
     <link type="text/css" rel="stylesheet" href="css/styles.css?v=1" media="screen,projection"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
     <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
@@ -22,103 +22,130 @@
                 <p>Trong Nguyen</p>
               </div>
               <div><img src="images/trong-colored.jpg" width="80" height="80" class="img-logo"/></div></a></li>
-          <li><a href="index.html">About Me</a></li>
-          <li><a href="education.html">Education</a></li>
-          <li><a href="experience.html">Skills &amp; Experience</a></li>
-          <li><a href="projects.html">Additional Projects</a></li>
+          <li><a href="index.html">
+              <!--i(class= icon_class)--><span>About Me</span></a></li>
+          <li><a href="education.html">
+              <!--i(class= icon_class)--><span>Education</span></a></li>
+          <li><a href="experience.html">
+              <!--i(class= icon_class)--><span>Skills &amp; Experience</span></a></li>
+          <li><a href="projects.html">
+              <!--i(class= icon_class)--><span>Projects</span></a></li>
+          <li><a href="http://manualoverri.de">
+              <!--i(class= icon_class)--><span>Blog</span></a></li>
         </ul>
       </nav>
     </div>
-    <div style="bottom: 30px; right: 30px;" class="fixed-action-btn"><a href="mailto:trong.ngyn@gmail.com" data-position="left" data-delay="50" data-tooltip="trong.ngyn@gmail.com" class="btn-floating btn-large tooltipped waves-effect waves-light color-teal"><i class="mdi-communication-email"></i></a></div>
+    <div style="bottom: 30px; right: 30px;" class="fixed-action-btn"><a href="mailto:trong.ngyn@gmail.com" data-position="left" data-delay="50" data-tooltip="trong.ngyn@gmail.com" class="btn-floating btn-large tooltipped waves-effect waves-light cyan accent-3"><i class="mdi-communication-email"></i></a>
+      <ul>
+        <li><a href="https://www.linkedin.com/pub/trong-nguyen/44/605/77b" class="btn-floating waves-effect waves-light color-indigo"><i class="fa fa-linkedin"></i></a></li>
+        <li><a href="https://facebook.com/trong" class="btn-floating waves-effect waves-light color-indigo"><i class="fa fa-facebook"></i></a></li>
+        <li><a href="https://instagram.com/trongable" class="btn-floating waves-effect waves-light color-indigo"><i class="fa fa-instagram"></i></a></li>
+        <li><a href="https://twitter.com/trongable" class="btn-floating waves-effect waves-light color-indigo"><i class="fa fa-twitter"></i></a></li>
+      </ul>
+    </div>
     <div class="container content education-wrap display-none">
-      <div class="section">
+      <div class="row header white-text z-depth-1">
         <h5>George Mason University</h5>
-        <h6>Graduated Fall 2013</h6>
       </div>
-      <div class="divider"></div>
-      <div class="section">
-        <div class="row">
-          <div class="col s12 m6">
-            <h6 class="bold">Degree</h6>
-            <p>BS Computer Science</p>
-            <p>Program GPA: 3.36</p>
-            <p>Overall GPA: 3.27</p>
+      <div class="row">
+        <div class="col s12 m6">
+          <div class="card card-header color-indigo">
+            <div class="card-title white-text"><span class="card-title">Degree</span></div>
+            <div class="card-content white">
+              <p>BS Computer Science (Fall 2013)</p>
+              <p>Program GPA: 3.36</p>
+              <p>Overall GPA: 3.27</p>
+            </div>
           </div>
-          <div class="col s12 m6">
-            <h6 class="bold">Awards</h6>
-            <p>Dean's List (Spring 2010, Spring 2013, Fall 2013)</p>
-            <p>VGAP Grant (2012, 2013)</p>
+        </div>
+        <div class="col s12 m6">
+          <div class="card card-header color-indigo">
+            <div class="card-title white-text"><span class="card-title">Awards</span></div>
+            <div class="card-content white">
+              <p>Dean's List (Spring 2010, Spring 2013, Fall 2013)</p>
+              <p>VGAP Grant (2012, 2013)</p>
+            </div>
           </div>
         </div>
       </div>
-      <div class="section">
+      <div class="row header white-text z-depth-1">
         <h5>Course Projects</h5>
       </div>
-      <div class="divider"></div>
-      <div class="section">
-        <ul data-collapsible="expandable" class="collapsible popout">
-          <li>
-            <div class="collapsible-header active waves-effect waves-color-indigo">CS 499 - Mobile Device Programming<span class="badge hide-on-small-only">1</span></div>
-            <div class="collapsible-body">
-              <ul>
-                <li>Groceroni - Improved Grocery Lists with Insertion by Barcode and Locate Nearby Grocery Stores (Android)</li>
-              </ul>
-            </div>
-          </li>
-          <li>
-            <div class="collapsible-header active waves-effect waves-color-indigo">CS 484 - Data Mining<span class="badge hide-on-small-only">1</span></div>
-            <div class="collapsible-body">
-              <ul>
-                <li>Analysis of Nationwide University Professor Salaries (WEKA)</li>
-              </ul>
-            </div>
-          </li>
-          <li>
-            <div class="collapsible-header active waves-effect waves-color-indigo">CS 480 - Introduction to Artificial Intelligence<span class="badge hide-on-small-only">4</span></div>
-            <div class="collapsible-body">
-              <ul>
-                <li>Function Solving Genetic Algorithm (Common LISP)</li>
-                <li>Function Solving Neural Network (Common LISP)</li>
-                <li>8-Puzzle Solver (Common LISP)</li>
-                <li>Konane Adverserial Search Game Playing A.I (Common LISP)</li>
-              </ul>
-            </div>
-          </li>
-          <li>
-            <div class="collapsible-header active waves-effect waves-color-indigo">CS 475 - Concurrent and Distributed Systems<span class="badge hide-on-small-only">1</span></div>
-            <div class="collapsible-body">
-              <ul>
-                <li>Concurrent Anagram Solver (Java)</li>
-              </ul>
-            </div>
-          </li>
-          <li>
-            <div class="collapsible-header active waves-effect waves-color-indigo">CS 471 - Operating Systems<span class="badge hide-on-small-only">2</span></div>
-            <div class="collapsible-body">
-              <ul>
-                <li>Adding a Module to the Linux 2.6 Kernel (C)</li>
-                <li>Build and Add System Call to the Linux 2.6 Kernel (C)</li>
-              </ul>
-            </div>
-          </li>
-          <li>
-            <div class="collapsible-header active waves-effect waves-color-indigo">CS 321 - Software Requirements/Design Modeling<span class="badge hide-on-small-only">1</span></div>
-            <div class="collapsible-body">
-              <ul>
-                <li>Math Tutor with Teacher and Student Accounts (Java)</li>
-              </ul>
-            </div>
-          </li>
-        </ul>
+      <div class="row">
+        <div class="col s12">
+          <ul data-collapsible="expandable" class="collapsible popout">
+            <li>
+              <div class="collapsible-header active waves-effect waves-color-indigo">CS 499 - Mobile Device Programming<span class="badge hide-on-small-only">1</span></div>
+              <div class="collapsible-body">
+                <ul>
+                  <li>Groceroni - Improved Grocery Lists with Insertion by Barcode and Locate Nearby Grocery Stores (Android)</li>
+                </ul>
+              </div>
+            </li>
+            <li>
+              <div class="collapsible-header active waves-effect waves-color-indigo">CS 484 - Data Mining<span class="badge hide-on-small-only">1</span></div>
+              <div class="collapsible-body">
+                <ul>
+                  <li>Analysis of Nationwide University Professor Salaries (WEKA)</li>
+                </ul>
+              </div>
+            </li>
+            <li>
+              <div class="collapsible-header active waves-effect waves-color-indigo">CS 480 - Introduction to Artificial Intelligence<span class="badge hide-on-small-only">4</span></div>
+              <div class="collapsible-body">
+                <ul>
+                  <li>Function Solving Genetic Algorithm (Common LISP)</li>
+                  <li>Function Solving Neural Network (Common LISP)</li>
+                  <li>8-Puzzle Solver (Common LISP)</li>
+                  <li>Konane Adverserial Search Game Playing A.I (Common LISP)</li>
+                </ul>
+              </div>
+            </li>
+            <li>
+              <div class="collapsible-header active waves-effect waves-color-indigo">CS 475 - Concurrent and Distributed Systems<span class="badge hide-on-small-only">1</span></div>
+              <div class="collapsible-body">
+                <ul>
+                  <li>Concurrent Anagram Solver (Java)</li>
+                </ul>
+              </div>
+            </li>
+            <li>
+              <div class="collapsible-header active waves-effect waves-color-indigo">CS 471 - Operating Systems<span class="badge hide-on-small-only">2</span></div>
+              <div class="collapsible-body">
+                <ul>
+                  <li>Adding a Module to the Linux 2.6 Kernel (C)</li>
+                  <li>Build and Add System Call to the Linux 2.6 Kernel (C)</li>
+                </ul>
+              </div>
+            </li>
+            <li>
+              <div class="collapsible-header active waves-effect waves-color-indigo">CS 321 - Software Requirements/Design Modeling<span class="badge hide-on-small-only">1</span></div>
+              <div class="collapsible-body">
+                <ul>
+                  <li>Math Tutor with Teacher and Student Accounts (Java)</li>
+                </ul>
+              </div>
+            </li>
+            <li>
+              <div class="collapsible-header active waves-effect waves-color-indigo">CS 101 - Preview of Computer Science<span class="badge hide-on-small-only">1</span></div>
+              <div class="collapsible-body">
+                <ul>
+                  <li>Kinect Controlled iRobot Vaccuum (Python)</li>
+                </ul>
+              </div>
+            </li>
+          </ul>
+        </div>
       </div>
-      <div class="section">
+      <div class="row header white-text z-depth-1">
         <h5>Additional Coursework</h5>
       </div>
-      <div class="divider"></div>
-      <div class="section">
-        <p>CS-332 - Object-Oriented Design and Implementation</p>
-        <p>CS-465 - Computer Systems Architecture</p>
-        <p>CS-483 - Analysis of Algorithms</p>
+      <div class="row">
+        <div class="col s12">
+          <p>CS-332 - Object-Oriented Design and Implementation</p>
+          <p>CS-465 - Computer Systems Architecture</p>
+          <p>CS-483 - Analysis of Algorithms</p>
+        </div>
       </div>
     </div>
   </body>

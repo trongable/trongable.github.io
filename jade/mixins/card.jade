@@ -1,6 +1,6 @@
 mixin card(img_url, title, blurb)
 	div.card
-		div.card-image.waves-effect.waves-block.waves-color-teal
+		div.card-image.waves-effect.waves-block.waves-color-cyan
 			img.activator(src= img_url)
 		div.card-content
 			span.card-title.activator.grey-text.text-darken-4= title
@@ -9,7 +9,16 @@ mixin card(img_url, title, blurb)
 		div.card-reveal
 			span.card-title.grey-text.text-darken-4= title
 				i.mdi-navigation-close.right
-			if block
+			if (block)
+				block
+			else
+
+mixin card-header(title)
+	div.card.card-header.color-indigo
+		div.card-title.white-text
+			span.card-title= title
+		div.card-content.white
+			if (block)
 				block
 			else
 				p No content provided

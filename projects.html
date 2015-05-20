@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <link type="text/css" rel="stylesheet" href="css/materialize.min.css" media="screen,projection"/>
-    <link type="text/css" rel="stylesheet" href="font-awesome-4.3.0/css/font-awesome.min.css" media="screen,projection"/>
+    <link type="text/css" rel="stylesheet" href="css/font-awesome.min.css" media="screen,projection"/>
     <link type="text/css" rel="stylesheet" href="css/styles.css?v=1" media="screen,projection"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
     <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
@@ -21,14 +21,65 @@
                 <p>Trong Nguyen</p>
               </div>
               <div><img src="images/trong-colored.jpg" width="80" height="80" class="img-logo"/></div></a></li>
-          <li><a href="index.html">About Me</a></li>
-          <li><a href="education.html">Education</a></li>
-          <li><a href="experience.html">Skills &amp; Experience</a></li>
-          <li><a href="projects.html">Additional Projects</a></li>
+          <li><a href="index.html">
+              <!--i(class= icon_class)--><span>About Me</span></a></li>
+          <li><a href="education.html">
+              <!--i(class= icon_class)--><span>Education</span></a></li>
+          <li><a href="experience.html">
+              <!--i(class= icon_class)--><span>Skills &amp; Experience</span></a></li>
+          <li><a href="projects.html">
+              <!--i(class= icon_class)--><span>Projects</span></a></li>
+          <li><a href="http://manualoverri.de">
+              <!--i(class= icon_class)--><span>Blog</span></a></li>
         </ul>
       </nav>
     </div>
-    <div style="bottom: 30px; right: 30px;" class="fixed-action-btn"><a href="mailto:trong.ngyn@gmail.com" data-position="left" data-delay="50" data-tooltip="trong.ngyn@gmail.com" class="btn-floating btn-large tooltipped waves-effect waves-light color-teal"><i class="mdi-communication-email"></i></a></div>
-    <div class="container"></div>
+    <div style="bottom: 30px; right: 30px;" class="fixed-action-btn"><a href="mailto:trong.ngyn@gmail.com" data-position="left" data-delay="50" data-tooltip="trong.ngyn@gmail.com" class="btn-floating btn-large tooltipped waves-effect waves-light cyan accent-3"><i class="mdi-communication-email"></i></a>
+      <ul>
+        <li><a href="https://www.linkedin.com/pub/trong-nguyen/44/605/77b" class="btn-floating waves-effect waves-light color-indigo"><i class="fa fa-linkedin"></i></a></li>
+        <li><a href="https://facebook.com/trong" class="btn-floating waves-effect waves-light color-indigo"><i class="fa fa-facebook"></i></a></li>
+        <li><a href="https://instagram.com/trongable" class="btn-floating waves-effect waves-light color-indigo"><i class="fa fa-instagram"></i></a></li>
+        <li><a href="https://twitter.com/trongable" class="btn-floating waves-effect waves-light color-indigo"><i class="fa fa-twitter"></i></a></li>
+      </ul>
+    </div>
+    <div class="container content-slider center display-none">
+      <div class="slider z">
+        <ul class="slides">
+          <li class="z-depth-1"><a href="#" class="racial-recognition"><img src=""/>
+              <div class="caption center-align">
+                <h3>Racial Recognition (C#, Python)</h3>
+                <h5 class="light grey-text text-lighten-3">Detecting ethnicity from a profile picture</h5>
+              </div></a></li>
+          <li class="z-depth-1"><a href="#" class="mario-chase-es"><img src=""/>
+              <div class="caption center-align">
+                <h3>Mario Chase Learning with Evolutionary Strategies (Java)</h3>
+                <h5 class="light grey-text text-lighten-3">To Catch A Mario with Self-Teaching Toads</h5>
+              </div></a></li>
+          <li class="z-depth-1"><a href="#" class="secret-santa"><img src=""/>
+              <div class="caption center-align">
+                <h3>Secret Santa (Android)</h3>
+                <h5 class="light grey-text text-lighten-3">Easily randomize your Secret Santas and discreetly notify your friends</h5>
+              </div></a></li>
+          <li class="z-depth-1"><a href="#" class="tumblr-cli"><img src=""/>
+              <div class="caption center-align">
+                <h3>Tumblr CLI (Java)</h3>
+                <h5 class="light grey-text text-lighten-3">Post to Tumblr from the command line</h5>
+              </div></a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="container content index-wrap display-none">				
+      <div class="row">
+        <div class="col l6 m8 offset-m2 s12">
+          <!--
+          +card("", "Secret Santa (Android)", "Easily randomize your Secret Santas and discreetly notify your friends")
+          	p  My friends and I did Secret Santa each year for Christmas, and I wanted a way to make sure
+          		| everyone knew who they were matched with but without having to coordinate with everyone.
+          	p I wrote this small app for Android using MIT's Scratch block programming language. It was
+          		| impossible to maintain due to it 
+          -->
+        </div>
+      </div>
+    </div>
   </body>
 </html>

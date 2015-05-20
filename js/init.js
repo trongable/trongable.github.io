@@ -5,5 +5,7 @@ $(document).ready(function(){
 	
 	$('.navbar-fixed .container').velocity('transition.slideDownIn', { duration: 400 });
 	
-	$('.container.content').velocity('transition.slideUpIn', { duration: 600, delay: 600 });
+	$('.container.content, .content-slider').velocity('transition.slideUpIn', { duration: 600, delay: 600 });
+	
+    $('.slider').slider({full_width: true});
 });

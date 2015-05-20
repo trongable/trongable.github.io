@@ -2,29 +2,29 @@
 $color-pink: rgba(233, 30, 99, 1);
 $color-pink-trans: rgba(233, 30, 99, 0.7);
 $color-pink-light: #EC407A;
-$color-teal: rgba(0, 229, 255, 1);
-$color-teal-trans: rgba(0, 229, 255, 0.7);
-$color-indigo: rgba(63, 81, 181, 1);
+$color-cyan: rgba(0, 229, 255, 1);
+$color-cyan-trans: rgba(0, 229, 255, 0.7);
+$color-indigo: rgba(120, 132, 203, 1);
 $color-indigo-trans: rgba(63, 81, 181, 0.7);
 
 .color-pink {
-  color: $color-pink;
+  background-color: $color-pink !important;
 }
 
 .waves-effect.waves-color-pink .waves-ripple {
   background-color: $color-pink-trans;
 }
  
-.color-teal {
-  background-color: $color-teal !important;
+.color-cyan {
+  background-color: $color-cyan !important;
 }
 
-.waves-effect.waves-color-teal .waves-ripple {
-  background-color: $color-teal-trans;
+.waves-effect.waves-color-cyan .waves-ripple {
+  background-color: $color-cyan-trans;
 }
 
 .color-indigo {
-  background-color: $color-indigo;
+  background-color: $color-indigo !important;
 }
 
 .waves-effect.waves-color-indigo .waves-ripple {
@@ -51,7 +51,17 @@ $color-indigo-trans: rgba(63, 81, 181, 0.7);
 
   ul.side-nav.fixed {
     li.logo-container {
+      display: block;
       background-color: $color-pink-light;
+    }
+
+    li {
+      //display: inline-flex;
+
+      i {
+        color: $color-pink-trans;
+        line-height: 64px;
+      }
     }
 
     a.logo {
@@ -71,6 +81,32 @@ $color-indigo-trans: rgba(63, 81, 181, 0.7);
   }
 }
 
+.fixed-action-btn ul .btn-floating i {
+  font-size: 16px;
+}
+
+/* Cards */
+
+.card {
+  position: inherit;
+}
+.card.card-header .card-title {
+  font-size: 15px;
+  font-weight: 400;
+  padding: 0.75rem 0.5rem 0.75rem 0.7rem;
+}
+
+.card.card-header.full .card-title {
+  padding: 5px 5px 15px 20px;
+}
+
+.card.card-header .card-content {
+  padding: 0.5rem 1rem 0.5rem 1.5rem;
+
+  p {
+    margin: 1rem 0 1rem 0;
+  }
+}
 
 /* General */
 .container {
@@ -92,6 +128,11 @@ $color-indigo-trans: rgba(63, 81, 181, 0.7);
   padding: 2rem 0 2rem 0;
 }
 
+.container.content-slider {
+  padding: 0 0 0 0;
+  width: 100%;
+}
+
 .container.content p.flow-text:first-child {
   margin-top: 0.5rem;
 }
@@ -104,17 +145,39 @@ $color-indigo-trans: rgba(63, 81, 181, 0.7);
   display: none;
 }
 
-/* Pages */
-.experience-wrap ul {
-  width: 80%;  
+.row.header {
+  background-color: $color-cyan;
+  margin-top: 24px;
+  padding: 5px 5px 5px 18px;
 }
 
-.education-wrap .collapsible ul li,
-.experience-wrap ul li {
-  list-style-type: disc;
-  list-style-position: inside;
-  padding: 0 0 0.3rem 1rem;
-  text-indent: -1rem;
+/* Pages */
+.experience-wrap {
+  ul {
+    width: 90%;  
+  }
+
+  .card.card-header:not(.full) .card-content {
+    height: 180px;
+    width: 100%;
+  }
+}
+
+.education-wrap .collapsible,
+.experience-wrap {
+  ul li {
+    list-style-type: disc;
+    list-style-position: inside;
+    padding: 0 0 0.3rem 1rem;
+    text-indent: -1rem;
+  }
+}
+
+.education-wrap {
+  .card.card-header:not(.full) .card-content {
+    height: 140px;
+    width: 100%;
+  }
 }
 
 .education-wrap .collapsible ul li {
@@ -142,10 +205,20 @@ $color-indigo-trans: rgba(63, 81, 181, 0.7);
   padding: 0.5rem 0 0.5rem 0;
 }
 
+.slider .indicators .indicator-item.active {
+  background-color: $color-cyan;
+}
+
 @media only screen and (min-width : 992px) {
   nav .brand-logo,
-  .container.content {
+  .container.content,
+  .container.content-slider {
     padding-left: 240px;
+  }
+  
+  .container.content-slider {
+    padding-top: 4rem;
+    width: 80%;
   }
 }
 

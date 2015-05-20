@@ -1,0 +1,14 @@
+{
+	"folders":
+	[
+		{
+			"path": "jade"
+		},
+		{
+			"path": "scss"
+		},
+		{
+			"path": "js"
+		}
+	]
+}

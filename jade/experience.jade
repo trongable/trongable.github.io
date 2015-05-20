@@ -3,75 +3,83 @@ extends ./layout.jade
 block content
 	+navigation('Skills & Experience', 'experience')
 	div.container.content.experience-wrap.display-none
-		div.section
+		div.row.header.white-text.z-depth-1
 			h5 Skills
-		div.divider
-		div.section
-			div.row
-				div.col.s12.m4
-					h6.bold Frontend
+		div.row
+			div.col.s12.m6.l3
+				+card-header("Frontend")
 					ul
 						li HTML
 						li Jade
 						li CSS + SCSS
-						li jQuery
-						li Javascript
-				div.col.s12.m4
-					h6.bold Backend
+						li Javascript + jQuery
+			div.col.s12.m6.l3
+				+card-header("Backend")
 					ul
 						li C#
 						li Java + Android
 						li Python
-						li Common LISP
 						li MS-SQL + SQLite
-						li C
-				div.col.s12.m4
-					h6.bold Software
+			div.col.s12.m6.l3
+				+card-header("Software")
 					ul
 						li Visual Studio
 						li IntelliJ IDEA + Android Studio
 						li Eclipse
 						li PyCharm 
+			div.col.s12.m6.l3
+				+card-header("Previously Used")
+					ul
+						li Common LISP
 						li LispWorks
-						li WEKA
-		div.section
-			h5 Alarm.com
-			h6 Software Engineer
-			h6 Jan 2014 - Present
-		div.divider
-		div.section
-			h6.bold Languages:
-			ul
-				li ASP.NET
-				li C#
-				li HTML
-				li CSS
-				li jQuery and Javascript
-				li MS-SQL
-				li Proprietary assembly language
-		div.section
-			h6.bold Responsibilities:
-			ul
-				li Develop and maintain web pages and backend services for home automation devices
-					| for new and existing products around thermostats, lights, and energy meters.
-				li Utilize Z-Wave protocol to send commands and parse messages to and from devices.
-				li Create rules to further automate devices based on timing sensor activity, schedules
-					| and geolocation.
-				li Create onboarding documentation for home automation engineers.
-		div.section
-			h5 George Mason University
-			h6 Undergraduate Teaching Assistant
-			h6 Aug 2010 - Dec 2013
-		div.divider
-		div.section
-			h6.bold Courses:
-			ul
-				li CS 112 - Introduction to Computer Programming (Python)
-				li CS-211 - Introduction to Object Oriented Porgramming (Java)
-		div.section
-			h6.bold Responsibilities:
-			ul
-				li Attend labs and assist students with in-class demonstrations.
-				li In-class and private tutoring to help debug and test assignments.
-				li Answer student questions on course discussion board (Blackboard, Piazza).
-				li Proctor exams and grade quizzes.
+						li C
+		div.row.header.white-text.z-depth-1
+			h5 Experience
+		div.row
+			div.col.s12
+				div.card.card-header.full.color-indigo
+					div.card-title.white-text
+						h5 Alarm.com
+						h6 Software Engineer
+						h6 Jan 2014 - Present
+					div.card-content.white
+						div.section
+							h6.bold Languages:
+							ul
+								li ASP.NET
+								li C#
+								li HTML
+								li CSS
+								li jQuery and Javascript
+								li MS-SQL
+								li Proprietary assembly language
+						div.section
+							h6.bold Responsibilities:
+							ul
+								li Develop and maintain web pages and backend services for home automation devices
+									| for new and existing products around thermostats, lights, and energy meters.
+								li Utilize Z-Wave protocol to send commands and parse messages to and from devices.
+								li Create rules to further automate devices based on timing sensor activity, schedules
+									| and geolocation.
+								li Create onboarding documentation for home automation engineers.
+		div.row
+			div.col.s12
+				div.card.card-header.full.color-indigo
+					div.card-title.white-text
+						h5 George Mason University
+						h6 Undergraduate Teaching Assistant
+						h6 Aug 2010 - Dec 2013
+					div.card-content.white
+						div.section
+							h6.bold Courses:
+							ul
+								li CS 112 - Introduction to Computer Programming (Python)
+								li CS-211 - Introduction to Object Oriented Porgramming (Java)
+						div.section
+							h6.bold Responsibilities:
+							ul
+								li Attend labs and assist students with in-class demonstrations.
+								li In-class and private tutoring to help debug and test assignments.
+								li Answer student questions on course discussion board (Blackboard, Piazza).
+								li Proctor exams and grade quizzes.
+			
