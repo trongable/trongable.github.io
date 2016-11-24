@@ -14,7 +14,7 @@ $color-indigo-trans: rgba(63, 81, 181, 0.7);
 .waves-effect.waves-color-pink .waves-ripple {
   background-color: $color-pink-trans;
 }
- 
+
 .color-cyan {
   background-color: $color-cyan !important;
 }
@@ -34,7 +34,7 @@ $color-indigo-trans: rgba(63, 81, 181, 0.7);
 /* Navigation */
 .navbar-fixed nav {
   background-color: $color-pink;
-  
+
   .brand-logo {
     font-weight: 300;
   }
@@ -44,7 +44,7 @@ $color-indigo-trans: rgba(63, 81, 181, 0.7);
   .button-collapse {
     color: #FFFFFF;
   }
-  
+
   .button-collapse {
     padding: 0 0 0 1rem;
   }
@@ -54,7 +54,7 @@ $color-indigo-trans: rgba(63, 81, 181, 0.7);
       display: block;
       background-color: $color-pink-light;
     }
-
+i
     li {
       //display: inline-flex;
 
@@ -117,7 +117,7 @@ $color-indigo-trans: rgba(63, 81, 181, 0.7);
 .collapsible li .collapsible-header {
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;   
+  text-overflow: ellipsis;
 }
 
 .navbar-fixed .container a.brand-logo {
@@ -154,7 +154,7 @@ $color-indigo-trans: rgba(63, 81, 181, 0.7);
 /* Pages */
 .experience-wrap {
   ul {
-    width: 90%;  
+    width: 90%;
   }
 
   .card.card-header:not(.full) .card-content {
@@ -215,7 +215,7 @@ $color-indigo-trans: rgba(63, 81, 181, 0.7);
   .container.content-slider {
     padding-left: 240px;
   }
-  
+
   .container.content-slider {
     padding-top: 4rem;
     width: 80%;

@@ -128,26 +128,13 @@
 	"buffers":
 	[
 		{
+			"contents": "extends ./layout.jade\n\nblock append scripts\n	script(type=\"text/javascript\", src=\"js/index.js\")\n\nblock content\n	+navigation(\"Hello!\", \"About\")\n	div.container.content.index-wrap.display-none\n		div.row\n			div.col.s10.offset-s1\n				p.flow-text.center\n					| My naem is Trong, I'm 24, and I'm a Software Engineer at Alarm.com on the home automation team.\n					| I'm a huge fan of Chicken Fries&#8482, and I constantly worry that they'll leave my life again.\n		div.row\n			div.col.l4.m8.offset-m2.s12\n				+card(\"images/about/trong-tongue-3.jpg\", \"Programming\", \"card.OnClickHandler = Expand;\")\n					p  Artificial intelligence and machine learning are my favorite topics\n						| with stochastic optimization being my main area of interest.\n					p These pages were written in Jade and SCSS with styling provided by\n						a(href=\"http://materializecss.com/about.html\") Materialize\n						| . View the source and check out my\n						a(href=\"http://github.com/trongable\") GitHub\n						| here!\n			div.col.l4.m8.offset-m2.s12\n				+card(\"images/about/corki-3.jpg\", \"Cosplay\", \"I dress up in costumes for fun\")\n					p Corki from League of Legends\n			div.col.l4.m8.offset-m2.s12\n				+card(\"images/about/ant.jpg\", \"Photography\", \"I like taking pictures of bugs\")\n					p And I'm pretty darn good at writing them.\n					p Check out my\n						a(href=\"http://instagram.com/trongable\") Instagram\n						| !\n",
 			"file": "jade/index.jade",
+			"file_size": 1411,
+			"file_write_time": 130772689184946237,
 			"settings":
 			{
-				"buffer_size": 1386,
-				"line_ending": "Windows"
-			}
-		},
-		{
-			"file": "jade/projects.jade",
-			"settings":
-			{
-				"buffer_size": 1288,
-				"line_ending": "Windows"
-			}
-		},
-		{
-			"file": "jade/experience.jade",
-			"settings":
-			{
-				"buffer_size": 2499,
+				"buffer_size": 1379,
 				"line_ending": "Windows"
 			}
 		},
@@ -160,63 +147,18 @@
 			}
 		},
 		{
-			"file": "jade/mixins/card.jade",
-			"settings":
-			{
-				"buffer_size": 590,
-				"line_ending": "Windows"
-			}
-		},
-		{
-			"file": "jade/layout.jade",
-			"settings":
-			{
-				"buffer_size": 896,
-				"line_ending": "Windows"
-			}
-		},
-		{
-			"file": "/C/Users/Trong/Desktop/GitHubLog.txt",
-			"settings":
-			{
-				"buffer_size": 37657,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "jade/mixins/navigation.jade",
-			"settings":
-			{
-				"buffer_size": 1784,
-				"line_ending": "Windows"
-			}
-		},
-		{
-			"file": "jade/mixins/collapsible.jade",
-			"settings":
-			{
-				"buffer_size": 1009,
-				"line_ending": "Windows"
-			}
-		},
-		{
+			"contents": "/* Colors */\n$color-pink: rgba(233, 30, 99, 1);\n$color-pink-trans: rgba(233, 30, 99, 0.7);\n$color-pink-light: #EC407A;\n$color-cyan: rgba(0, 229, 255, 1);\n$color-cyan-trans: rgba(0, 229, 255, 0.7);\n$color-indigo: rgba(120, 132, 203, 1);\n$color-indigo-trans: rgba(63, 81, 181, 0.7);\n\n.color-pink {\n  background-color: $color-pink !important;\n}\n\n.waves-effect.waves-color-pink .waves-ripple {\n  background-color: $color-pink-trans;\n}\n\n.color-cyan {\n  background-color: $color-cyan !important;\n}\n\n.waves-effect.waves-color-cyan .waves-ripple {\n  background-color: $color-cyan-trans;\n}\n\n.color-indigo {\n  background-color: $color-indigo !important;\n}\n\n.waves-effect.waves-color-indigo .waves-ripple {\n  background-color: $color-indigo-trans;\n}\n\n/* Navigation */\n.navbar-fixed nav {\n  background-color: $color-pink;\n\n  .brand-logo {\n    font-weight: 300;\n  }\n\n  ul a,\n  .brand-logo\n  .button-collapse {\n    color: #FFFFFF;\n  }\n\n  .button-collapse {\n    padding: 0 0 0 1rem;\n  }\n\n  ul.side-nav.fixed {\n    li.logo-container {\n      display: block;\n      background-color: $color-pink-light;\n    }\ni\n    li {\n      //display: inline-flex;\n\n      i {\n        color: $color-pink-trans;\n        line-height: 64px;\n      }\n    }\n\n    a.logo {\n      text-align: center;\n      height: 170px;\n    }\n\n    p {\n      color: #FFFFFF;\n      margin: 0 0 0 0;\n    }\n  }\n\n  .img-logo {\n    border-radius: 5px;\n    border: solid 1px #E6E6E6;\n  }\n}\n\n.fixed-action-btn ul .btn-floating i {\n  font-size: 16px;\n}\n\n/* Cards */\n\n.card.card-header {\n  position: inherit;\n}\n.card.card-header .card-title {\n  font-size: 15px;\n  font-weight: 400;\n  padding: 0.75rem 0.5rem 0.75rem 0.7rem;\n}\n\n.card.card-header.full .card-title {\n  padding: 5px 5px 15px 20px;\n}\n\n.card.card-header .card-content {\n  padding: 0.5rem 1rem 0.5rem 1.5rem;\n\n  p {\n    margin: 1rem 0 1rem 0;\n  }\n}\n\n/* General */\n.container {\n  width: 80%;\n}\n\n.navbar-fixed .container a.brand-logo,\n.collapsible li .collapsible-header {\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n\n.navbar-fixed .container a.brand-logo {\n  width: 80%;\n}\n\n.container.content {\n  padding: 2rem 0 2rem 0;\n}\n\n.container.content-slider {\n  padding: 0 0 0 0;\n  width: 100%;\n}\n\n.container.content p.flow-text:first-child {\n  margin-top: 0.5rem;\n}\n\n.bold {\n  font-weight: 700;\n}\n\n.display-none {\n  display: none;\n}\n\n.row.header {\n  background-color: $color-cyan;\n  margin-top: 24px;\n  padding: 5px 5px 5px 18px;\n}\n\n/* Pages */\n.experience-wrap {\n  ul {\n    width: 90%;\n  }\n\n  .card.card-header:not(.full) .card-content {\n    height: 180px;\n    width: 100%;\n  }\n}\n\n.education-wrap .collapsible,\n.experience-wrap {\n  ul li {\n    list-style-type: disc;\n    list-style-position: inside;\n    padding: 0 0 0.3rem 1rem;\n    text-indent: -1rem;\n  }\n}\n\n.education-wrap {\n  .card.card-header:not(.full) .card-content {\n    height: 140px;\n    width: 100%;\n  }\n}\n\n.education-wrap .collapsible ul li {\n  padding: 0.5rem 0 0.5rem 2rem;\n}\n\n\n/* Mixins */\n.collapsible li.active .collapsible-header,\n.collapsible li.active .collapsible-header .badge {\n  color: #FFFFFF;\n  background-color: $color-indigo;\n}\n\n.collapsible ll .collapsible-header .badge {\n  font-weight: 300;\n}\n\n.collapsible li .collapsible-header .badge:after {\n  content: ' project(s)'\n}\n\n.collapsible li .collapsible-body {\n  background-color: #FFFFFF;\n  padding: 0.5rem 0 0.5rem 0;\n}\n\n.slider .indicators .indicator-item.active {\n  background-color: $color-cyan;\n}\n\n@media only screen and (min-width : 992px) {\n  nav .brand-logo,\n  .container.content,\n  .container.content-slider {\n    padding-left: 240px;\n  }\n\n  .container.content-slider {\n    padding-top: 4rem;\n    width: 80%;\n  }\n}\n\n@media only screen and (max-width : 600px) {\n\n}\n\n// Stacked Icons\n// -------------------------\n\n.stack {\n  position: relative;\n  display: inline-block;\n  width: 2em;\n  height: 2em;\n  line-height: 2em;\n  vertical-align: middle;\n}\n\n.stack-inner, .stack-outer {\n  position: absolute;\n  left: 0;\n  width: 100%;\n  text-align: center;\n}\n.stack-inner { line-height: inherit; }\n.stack-outer { left: -50%; }\n.inverse { color: #FFFFFF; }",
 			"file": "scss/styles.scss",
+			"file_size": 4342,
+			"file_write_time": 130772690223615646,
 			"settings":
 			{
-				"buffer_size": 4106,
+				"buffer_size": 4095,
 				"line_ending": "Windows"
-			}
-		},
-		{
-			"file": "css/font-awesome.css",
-			"settings":
-			{
-				"buffer_size": 28812,
-				"line_ending": "Unix"
 			}
 		}
 	],
-	"build_system": "Packages/SASS Build/SASS.sublime-build",
+	"build_system": "",
 	"build_system_choices":
 	[
 		[
@@ -239,10 +181,42 @@
 	"build_varint": "",
 	"command_palette":
 	{
-		"height": 104.0,
-		"last_filter": "jade",
+		"height": 141.0,
+		"last_filter": "remove",
 		"selected_items":
 		[
+			[
+				"remove",
+				"Package Control: Remove Package"
+			],
+			[
+				"re",
+				"Package Control: Remove Package"
+			],
+			[
+				"remov",
+				"Package Control: Remove Package"
+			],
+			[
+				"remo",
+				"Package Control: Remove Package"
+			],
+			[
+				"Package Control: ",
+				"Package Control: Remove Package"
+			],
+			[
+				"insta",
+				"Package Control: Install Package"
+			],
+			[
+				"inst",
+				"Package Control: Install Package"
+			],
+			[
+				"pac",
+				"Package Control: Install Package"
+			],
 			[
 				"jade",
 				"Set Syntax: Jade"
@@ -300,7 +274,7 @@
 				"Set Syntax: Lisp"
 			]
 		],
-		"width": 400.0
+		"width": 408.0
 	},
 	"console":
 	{
@@ -329,24 +303,32 @@
 	[
 		"/C/Users/Trong/Desktop/Landing-Page/jade",
 		"/C/Users/Trong/Desktop/Landing-Page/jade/mixins",
-		"/C/Users/Trong/Desktop/Landing-Page/scss",
-		"/C/Users/Trong/Desktop/Landing-Page/js"
+		"/C/Users/Trong/Desktop/Landing-Page/js",
+		"/C/Users/Trong/Desktop/Landing-Page/scss"
 	],
 	"file_history":
 	[
-		"/C/Users/Trong/Desktop/Landing-Page/index.html",
+		"/C/Users/Trong/AppData/Roaming/Sublime Text 3/Packages/SublimeCodeIntel/SublimeCodeIntel.sublime-settings",
+		"/D/Dropbox/Settings/Speed Dial 2.txt",
+		"/C/Users/Trong/Desktop/Landing-Page/jade/projects.jade",
 		"/C/Users/Trong/Desktop/Landing-Page/jade/layout.jade",
+		"/C/Users/Trong/Desktop/Landing-Page/jade/experience.jade",
+		"/C/Users/Trong/Desktop/Landing-Page/jade/education.jade",
+		"/C/Users/Trong/Desktop/Landing-Page/jade/mixins/collapsible.jade",
 		"/C/Users/Trong/Desktop/Landing-Page/jade/mixins/navigation.jade",
 		"/C/Users/Trong/Desktop/Landing-Page/jade/mixins/slider.jade",
+		"/C/Users/Trong/Desktop/Landing-Page/landingpage.sublime-workspace",
+		"/C/Users/Trong/AppData/Roaming/Sublime Text 3/Packages/User/Preferences.sublime-settings",
+		"/C/Users/Trong/Desktop/Landing-Page/js/velocity.ui.min.js",
+		"/C/Users/Trong/Desktop/Landing-Page/css/font-awesome.css",
+		"/C/Users/Trong/Desktop/GitHubLog.txt",
+		"/C/Users/Trong/Desktop/Landing-Page/index.html",
 		"/C/Users/Trong/Desktop/vertical-timeline/css/style.css",
 		"/C/Users/Trong/Desktop/vertical-timeline/scss/style.scss",
 		"/C/Users/Trong/Desktop/vertical-timeline/css/reset.css",
 		"/C/Users/Trong/Desktop/Landing-Page/scss/styles.scss",
 		"/D/Dropbox/Documents/Win7.txt",
 		"/C/Users/Trong/Desktop/Landing-Page/jade/index.jade",
-		"/C/Users/Trong/Desktop/Landing-Page/jade/projects.jade",
-		"/C/Users/Trong/Desktop/Landing-Page/jade/mixins/collapsible.jade",
-		"/C/Users/Trong/Desktop/Landing-Page/jade/education.jade",
 		"/C/Users/Trong/Desktop/Landing-Page/jade/mixins/card.jade",
 		"/C/Users/Trong/Desktop/Landing-Page/scss/style.scss",
 		"/C/Users/Trong/Desktop/Landing-Page/js/education.js",
@@ -399,7 +381,6 @@
 		"/C/Users/Trong/Desktop/Site/index.html",
 		"/C/Users/Trong/Desktop/Site/nav.jade",
 		"/C/Users/Trong/Desktop/Site/mixins/nav.html",
-		"/C/Users/Trong/AppData/Roaming/Sublime Text 3/Packages/User/Preferences.sublime-settings",
 		"/C/Users/Trong/Desktop/Site/css/style.css",
 		"/D/GitHub/Racial-Recognition/OkScraper/bin/Debug/pending.txt",
 		"/C/Users/Trong/AppData/Roaming/Sublime Text 3/Packages/SublimeOnSaveBuild/SublimeOnSaveBuild.sublime-settings",
@@ -422,7 +403,6 @@
 		"/D/GitHub/Racial-Recognition/scope_settings.xml",
 		"/D/GitHub/Racial-Recognition/vcs.xml",
 		"/D/GitHub/facebook_face_training_set/create_pics_from_facebook.py",
-		"/C/Users/Trong/Desktop/GitHubLog.txt",
 		"/D/GitHub/Racial-Recognition/workspace.xml",
 		"/D/GitHub/Racial-Recognition/RacialFeatures/HelloOpenCV/haarcascade_frontalface_default.xml",
 		"/D/GitHub/SpiderScrape/SpiderScrape/bin/Debug/config.txt",
@@ -455,17 +435,11 @@
 		"/F/Steam Library/SteamApps/common/Transistor/_CommonRedist/vcredist/2012/installscript.vdf",
 		"/F/Steam Library/SteamApps/common/Fallout New Vegas/Fallout_default.ini",
 		"/D/GitHub/Russian-Teacher/.idea/compiler.xml",
-		"/D/GitHub/Russian-Teacher/.idea/vcs.xml",
-		"/D/GitHub/Russian-Teacher/.idea/project-template.xml",
-		"/D/GitHub/Russian-Teacher/.idea/modules.xml",
-		"/D/GitHub/Russian-Teacher/.idea/misc.xml",
-		"/D/GitHub/Russian-Teacher/.idea/encodings.xml",
-		"/D/GitHub/Russian-Teacher/.idea/description.html",
-		"/D/GitHub/Russian-Teacher/.idea/workspace.xml"
+		"/D/GitHub/Russian-Teacher/.idea/vcs.xml"
 	],
 	"find":
 	{
-		"height": 34.0
+		"height": 23.0
 	},
 	"find_in_files":
 	{
@@ -611,7 +585,7 @@
 	"groups":
 	[
 		{
-			"selected": 6,
+			"selected": 1,
 			"sheets":
 			[
 				{
@@ -620,135 +594,20 @@
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 1386,
+						"buffer_size": 1379,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								381,
-								381
+								260,
+								260
 							]
 						],
 						"settings":
 						{
-							"syntax": "Packages/Jade/Syntaxes/Jade.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 5,
-					"type": "text"
-				},
-				{
-					"buffer": 1,
-					"file": "jade/projects.jade",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 1288,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								621,
-								621
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/Jade/Syntaxes/Jade.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 4,
-					"type": "text"
-				},
-				{
-					"buffer": 2,
-					"file": "jade/experience.jade",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 2499,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								857,
-								863
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/Jade/Syntaxes/Jade.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 7,
-					"type": "text"
-				},
-				{
-					"buffer": 3,
-					"file": "jade/education.jade",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 2199,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								541,
-								541
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/Jade/Syntaxes/Jade.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 8,
-					"type": "text"
-				},
-				{
-					"buffer": 4,
-					"file": "jade/mixins/card.jade",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 590,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								261,
-								261
-							]
-						],
-						"settings":
-						{
+							"color_scheme": "Packages/Seti_UI/Scheme/Seti_monokai.tmTheme",
 							"syntax": "Packages/Jade/Syntaxes/Jade.tmLanguage",
 							"translate_tabs_to_spaces": false
 						},
@@ -760,118 +619,33 @@
 					"type": "text"
 				},
 				{
-					"buffer": 5,
-					"file": "jade/layout.jade",
+					"buffer": 1,
+					"file": "jade/education.jade",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 896,
+						"buffer_size": 2199,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								389,
-								389
+								1140,
+								1140
 							]
 						],
 						"settings":
 						{
+							"color_scheme": "Packages/Seti_UI/Scheme/Seti_monokai.tmTheme",
 							"syntax": "Packages/Jade/Syntaxes/Jade.tmLanguage",
 							"translate_tabs_to_spaces": false
 						},
-						"translation.x": 18.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 1,
-					"type": "text"
-				},
-				{
-					"buffer": 6,
-					"file": "/C/Users/Trong/Desktop/GitHubLog.txt",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 37657,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								37656,
-								37656
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/Text/Plain text.tmLanguage"
-						},
 						"translation.x": 0.0,
-						"translation.y": 6840.0,
+						"translation.y": 239.0,
 						"zoom_level": 1.0
 					},
 					"stack_index": 0,
-					"type": "text"
-				},
-				{
-					"buffer": 7,
-					"file": "jade/mixins/navigation.jade",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 1784,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								70,
-								70
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/Jade/Syntaxes/Jade.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 6,
-					"type": "text"
-				},
-				{
-					"buffer": 8,
-					"file": "jade/mixins/collapsible.jade",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 1009,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								1009,
-								1009
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/Jade/Syntaxes/Jade.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 9,
 					"type": "text"
 				}
 			]
@@ -881,55 +655,26 @@
 			"sheets":
 			[
 				{
-					"buffer": 9,
+					"buffer": 2,
 					"file": "scss/styles.scss",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 4106,
+						"buffer_size": 4095,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								1542,
-								1542
+								580,
+								580
 							]
 						],
 						"settings":
 						{
-							"syntax": "Packages/Sass/Syntaxes/Sass.tmLanguage",
-							"tab_size": 2,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 847.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 3,
-					"type": "text"
-				},
-				{
-					"buffer": 10,
-					"file": "css/font-awesome.css",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 28812,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								897,
-								897
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/CSS/CSS.tmLanguage",
+							"color_scheme": "Packages/Seti_UI/Scheme/Seti_monokai.tmTheme",
+							"syntax": "Packages/Seti_UI/Langs/SCSS.tmLanguage",
 							"tab_size": 2,
 							"translate_tabs_to_spaces": true
 						},
@@ -937,7 +682,7 @@
 						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 10,
+					"stack_index": 1,
 					"type": "text"
 				}
 			]
@@ -993,7 +738,7 @@
 	"project": "landingpage.sublime-project",
 	"replace":
 	{
-		"height": 62.0
+		"height": 42.0
 	},
 	"save_all_on_build": true,
 	"select_file":

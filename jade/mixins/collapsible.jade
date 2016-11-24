@@ -4,7 +4,7 @@ mixin collapsible-row(header, badge_num)
 			if (badge_num > 0)
 				span.badge.hide-on-small-only= badge_num
 		div.collapsible-body
-			if (block)
+			if block
 				block
 
 mixin collapsible-row-active(header, badge_num)
@@ -13,7 +13,7 @@ mixin collapsible-row-active(header, badge_num)
 			if (badge_num > 0)
 				span.badge.hide-on-small-only= badge_num
 		div.collapsible-body
-			if (block)
+			if block
 				block
 
 
@@ -24,7 +24,7 @@ mixin collapsible-row-with-icon(icon, header, badge_num)
 				span.badge.hide-on-small-only= badge_num
 		i(class= icon)= header
 		div.collapsible-body
-			if (block)
+			if block
 				block
 
 mixin collapsible-row-with-icon-active(icon, header, badge_num)
@@ -34,5 +34,5 @@ mixin collapsible-row-with-icon-active(icon, header, badge_num)
 				span.badge.hide-on-small-only= badge_num
 		i(class= icon)= header
 		div.collapsible-body
-			if (block)
+			if block
 				block

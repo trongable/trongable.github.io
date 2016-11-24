@@ -5,10 +5,10 @@
 			"path": "jade"
 		},
 		{
-			"path": "scss"
+			"path": "js"
 		},
 		{
-			"path": "js"
+			"path": "scss"
 		}
 	]
 }

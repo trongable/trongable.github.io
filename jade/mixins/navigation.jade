@@ -14,22 +14,22 @@ mixin navigation(title, active)
 
 			ul#slide-out.side-nav.fixed
 				li.logo-container
-					a.logo(href="index.html") 
+					a.logo(href="index.html")
 						div
 							p Trong Nguyen
 						div
 							img.img-logo(src="images/trong-colored.jpg", width="80", height="80")
 				+slideout-nav-row("About Me", "index.html", "mdi-action-account-box small")
+				+slideout-nav-row("Experience", "experience.html", "mdi-editor-insert-chart small")
 				+slideout-nav-row("Education", "education.html", "mdi-social-school small")
-				+slideout-nav-row("Skills & Experience", "experience.html", "mdi-editor-insert-chart small")
 				+slideout-nav-row("Projects", "projects.html", "mdi-action-view-carousel small")
-				+slideout-nav-row("Blog", "http://manualoverri.de", "mdi-editor-insert-drive-file small")
+				//+slideout-nav-row("Blog", "http://blog.trongngyn.com", "mdi-editor-insert-drive-file small")
 
 	div.fixed-action-btn(style="bottom: 30px; right: 30px;")
 		a.btn-floating.btn-large.tooltipped.waves-effect.waves-light.cyan.accent-3(
 			href="mailto:trong.ngyn@gmail.com"
-			data-position="left", 
-			data-delay="50", 
+			data-position="left",
+			data-delay="50",
 			data-tooltip="trong.ngyn@gmail.com")
 			i.mdi-communication-email
 		ul
@@ -49,4 +49,3 @@ mixin navigation(title, active)
 				a.btn-floating.waves-effect.waves-light.color-indigo(
 					href="https://twitter.com/trongable")
 					i.fa.fa-twitter
-			
