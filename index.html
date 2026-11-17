@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='40' fill='none' stroke='%23ffffff' stroke-width='6'/></svg>" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Personal web platform & 3D mathematical geometry laboratory by Trong Nguyen." />
+    <meta name="author" content="Trong Nguyen" />
+    <meta name="theme-color" content="#1c1b22" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://trongable.github.io/" />
+    <meta property="og:title" content="trongable" />
+    <meta property="og:description" content="Personal web platform & 3D mathematical geometry laboratory by Trong Nguyen." />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="trongable" />
+    <meta name="twitter:description" content="Personal web platform & 3D mathematical geometry laboratory by Trong Nguyen." />
+
+    <!-- Font Preloading -->
+    <link rel="preload" href="/fonts/Newsreader-Italic.ttf" as="font" type="font/ttf" crossorigin />
+    <link rel="preload" href="/fonts/JetBrainsMono-Regular.ttf" as="font" type="font/ttf" crossorigin />
+
+    <title>trongable</title>
+    <script type="text/javascript">
+      // GitHub Pages SPA redirect decode
+      (function(l) {
+        if (l.search[1] === '/' ) {
+          var decoded = l.search.slice(1).split('&').map(function(s) { 
+            return s.replace(/~and~/g, '&')
+          }).join('?');
+          window.history.replaceState(null, null,
+              l.pathname.slice(0, -1) + decoded + l.hash
+          );
+        }
+      }(window.location))
+    </script>
+  </head>
+  <body class="bg-[#1c1b22] text-neutral-100 antialiased selection:bg-neutral-800 selection:text-white">
+    <noscript>
+      <div style="padding: 2rem; color: #e2f872; background: #1c1b22; font-family: monospace;">
+        <h1>trongable</h1>
+        <p>JavaScript is required to experience this interactive 3D mathematical geometry laboratory.</p>
+        <p><a href="/about" style="color: #f5ff9e;">About</a> | <a href="/more" style="color: #f5ff9e;">More</a> | <a href="https://dc-hardcore.com" style="color: #f5ff9e;">DCHC</a></p>
+      </div>
+    </noscript>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
