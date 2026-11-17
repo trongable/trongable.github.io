@@ -13,6 +13,7 @@ import {
   isValidGeometryMode,
   GEOMETRY_MODES,
 } from '../components/canvas/geometries/geometryConfig'
+import { scrambleGlyphs } from '../utils/glyphUtils'
 
 export const HomePage: React.FC = () => {
   const { navigate, queryParams } = useRouter()
@@ -88,6 +89,22 @@ export const HomePage: React.FC = () => {
   const [isExpanded, setIsExpanded] = useState<boolean>(() => isHaloParam)
   const [isGlitching, setIsGlitching] = useState(false)
   const [glitchDuration, setGlitchDuration] = useState(360)
+  const [isTouchHovered, setIsTouchHovered] = useState(false)
+  const [welcomeDisplay, setWelcomeDisplay] = useState('welcome')
+
+  // Scramble glyphs while touch-hovered (press-and-hold tactile feedback on mobile)
+  useEffect(() => {
+    if (!isTouchHovered) {
+      setWelcomeDisplay('welcome')
+      return
+    }
+
+    const interval = window.setInterval(() => {
+      setWelcomeDisplay(scrambleGlyphs('welcome', Math.random() < 0.35 ? 2 : 1))
+    }, 85)
+
+    return () => window.clearInterval(interval)
+  }, [isTouchHovered])
 
   // Synchronize if query params change
   useEffect(() => {
@@ -142,6 +159,8 @@ export const HomePage: React.FC = () => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setIsExpanded(false)
+        setIsTouchHovered(false)
+        setWelcomeDisplay('welcome')
       }
     }
     window.addEventListener('keydown', handleKeyDown)
@@ -212,10 +231,12 @@ export const HomePage: React.FC = () => {
 
   return (
     <main
-      className="relative w-full h-screen overflow-hidden bg-[#1c1b22] flex items-center justify-center select-none"
+      className="relative w-full h-full min-h-dvh overflow-hidden bg-[#1c1b22] flex items-center justify-center select-none"
       onClick={() => {
         if (isExpanded) {
           setIsExpanded(false)
+          setIsTouchHovered(false)
+          setWelcomeDisplay('welcome')
         }
       }}
     >
@@ -252,19 +273,34 @@ export const HomePage: React.FC = () => {
           data-testid="welcome-trigger"
           aria-label="Welcome menu trigger"
           onMouseEnter={() => setIsExpanded(true)}
+          onTouchStart={() => {
+            setIsTouchHovered(true)
+          }}
+          onTouchEnd={(e) => {
+            e.preventDefault()
+            setIsTouchHovered(false)
+            setWelcomeDisplay('welcome')
+            setIsExpanded(true)
+          }}
+          onTouchCancel={() => {
+            setIsTouchHovered(false)
+            setWelcomeDisplay('welcome')
+          }}
           onClick={(e) => {
             e.stopPropagation()
             setIsExpanded((prev) => !prev)
           }}
-          className={`font-serif italic lowercase tracking-wide text-2xl md:text-3xl transition-all duration-700 ease-out px-6 py-3 rounded-full ${
+          className={`relative font-serif italic lowercase tracking-wide text-2xl md:text-3xl transition-all duration-700 ease-out px-6 py-3 rounded-full touch-manipulation after:content-[''] after:absolute after:-inset-8 md:after:inset-0 ${
             isGlitching ? 'glitch-shear-active' : ''
           } ${
             isExpanded
               ? 'scale-0 opacity-0 pointer-events-none'
+              : isTouchHovered
+              ? 'pointer-events-auto cursor-pointer scale-105 opacity-100 text-[var(--theme-highlight)]'
               : 'pointer-events-auto cursor-pointer scale-100 opacity-100 text-[var(--theme-primary)] hover:text-[var(--theme-highlight)] hover:scale-105'
           }`}
         >
-          welcome
+          {welcomeDisplay}
         </button>
       </div>
 

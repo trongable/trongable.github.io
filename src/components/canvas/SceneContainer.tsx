@@ -41,7 +41,7 @@ export const SceneContainer: React.FC<{
   return (
     <div
       data-testid="scene-container"
-      className={`absolute inset-0 pointer-events-auto transition-transform duration-75 ${
+      className={`absolute inset-0 pointer-events-auto touch-none transition-transform duration-75 ${
         isGlitching ? 'translate-x-[1.5px] -translate-y-[0.5px]' : ''
       }`}
     >

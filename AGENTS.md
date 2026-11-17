@@ -79,6 +79,12 @@ A secret diagnostic and tuning HUD positioned in the bottom-right corner:
    - Application code chunk remains lightweight (<60 KB).
 7. **Font Preloading**:
    Editorial fonts (`Newsreader-Italic.ttf`, `JetBrainsMono-Regular.ttf`) are preloaded in `index.html` to eliminate FOUT (Flash of Unstyled Text).
+8. **Mobile Viewport & Touch Architecture**:
+   - Containers use `min-h-dvh` and `h-full` (dynamic viewport height) to eliminate iOS Safari / Android Chrome URL bar vertical overflows.
+   - `html, body, #root` enforce `overscroll-behavior: none` to prevent elastic rubber-band bouncing.
+   - `SceneContainer` uses `touch-action: none` (`touch-none`) to prevent browser scroll hijacking and enable continuous touch drag raycasting (`pointermove`) across 3D meshes.
+   - The central `"welcome"` prompt expands its hit target to >80px × 200px via `after:absolute after:-inset-8 md:after:inset-0 touch-manipulation`, keeping the visible text compact and elegant.
+   - Touchscreens trigger real-time tactile hover feedback on `"welcome"` via `onTouchStart` (neon highlight glow + cyber glyph scrambling) and expand into 3D on `onTouchEnd`. In the 3D scene, gliding a finger acts as an interactive radar sweep triggering live mesh hover and glyph scrambling.
 
 ---
 

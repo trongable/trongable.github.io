@@ -21,7 +21,7 @@ const AppContent: React.FC = () => {
   }
 
   return (
-    <div className="relative w-full min-h-screen bg-[#1c1b22] text-[var(--theme-primary)] font-sans selection:bg-neutral-800">
+    <div className="relative w-full h-full min-h-dvh bg-[#1c1b22] text-[var(--theme-primary)] font-sans selection:bg-neutral-800">
       {renderCurrentPage()}
     </div>
   )

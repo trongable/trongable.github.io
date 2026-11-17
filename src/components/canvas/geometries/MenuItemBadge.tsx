@@ -222,6 +222,11 @@ export const MenuItemBadge: React.FC<MenuItemBadgeProps> = ({
               e.stopPropagation()
               onSelect(path)
             }}
+            onPointerDown={(e) => {
+              if (!isExpanded) return
+              e.stopPropagation()
+              onHover(true)
+            }}
             onPointerOver={(e) => {
               if (!isExpanded) return
               e.stopPropagation()

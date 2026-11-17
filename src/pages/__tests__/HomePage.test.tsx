@@ -186,4 +186,69 @@ describe('HomePage Component', () => {
     expect(tuner).toBeInTheDocument()
     expect(tuner).toHaveTextContent('trefoil')
   })
+
+  it('includes mobile-friendly viewport classes and expanded touch target area', () => {
+    window.location.hash = '#/'
+    const { container } = render(
+      <RouterProvider>
+        <HomePage />
+      </RouterProvider>
+    )
+
+    const main = container.querySelector('main')
+    expect(main).toHaveClass('min-h-dvh')
+    expect(main).toHaveClass('h-full')
+
+    const welcomeButton = screen.getByTestId('welcome-trigger')
+    expect(welcomeButton).toHaveClass('touch-manipulation')
+    expect(welcomeButton.className).toContain('after:absolute')
+    expect(welcomeButton.className).toContain('after:-inset-8')
+    expect(welcomeButton.className).toContain('md:after:inset-0')
+  })
+
+  it('activates tactile touch hover state on touchStart and expands on touchEnd', () => {
+    window.location.hash = '#/'
+    render(
+      <RouterProvider>
+        <HomePage />
+      </RouterProvider>
+    )
+
+    const welcomeButton = screen.getByTestId('welcome-trigger')
+    const haloRing = screen.getByTestId('mock-halo-ring')
+
+    expect(haloRing).toHaveAttribute('data-expanded', 'false')
+
+    // Touch down: tactile hover activated (highlight color + subtle scale)
+    fireEvent.touchStart(welcomeButton)
+    expect(welcomeButton.className).toContain('scale-105')
+    expect(welcomeButton.className).toContain('text-[var(--theme-highlight)]')
+    expect(haloRing).toHaveAttribute('data-expanded', 'false')
+
+    // Touch release: commits expansion into 3D topology
+    fireEvent.touchEnd(welcomeButton)
+    expect(haloRing).toHaveAttribute('data-expanded', 'true')
+    expect(welcomeButton.className).toContain('scale-0')
+  })
+
+  it('resets touch hover state when touchCancel is dispatched', () => {
+    window.location.hash = '#/'
+    render(
+      <RouterProvider>
+        <HomePage />
+      </RouterProvider>
+    )
+
+    const welcomeButton = screen.getByTestId('welcome-trigger')
+    const haloRing = screen.getByTestId('mock-halo-ring')
+
+    // Touch down
+    fireEvent.touchStart(welcomeButton)
+    expect(welcomeButton.className).toContain('scale-105')
+
+    // Finger dragged away / gesture cancelled
+    fireEvent.touchCancel(welcomeButton)
+    expect(welcomeButton.className).toContain('scale-100')
+    expect(haloRing).toHaveAttribute('data-expanded', 'false')
+  })
 })
