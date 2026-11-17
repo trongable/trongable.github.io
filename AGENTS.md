@@ -5,7 +5,7 @@
 ## Project Overview
 
 This repository hosts a personal web platform and interactive 3D mathematical geometry laboratory deployed statically to **GitHub Pages** via GitHub Actions.
-- **URL**: `https://trongable.github.io`
+- **URL**: `https://trongngyn.com` (`https://trongable.github.io`)
 - **Core Stack**: React 19, Vite 8 (Rolldown), React Three Fiber (R3F) v9, `@react-three/drei` v10, Three.js 0.187, Tailwind CSS v4, TypeScript 7.
 - **Routing**: Minimalist client-side router (`src/routes/Router.tsx`) with HTML5 pushState, hash routing fallback for GitHub Pages, and URL query parameter state synchronization (`?geo=...`, `?tuner=...`, `?halo=...`).
 - **Pages**:
