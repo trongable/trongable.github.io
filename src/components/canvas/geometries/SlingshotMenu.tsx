@@ -1,8 +1,9 @@
-import React, { useRef, useState, useMemo, useEffect } from 'react'
+import React, { useRef, useState, useMemo } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { ThemeColor } from '@/context/ThemeContext'
 import { MenuItemBadge } from './MenuItemBadge'
+import { ProceduralGuide } from './ProceduralGuide'
 import { SlingshotParams } from './geometryConfig'
 
 export interface SlingshotMenuProps {
@@ -55,6 +56,22 @@ export function computeKeplerPosition(
   return { x, y, r }
 }
 
+export class KeplerCurve extends THREE.Curve<THREE.Vector3> {
+  a: number
+  e: number
+  constructor(a: number, e: number) {
+    super()
+    this.a = a
+    this.e = e
+  }
+  getPoint(t: number, optionalTarget = new THREE.Vector3()): THREE.Vector3 {
+    const theta = t * Math.PI * 2
+    const p = this.a * (1 - this.e * this.e)
+    const r = p / (1 + this.e * Math.cos(theta))
+    return optionalTarget.set(r * Math.cos(theta), r * Math.sin(theta), 0)
+  }
+}
+
 export const SlingshotMenu: React.FC<SlingshotMenuProps> = ({
   isExpanded,
   onSelect,
@@ -76,39 +93,13 @@ export const SlingshotMenu: React.FC<SlingshotMenuProps> = ({
   const e = THREE.MathUtils.clamp(params.eccentricity, 0.1, 0.88)
 
   const primaryColorHex = theme?.primary ?? '#e2f872'
+  const highlightColorHex = theme?.highlight ?? '#ffffff'
 
   // Pre-allocated coordinate targets for zero-allocation useFrame updates
   const coordCache = useRef<KeplerCoord[]>(ITEMS.map(() => ({ x: 0, y: 0, r: 0 })))
 
-  // Pre-generate Elliptical Wireframe Lines for each orbit
-  const orbitLines = useMemo(() => {
-    return ITEMS.map(() => {
-      const points: THREE.Vector3[] = []
-      const segments = 120
-      for (let i = 0; i <= segments; i++) {
-        const th = (i / segments) * Math.PI * 2
-        const pos = computeKeplerPosition(th, semiMajorAxis, e)
-        points.push(new THREE.Vector3(pos.x, pos.y, 0))
-      }
-      const geom = new THREE.BufferGeometry().setFromPoints(points)
-      const mat = new THREE.LineBasicMaterial({
-        color: new THREE.Color(primaryColorHex),
-        transparent: true,
-        opacity: 0.2,
-      })
-      return new THREE.LineLoop(geom, mat)
-    })
-  }, [semiMajorAxis, e, primaryColorHex])
-
-  // WebGL GPU memory cleanup
-  useEffect(() => {
-    return () => {
-      orbitLines.forEach((line) => {
-        line.geometry.dispose()
-        ;(line.material as THREE.Material).dispose()
-      })
-    }
-  }, [orbitLines])
+  // Pre-generate Elliptical Kepler Curve for procedural guide
+  const keplerCurve = useMemo(() => new KeplerCurve(semiMajorAxis, e), [semiMajorAxis, e])
 
   useFrame((_, delta) => {
     if (!rootGroupRef.current) return
@@ -121,12 +112,11 @@ export const SlingshotMenu: React.FC<SlingshotMenuProps> = ({
     rootGroupRef.current.scale.setScalar(currentScale.current)
     rootGroupRef.current.visible = currentScale.current > 0.06
 
-    orbitLines.forEach((line, idx) => {
-      line.visible = isExpanded && params.showOrbits
-      const mat = line.material as THREE.LineBasicMaterial
-      mat.opacity = currentOpacity.current * (hoveredIdx === idx ? 0.5 : 0.2)
-      mat.color.set(primaryColorHex)
-    })
+    // Sleep guard: bypass calculations when collapsed and fully shrunk
+    if (!isExpanded && currentScale.current <= 0.051) {
+      if (rootGroupRef.current.visible) rootGroupRef.current.visible = false
+      return
+    }
 
     // Advance orbital angle using Kepler velocity: dTheta/dt ~ 1 / r^2
     ITEMS.forEach((_, idx) => {
@@ -157,8 +147,18 @@ export const SlingshotMenu: React.FC<SlingshotMenuProps> = ({
       {ITEMS.map((item, index) => {
         return (
           <group key={item.label} rotation={STATIC_TILT_EULERS[index]}>
-            {/* Eccentric Orbital Path Wireframe */}
-            {params.showOrbits && <primitive object={orbitLines[index]} />}
+            {/* Eccentric Orbital Path Procedural Guide */}
+            {params.showOrbits && (
+              <ProceduralGuide
+                curve={keplerCurve}
+                style={params.orbitStyle}
+                width={params.orbitWidth}
+                color={primaryColorHex}
+                highlightColor={highlightColorHex}
+                opacity={currentOpacity}
+                visible={isExpanded && params.showOrbits}
+              />
+            )}
 
             {/* Cometary Slingshot Badge */}
             <group

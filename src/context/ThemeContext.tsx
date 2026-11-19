@@ -1,6 +1,16 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react'
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  useRef,
+} from 'react'
+import { computeHighlightColor, normalizeHex, isValidHex } from '@/utils/colorUtils'
 
-export type ThemeId = 'yellow' | 'pink' | 'green' | 'orange'
+export type ThemePresetId = 'yellow' | 'purple' | 'teal'
+export type ThemeId = ThemePresetId | 'custom'
 
 export interface ThemeColor {
   id: ThemeId
@@ -9,63 +19,93 @@ export interface ThemeColor {
   highlight: string
 }
 
-export const THEME_PALETTES: Record<ThemeId, ThemeColor> = {
+export const THEME_PALETTES: Record<ThemePresetId, ThemeColor> = {
   yellow: {
     id: 'yellow',
     name: 'Volt Yellow',
     primary: '#e2f872',
     highlight: '#f5ff9e',
   },
-  pink: {
-    id: 'pink',
-    name: 'Toxic Pink',
-    primary: '#ff007f',
-    highlight: '#ff70ba',
+  purple: {
+    id: 'purple',
+    name: 'Purple',
+    primary: '#d4adf0',
+    highlight: '#eddcf9',
   },
-  green: {
-    id: 'green',
-    name: 'Toxic Green',
-    primary: '#39ff14',
-    highlight: '#8fff70',
-  },
-  orange: {
-    id: 'orange',
-    name: 'Toxic Orange',
-    primary: '#ff3c00',
-    highlight: '#ff8855',
+  teal: {
+    id: 'teal',
+    name: 'Teal',
+    primary: '#83d4d4',
+    highlight: '#afe5e5',
   },
 }
 
-export const THEME_IDS: ThemeId[] = ['yellow', 'pink', 'green', 'orange']
+export const THEME_IDS: ThemePresetId[] = ['yellow', 'purple', 'teal']
 
 export const DEFAULT_THEME: ThemeColor = THEME_PALETTES.yellow
 
 export interface ThemeContextValue {
   currentTheme: ThemeColor
   randomizeTheme: () => void
-  setTheme: (id: ThemeId) => void
+  setTheme: (id: ThemeId | 'green') => void
+  setCustomColor: (primaryHex: string, highlightHex?: string) => void
+  isThemeLocked: boolean
+  setIsThemeLocked: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 const ThemeContext = createContext<ThemeContextValue>({
   currentTheme: DEFAULT_THEME,
   randomizeTheme: () => {},
   setTheme: () => {},
+  setCustomColor: () => {},
+  isThemeLocked: false,
+  setIsThemeLocked: () => {},
 })
 
-export const ThemeProvider: React.FC<{ children: React.ReactNode; initialTheme?: ThemeId }> = ({
+export const ThemeProvider: React.FC<{
+  children: React.ReactNode
+  initialTheme?: ThemeId | 'green'
+}> = ({
   children,
   initialTheme = 'yellow',
 }) => {
-  const [currentTheme, setCurrentTheme] = useState<ThemeColor>(() => THEME_PALETTES[initialTheme] || DEFAULT_THEME)
+  const [currentTheme, setCurrentTheme] = useState<ThemeColor>(() => {
+    const canonical = (initialTheme === 'green' ? 'teal' : initialTheme) as ThemeId
+    if (canonical !== 'custom' && THEME_PALETTES[canonical]) {
+      return THEME_PALETTES[canonical]
+    }
+    return DEFAULT_THEME
+  })
+  const [isThemeLocked, setIsThemeLocked] = useState(false)
+  const isThemeLockedRef = useRef(isThemeLocked)
+  isThemeLockedRef.current = isThemeLocked
 
-  const setTheme = useCallback((id: ThemeId) => {
-    if (THEME_PALETTES[id]) {
-      setCurrentTheme(THEME_PALETTES[id])
+  const setTheme = useCallback((id: ThemeId | 'green') => {
+    const canonical = (id === 'green' ? 'teal' : id) as ThemeId
+    if (canonical !== 'custom' && THEME_PALETTES[canonical]) {
+      setCurrentTheme(THEME_PALETTES[canonical])
     }
   }, [])
 
-  // Randomly pick a new neon color different from the current one
+  const setCustomColor = useCallback((primaryHex: string, highlightHex?: string) => {
+    const cleanPrimary = normalizeHex(primaryHex)
+    if (!cleanPrimary) return
+    const cleanHighlight =
+      highlightHex && isValidHex(highlightHex)
+        ? normalizeHex(highlightHex)!
+        : computeHighlightColor(cleanPrimary)
+
+    setCurrentTheme({
+      id: 'custom',
+      name: 'Custom',
+      primary: cleanPrimary,
+      highlight: cleanHighlight,
+    })
+  }, [])
+
+  // Randomly pick a new color different from the current one (unless theme is locked)
   const randomizeTheme = useCallback(() => {
+    if (isThemeLockedRef.current) return
     setCurrentTheme((prev) => {
       const candidates = THEME_IDS.filter((id) => id !== prev.id)
       const nextId = candidates[Math.floor(Math.random() * candidates.length)]
@@ -86,8 +126,11 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode; initialTheme?:
       currentTheme,
       randomizeTheme,
       setTheme,
+      setCustomColor,
+      isThemeLocked,
+      setIsThemeLocked,
     }),
-    [currentTheme, randomizeTheme, setTheme]
+    [currentTheme, randomizeTheme, setTheme, setCustomColor, isThemeLocked]
   )
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>

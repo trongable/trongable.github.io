@@ -69,28 +69,48 @@ export const LorenzMenu: React.FC<LorenzMenuProps> = ({
 
   const primaryColorHex = theme?.primary ?? '#e2f872'
 
-  const trailLines = useMemo(() => {
+  const trailObjects = useMemo(() => {
     return ITEMS.map((_, idx) => {
       const geom = new THREE.BufferGeometry()
       geom.setAttribute('position', new THREE.BufferAttribute(trails.current[idx], 3))
-      const mat = new THREE.LineBasicMaterial({
-        color: new THREE.Color(primaryColorHex),
-        transparent: true,
-        opacity: 0.4,
-      })
-      return new THREE.Line(geom, mat)
+      if (params.trailStyle === 'points') {
+        const mat = new THREE.PointsMaterial({
+          color: new THREE.Color(primaryColorHex),
+          size: 0.055,
+          sizeAttenuation: true,
+          transparent: true,
+          opacity: 0.7,
+        })
+        return new THREE.Points(geom, mat)
+      } else if (params.trailStyle === 'dashed') {
+        const mat = new THREE.LineDashedMaterial({
+          color: new THREE.Color(primaryColorHex),
+          dashSize: 0.09,
+          gapSize: 0.06,
+          transparent: true,
+          opacity: 0.5,
+        })
+        return new THREE.Line(geom, mat)
+      } else {
+        const mat = new THREE.LineBasicMaterial({
+          color: new THREE.Color(primaryColorHex),
+          transparent: true,
+          opacity: 0.4,
+        })
+        return new THREE.Line(geom, mat)
+      }
     })
-  }, [primaryColorHex])
+  }, [primaryColorHex, params.trailStyle])
 
   // WebGL GPU memory cleanup for lines & materials
   useEffect(() => {
     return () => {
-      trailLines.forEach((line) => {
-        line.geometry.dispose()
-        ;(line.material as THREE.Material).dispose()
+      trailObjects.forEach((obj) => {
+        obj.geometry.dispose()
+        ;(obj.material as THREE.Material).dispose()
       })
     }
-  }, [trailLines])
+  }, [trailObjects])
 
   useFrame((_, delta) => {
     if (!groupRef.current) return
@@ -102,6 +122,12 @@ export const LorenzMenu: React.FC<LorenzMenuProps> = ({
 
     groupRef.current.scale.setScalar(currentScale.current)
     groupRef.current.visible = currentScale.current > 0.06
+
+    // Sleep guard: bypass calculations when collapsed and fully shrunk
+    if (!isExpanded && currentScale.current <= 0.051) {
+      if (groupRef.current.visible) groupRef.current.visible = false
+      return
+    }
 
     const dt = (hoveredIdx !== null ? params.speed * 0.25 : params.speed)
     const glitchJitter = isGlitching ? THREE.MathUtils.randFloatSpread(0.01) : 0
@@ -129,12 +155,15 @@ export const LorenzMenu: React.FC<LorenzMenuProps> = ({
       trail[2] = scaledZ
     })
 
-    trailLines.forEach((line) => {
-      line.visible = isExpanded && params.showParticles
-      const mat = line.material as THREE.LineBasicMaterial
-      mat.opacity = currentOpacity.current * 0.4
+    trailObjects.forEach((obj) => {
+      obj.visible = isExpanded && params.showParticles
+      const mat = obj.material as THREE.Material & { opacity: number; color: THREE.Color }
+      mat.opacity = currentOpacity.current * (params.trailStyle === 'points' ? 0.7 : 0.45)
       mat.color.set(primaryColorHex)
-      line.geometry.attributes.position.needsUpdate = true
+      obj.geometry.attributes.position.needsUpdate = true
+      if (params.trailStyle === 'dashed' && obj instanceof THREE.Line) {
+        obj.computeLineDistances()
+      }
     })
   })
 
@@ -143,8 +172,8 @@ export const LorenzMenu: React.FC<LorenzMenuProps> = ({
       {ITEMS.map((item, index) => {
         return (
           <React.Fragment key={item.label}>
-            {/* Luminous Particle Trail Ribbon */}
-            {params.showParticles && <primitive object={trailLines[index]} />}
+            {/* Luminous Particle Trail Ribbon / Points */}
+            {params.showParticles && <primitive object={trailObjects[index]} />}
 
             {/* Orbiting Badge riding the chaotic lobe */}
             <group

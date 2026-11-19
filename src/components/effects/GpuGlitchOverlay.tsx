@@ -249,17 +249,46 @@ function generateRandomFrame(progress: number = 0.5, primaryColor: string = '#e2
   }
 }
 
-export const GpuGlitchOverlay: React.FC<{
+export const GLITCH_MEMORY_IMAGES = [
+  '/images/glitch/memory-01.jpg',
+  '/images/glitch/memory-02.jpg',
+]
+
+export interface GpuGlitchOverlayProps {
   isActive: boolean
   duration?: number
   primaryColor?: string
-}> = ({ isActive, duration = 360, primaryColor = '#e2f872' }) => {
+  imageProbability?: number
+  glitchImages?: string[]
+  forceImage?: string | null
+}
+
+export const GpuGlitchOverlay: React.FC<GpuGlitchOverlayProps> = ({
+  isActive,
+  duration = 360,
+  primaryColor = '#e2f872',
+  imageProbability = 1.0,
+  glitchImages = GLITCH_MEMORY_IMAGES,
+  forceImage,
+}) => {
   const [frame, setFrame] = useState<GlitchFrame | null>(null)
   const [shape, setShape] = useState<GlitchShape>(() => generateBlockyShape())
+  const [activeImage, setActiveImage] = useState<string | null>(null)
+
+  // Preload memory images on client mount for zero-latency display
+  useEffect(() => {
+    if (typeof window !== 'undefined' && glitchImages.length > 0) {
+      glitchImages.forEach((src) => {
+        const img = new Image()
+        img.src = src
+      })
+    }
+  }, [glitchImages])
 
   useEffect(() => {
     if (!isActive) {
       setFrame(null)
+      setActiveImage(null)
       return
     }
 
@@ -270,7 +299,18 @@ export const GpuGlitchOverlay: React.FC<{
 
     if (prefersReducedMotion) {
       setFrame(null)
+      setActiveImage(null)
       return
+    }
+
+    // Determine whether to display a memory photo (default 100% chance)
+    if (forceImage !== undefined) {
+      setActiveImage(forceImage)
+    } else if (glitchImages.length > 0 && Math.random() < imageProbability) {
+      const chosen = glitchImages[Math.floor(Math.random() * glitchImages.length)]
+      setActiveImage(chosen)
+    } else {
+      setActiveImage(null)
     }
 
     const startTime = Date.now()
@@ -296,7 +336,7 @@ export const GpuGlitchOverlay: React.FC<{
     }, frameInterval)
 
     return () => clearInterval(interval)
-  }, [isActive, duration, primaryColor])
+  }, [isActive, duration, primaryColor, imageProbability, glitchImages, forceImage])
 
   if (!isActive || !frame) return null
 
@@ -314,6 +354,28 @@ export const GpuGlitchOverlay: React.FC<{
       }}
       aria-hidden="true"
     >
+      {/* Easter Egg Corrupted Memory Photo (distorted, difference-blended, hard to make out) */}
+      {activeImage && (
+        <div
+          data-testid="glitch-memory-image"
+          className="absolute inset-0 pointer-events-none overflow-hidden select-none"
+          style={{
+            opacity: frame ? 0.16 + (Math.abs(frame.screenShiftX) % 5) * 0.025 : 0.20,
+            mixBlendMode: 'difference',
+            filter: 'grayscale(100%) contrast(150%) brightness(75%)',
+            transform: `translateX(${frame ? frame.screenShiftX * 1.5 : 0}px) scale(1.03)`,
+          }}
+          aria-hidden="true"
+        >
+          <img
+            src={activeImage}
+            alt=""
+            className="w-full h-full object-cover"
+            loading="eager"
+          />
+        </div>
+      )}
+
       {/* Momentary Color Inversion Mask within Blocky Zone */}
       {frame.showInversionFlash && (
         <div

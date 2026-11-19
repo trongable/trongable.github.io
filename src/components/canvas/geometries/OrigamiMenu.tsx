@@ -37,6 +37,8 @@ export const OrigamiMenu: React.FC<OrigamiMenuProps> = ({
   const tumbleGroupRef = useRef<THREE.Group>(null)
   const itemGroupRefs = useRef<(THREE.Group | null)[]>([])
   const wireMatRef = useRef<THREE.LineBasicMaterial>(null)
+  const solidMatRef = useRef<THREE.MeshBasicMaterial>(null)
+  const pointsMatRef = useRef<THREE.PointsMaterial>(null)
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
   const { viewport } = useThree()
 
@@ -57,6 +59,8 @@ export const OrigamiMenu: React.FC<OrigamiMenuProps> = ({
       wireGeometry.dispose()
       coreGeometry.dispose()
       wireMatRef.current?.dispose()
+      solidMatRef.current?.dispose()
+      pointsMatRef.current?.dispose()
     }
   }, [coreGeometry, wireGeometry])
 
@@ -74,6 +78,12 @@ export const OrigamiMenu: React.FC<OrigamiMenuProps> = ({
     rootGroupRef.current.scale.setScalar(currentScale.current)
     rootGroupRef.current.visible = currentScale.current > 0.06
 
+    // Sleep guard: bypass calculations when collapsed and fully shrunk
+    if (!isExpanded && currentScale.current <= 0.051) {
+      if (rootGroupRef.current.visible) rootGroupRef.current.visible = false
+      return
+    }
+
     // Slow tumble of the crystal core
     if (tumbleGroupRef.current) {
       const isAnyHovered = hoveredIdx !== null
@@ -84,8 +94,18 @@ export const OrigamiMenu: React.FC<OrigamiMenuProps> = ({
       tumbleGroupRef.current.rotation.x += params.tumbleSpeed * 0.5 * tumbleMult * delta
     }
 
+    const wireOpacity = currentOpacity.current * (1.1 - currentUnfold.current * 0.6)
     if (wireMatRef.current) {
-      wireMatRef.current.opacity = currentOpacity.current * (1.1 - currentUnfold.current * 0.6) * 0.4
+      wireMatRef.current.opacity = wireOpacity * 0.4
+      wireMatRef.current.color.set(primaryColorHex)
+    }
+    if (solidMatRef.current) {
+      solidMatRef.current.opacity = wireOpacity * 0.25
+      solidMatRef.current.color.set(primaryColorHex)
+    }
+    if (pointsMatRef.current) {
+      pointsMatRef.current.opacity = wireOpacity * 0.85
+      pointsMatRef.current.color.set(primaryColorHex)
     }
 
     // Unfolding facet badge positions in real-time
@@ -104,16 +124,52 @@ export const OrigamiMenu: React.FC<OrigamiMenuProps> = ({
   return (
     <group ref={rootGroupRef} position={[0, 0, 0]}>
       <group ref={tumbleGroupRef}>
-        {/* Central Tumbling Crystalline Wireframe */}
+        {/* Central Tumbling Crystalline Wireframe / Facets / Points */}
         {params.showWires && (
-          <lineSegments geometry={wireGeometry} visible={isExpanded}>
-            <lineBasicMaterial
-              ref={wireMatRef}
-              color={primaryColorHex}
-              transparent={true}
-              opacity={0.4}
-            />
-          </lineSegments>
+          <>
+            {params.wireStyle === 'solid' && (
+              <mesh geometry={coreGeometry} visible={isExpanded}>
+                <meshBasicMaterial
+                  ref={solidMatRef}
+                  color={primaryColorHex}
+                  transparent={true}
+                  opacity={0.25}
+                />
+              </mesh>
+            )}
+            {params.wireStyle === 'points' && (
+              <points geometry={coreGeometry} visible={isExpanded}>
+                <pointsMaterial
+                  ref={pointsMatRef}
+                  color={primaryColorHex}
+                  size={0.06}
+                  sizeAttenuation={true}
+                  transparent={true}
+                  opacity={0.8}
+                />
+              </points>
+            )}
+            {(params.wireStyle === 'wireframe' || params.wireStyle === 'glow' || (!['solid', 'points'].includes(params.wireStyle))) && (
+              <lineSegments geometry={wireGeometry} visible={isExpanded}>
+                <lineBasicMaterial
+                  ref={wireMatRef}
+                  color={primaryColorHex}
+                  transparent={true}
+                  opacity={0.4}
+                />
+              </lineSegments>
+            )}
+            {params.wireStyle === 'glow' && (
+              <mesh geometry={coreGeometry} visible={isExpanded}>
+                <meshBasicMaterial
+                  ref={solidMatRef}
+                  color={primaryColorHex}
+                  transparent={true}
+                  opacity={0.18}
+                />
+              </mesh>
+            )}
+          </>
         )}
 
         {/* Unfolding Facet Panels holding Badges */}

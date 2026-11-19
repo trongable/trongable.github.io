@@ -51,6 +51,26 @@ describe('GpuGlitchOverlay Component', () => {
     }
   })
 
+  it('renders a distorted memory image by default (100% chance)', () => {
+    render(<GpuGlitchOverlay isActive={true} />)
+    const imgContainer = screen.getByTestId('glitch-memory-image')
+    expect(imgContainer).toBeInTheDocument()
+    const img = imgContainer.querySelector('img')
+    expect(img).toBeInTheDocument()
+    expect(img?.getAttribute('src')).toMatch(/\/images\/glitch\/memory-0[12]\.jpg/)
+  })
+
+  it('suppresses memory image when imageProbability is 0', () => {
+    render(<GpuGlitchOverlay isActive={true} imageProbability={0} />)
+    expect(screen.queryByTestId('glitch-memory-image')).not.toBeInTheDocument()
+  })
+
+  it('renders forced image when forceImage prop is provided', () => {
+    render(<GpuGlitchOverlay isActive={true} forceImage="/custom-memory.jpg" />)
+    const img = screen.getByTestId('glitch-memory-image').querySelector('img')
+    expect(img?.getAttribute('src')).toBe('/custom-memory.jpg')
+  })
+
   it('suppresses glitch rendering when prefers-reduced-motion is active', () => {
     const matchMediaMock = vi.fn().mockImplementation((query: string) => ({
       matches: query.includes('prefers-reduced-motion: reduce'),

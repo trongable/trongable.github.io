@@ -66,10 +66,47 @@ export const GEOMETRY_MODES: GeometryMeta[] = [
   },
 ]
 
+export type GuideStyle =
+  | 'solid'
+  | 'wireframe'
+  | 'glow'
+  | 'hex'
+  | 'dashed'
+  | 'points'
+  | 'ribbed'
+
+export const GUIDE_STYLES: { id: GuideStyle; label: string }[] = [
+  { id: 'solid', label: 'solid' },
+  { id: 'wireframe', label: 'cage' },
+  { id: 'glow', label: 'glow' },
+  { id: 'hex', label: 'hex' },
+  { id: 'dashed', label: 'dash' },
+  { id: 'points', label: 'dots' },
+  { id: 'ribbed', label: 'ribbed' },
+]
+
+export type LineGuideStyle = 'solid' | 'dashed' | 'points'
+
+export const LINE_GUIDE_STYLES: { id: LineGuideStyle; label: string }[] = [
+  { id: 'solid', label: 'solid' },
+  { id: 'dashed', label: 'dash' },
+  { id: 'points', label: 'dots' },
+]
+
+export const FACET_GUIDE_STYLES: { id: GuideStyle; label: string }[] = [
+  { id: 'wireframe', label: 'cage' },
+  { id: 'solid', label: 'solid' },
+  { id: 'points', label: 'dots' },
+]
+
 export interface HaloParams {
   speed: number
   radius: number
   showGuide: boolean
+  tilt: number // degrees: -90° to 90° (0° = flat horizontal, 90° = vertical upright)
+  yaw: number  // degrees: 0° to 360° (azimuth heading)
+  guideWidth: number // 0.005 to 0.045
+  guideStyle: GuideStyle
 }
 
 export interface TrefoilParams {
@@ -77,6 +114,7 @@ export interface TrefoilParams {
   scale: number
   tubeRadius: number
   showTrack: boolean
+  trackStyle: GuideStyle
 }
 
 export interface TesseractParams {
@@ -84,6 +122,7 @@ export interface TesseractParams {
   distance: number
   cubeSize: number
   showWires: boolean
+  wireStyle: LineGuideStyle
 }
 
 export interface AstrolabeParams {
@@ -91,6 +130,8 @@ export interface AstrolabeParams {
   ringSpread: number
   tiltAngle: number
   showRings: boolean
+  ringWidth: number
+  ringStyle: GuideStyle
 }
 
 export interface LorenzParams {
@@ -98,6 +139,7 @@ export interface LorenzParams {
   scale: number
   rho: number
   showParticles: boolean
+  trailStyle: LineGuideStyle
 }
 
 export interface OrigamiParams {
@@ -105,6 +147,7 @@ export interface OrigamiParams {
   tumbleSpeed: number
   facetScale: number
   showWires: boolean
+  wireStyle: GuideStyle
 }
 
 export interface SlingshotParams {
@@ -112,6 +155,8 @@ export interface SlingshotParams {
   axis: number
   acceleration: number
   showOrbits: boolean
+  orbitWidth: number
+  orbitStyle: GuideStyle
 }
 
 export interface HelixParams {
@@ -119,6 +164,8 @@ export interface HelixParams {
   coils: number
   radius: number
   showCoil: boolean
+  coilWidth: number
+  coilStyle: GuideStyle
 }
 
 export interface AllGeometryParams {
@@ -136,49 +183,63 @@ export const DEFAULT_GEOMETRY_PARAMS: AllGeometryParams = {
   halo: {
     speed: 0.0825,
     radius: 1.0,
-    showGuide: false,
+    showGuide: true,
+    tilt: 0,
+    yaw: 0,
+    guideWidth: 0.015,
+    guideStyle: 'solid',
   },
   trefoil: {
     speed: 0.20,
     scale: 1.1,
     tubeRadius: 0.015,
     showTrack: true,
+    trackStyle: 'wireframe',
   },
   tesseract: {
     speed4D: 0.25,
     distance: 2.2,
     cubeSize: 1.15,
     showWires: true,
+    wireStyle: 'solid',
   },
   astrolabe: {
     speed: 1.0,
     ringSpread: 1.0,
     tiltAngle: 45,
     showRings: true,
+    ringWidth: 0.012,
+    ringStyle: 'solid',
   },
   lorenz: {
     speed: 0.008,
     scale: 0.065,
     rho: 28,
     showParticles: true,
+    trailStyle: 'solid',
   },
   origami: {
     unfold: 1.0,
     tumbleSpeed: 0.12,
-    facetScale: 1.0,
+    facetScale: 0.60,
     showWires: true,
+    wireStyle: 'wireframe',
   },
   slingshot: {
     eccentricity: 0.68,
     axis: 2.0,
     acceleration: 1.0,
     showOrbits: true,
+    orbitWidth: 0.012,
+    orbitStyle: 'solid',
   },
   helix: {
     speed: 0.22,
     coils: 6,
     radius: 1.8,
     showCoil: true,
+    coilWidth: 0.012,
+    coilStyle: 'solid',
   },
 }
 

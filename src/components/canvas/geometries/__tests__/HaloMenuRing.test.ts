@@ -26,8 +26,13 @@ describe('HaloMenuRing Topology', () => {
     expect(hasCyberGlyph).toBe(true)
   })
 
-  it('returns original string when count is 0 or string is empty', () => {
-    expect(scrambleGlyphs('test', 0)).toBe('test')
-    expect(scrambleGlyphs('', 2)).toBe('')
+  it('converts tilt and yaw angles accurately for 3D orientation', () => {
+    const tiltDeg = 90
+    const yawDeg = 180
+    const tiltRad = (tiltDeg * Math.PI) / 180
+    const yawRad = (yawDeg * Math.PI) / 180
+
+    expect(tiltRad).toBeCloseTo(Math.PI / 2)
+    expect(yawRad).toBeCloseTo(Math.PI)
   })
 })

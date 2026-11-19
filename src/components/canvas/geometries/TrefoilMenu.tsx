@@ -1,8 +1,9 @@
-import React, { useRef, useState, useMemo, useEffect } from 'react'
+import React, { useRef, useState, useMemo } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { ThemeColor } from '@/context/ThemeContext'
 import { MenuItemBadge } from './MenuItemBadge'
+import { ProceduralGuide } from './ProceduralGuide'
 import { TrefoilParams } from './geometryConfig'
 
 export interface GeometryProps {
@@ -63,17 +64,6 @@ export const TrefoilMenu: React.FC<GeometryProps> = ({
     return new THREE.CatmullRomCurve3(points, true)
   }, [responsiveScale])
 
-  const trackGeometry = useMemo(() => {
-    return new THREE.TubeGeometry(curvePoints, 140, params.tubeRadius, 8, true)
-  }, [curvePoints, params.tubeRadius])
-
-  // WebGL GPU memory cleanup
-  useEffect(() => {
-    return () => {
-      trackGeometry.dispose()
-    }
-  }, [trackGeometry])
-
   const primaryColorHex = theme?.primary ?? '#e2f872'
 
   useFrame((_, delta) => {
@@ -86,6 +76,12 @@ export const TrefoilMenu: React.FC<GeometryProps> = ({
 
     groupRef.current.scale.setScalar(currentScale.current)
     groupRef.current.visible = currentScale.current > 0.06
+
+    // Sleep guard: bypass calculations when collapsed and fully shrunk
+    if (!isExpanded && currentScale.current <= 0.051) {
+      if (groupRef.current.visible) groupRef.current.visible = false
+      return
+    }
 
     // Advance motion along the knot loop in real time
     const speed = hoveredIdx !== null ? params.speed * 0.25 : params.speed
@@ -105,16 +101,17 @@ export const TrefoilMenu: React.FC<GeometryProps> = ({
 
   return (
     <group ref={groupRef} position={[0, 0, 0]}>
-      {/* 3D Luminous Wireframe Guide Track */}
+      {/* 3D Luminous Guide Track via ProceduralGuide */}
       {params.showTrack && (
-        <mesh geometry={trackGeometry} visible={isExpanded}>
-          <meshBasicMaterial
-            color={primaryColorHex}
-            transparent={true}
-            opacity={currentOpacity.current * 0.28}
-            wireframe={true}
-          />
-        </mesh>
+        <ProceduralGuide
+          style={params.trackStyle ?? 'wireframe'}
+          curve={curvePoints}
+          width={params.tubeRadius}
+          color={primaryColorHex}
+          highlightColor={theme?.highlight ?? '#f5ff9e'}
+          opacity={currentOpacity}
+          visible={isExpanded}
+        />
       )}
 
       {/* Orbiting Badges */}

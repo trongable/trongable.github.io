@@ -3,6 +3,8 @@ import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { ThemeColor } from '@/context/ThemeContext'
 import { MenuItemBadge } from './MenuItemBadge'
+import { ProceduralGuide } from './ProceduralGuide'
+import { HaloParams, GuideStyle } from './geometryConfig'
 import { scrambleGlyphs, SCRAMBLE_GLYPHS } from '@/utils/glyphUtils'
 
 export { scrambleGlyphs, SCRAMBLE_GLYPHS }
@@ -22,7 +24,7 @@ export const HALO_ITEMS: HaloItem[] = [
 export const SHOW_DEBUG_RING_DEFAULT = false
 export const CONSTANT_ANGULAR_VELOCITY = 0.0825
 
-export const HaloMenuRing: React.FC<{
+export interface HaloMenuRingProps {
   isExpanded: boolean
   onSelect: (path: string) => void
   debugRing?: boolean
@@ -30,50 +32,60 @@ export const HaloMenuRing: React.FC<{
   theme?: ThemeColor
   speed?: number
   radiusScale?: number
-}> = ({ isExpanded, onSelect, debugRing, isGlitching, theme, speed, radiusScale = 1 }) => {
+  tilt?: number
+  yaw?: number
+  guideWidth?: number
+  guideStyle?: GuideStyle
+  params?: HaloParams
+}
+
+export const HaloMenuRing: React.FC<HaloMenuRingProps> = ({
+  isExpanded,
+  onSelect,
+  debugRing,
+  isGlitching,
+  theme,
+  speed,
+  radiusScale = 1,
+  tilt,
+  yaw,
+  guideWidth,
+  guideStyle,
+  params,
+}) => {
   const groupRef = useRef<THREE.Group>(null)
-  const ringMeshRef = useRef<THREE.Mesh>(null)
-  const ringGeomRef = useRef<THREE.TorusGeometry>(null)
-  const ringMatRef = useRef<THREE.MeshBasicMaterial>(null)
   const itemGroupRefs = useRef<(THREE.Group | null)[]>([])
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
   const { viewport } = useThree()
 
-  const [showDebugRing, setShowDebugRing] = useState<boolean>(() => {
-    if (typeof debugRing === 'boolean') return debugRing
+  const activeSpeed = typeof speed === 'number' ? speed : (params?.speed ?? CONSTANT_ANGULAR_VELOCITY)
+  const activeRadiusScale = typeof radiusScale === 'number' ? radiusScale : (params?.radius ?? 1)
+  const activeDebugRing = typeof debugRing === 'boolean' ? debugRing : (params?.showGuide ?? false)
+  const activeTilt = typeof tilt === 'number' ? tilt : (params?.tilt ?? 0)
+  const activeYaw = typeof yaw === 'number' ? yaw : (params?.yaw ?? 0)
+  const activeGuideWidth = typeof guideWidth === 'number' ? guideWidth : (params?.guideWidth ?? 0.015)
+  const activeGuideStyle = guideStyle ?? params?.guideStyle ?? 'solid'
+
+  const [keyboardDebugRing, setKeyboardDebugRing] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search)
-      if (params.has('debug')) return true
+      const urlParams = new URLSearchParams(window.location.search)
+      if (urlParams.has('debug')) return true
     }
     return SHOW_DEBUG_RING_DEFAULT
   })
 
   useEffect(() => {
-    if (typeof debugRing === 'boolean') {
-      setShowDebugRing(debugRing)
-    }
-  }, [debugRing])
-
-  useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
       if (e.key === 'd' || e.key === 'D') {
-        setShowDebugRing((prev) => !prev)
+        setKeyboardDebugRing((prev) => !prev)
       }
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [])
 
-  // WebGL GPU memory cleanup
-  useEffect(() => {
-    return () => {
-      ringGeomRef.current?.dispose()
-      ringMatRef.current?.dispose()
-    }
-  }, [])
-
-  const ringRadius = Math.min(viewport.width * 0.36, viewport.height * 0.34, 2.2) * radiusScale
+  const ringRadius = Math.min(viewport.width * 0.36, viewport.height * 0.34, 2.2) * activeRadiusScale
   const ringCenterY = 0
 
   const currentAngle = useRef(0)
@@ -91,22 +103,22 @@ export const HaloMenuRing: React.FC<{
     groupRef.current.scale.setScalar(currentScale.current)
     groupRef.current.visible = currentScale.current > 0.06
 
-    const velocity = typeof speed === 'number' ? speed : CONSTANT_ANGULAR_VELOCITY
+    // Sleep guard: bypass calculations when collapsed and fully shrunk
+    if (!isExpanded && currentScale.current <= 0.051) {
+      if (groupRef.current.visible) groupRef.current.visible = false
+      return
+    }
+
+    const velocity = activeSpeed
     const glitchJitter = isGlitching ? THREE.MathUtils.randFloatSpread(0.015) : 0
     currentAngle.current += (velocity * delta + glitchJitter)
 
-    groupRef.current.rotation.set(0, 0, 0)
+    // Apply 3D upright tilt and yaw rotation
+    const tiltRad = THREE.MathUtils.degToRad(activeTilt)
+    const yawRad = THREE.MathUtils.degToRad(activeYaw)
+    groupRef.current.rotation.set(tiltRad, yawRad, 0)
 
-    if (ringMeshRef.current && showDebugRing) {
-      ringMeshRef.current.visible = true
-      if (ringMatRef.current) {
-        ringMatRef.current.opacity = currentOpacity.current * 0.35
-      }
-    } else if (ringMeshRef.current) {
-      ringMeshRef.current.visible = false
-    }
-
-    // Position orbiting badges along the planar circular ring
+    // Position orbiting badges along the circular orbit
     HALO_ITEMS.forEach((_, index) => {
       const group = itemGroupRefs.current[index]
       if (group) {
@@ -118,13 +130,20 @@ export const HaloMenuRing: React.FC<{
     })
   })
 
+  const isRingVisible = activeDebugRing || keyboardDebugRing
+
   return (
     <group ref={groupRef} position={[0, ringCenterY, 0]}>
-      {/* Structural orbital guide ring */}
-      <mesh ref={ringMeshRef} rotation={[Math.PI / 2, 0, 0]} visible={showDebugRing}>
-        <torusGeometry ref={ringGeomRef} args={[ringRadius, 0.015, 16, 160]} />
-        <meshBasicMaterial ref={ringMatRef} color="#a1a1aa" transparent opacity={0} />
-      </mesh>
+      {/* Structural orbital guide ring via ProceduralGuide */}
+      <ProceduralGuide
+        style={activeGuideStyle}
+        radius={ringRadius}
+        width={activeGuideWidth}
+        color={theme?.primary ?? '#e2f872'}
+        highlightColor={theme?.highlight ?? '#f5ff9e'}
+        opacity={currentOpacity}
+        visible={isRingVisible && isExpanded}
+      />
 
       {/* Orbiting text badges using unified MenuItemBadge */}
       {HALO_ITEMS.map((item, index) => {

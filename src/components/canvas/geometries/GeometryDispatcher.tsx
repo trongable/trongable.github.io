@@ -115,6 +115,12 @@ export const GeometryDispatcher: React.FC<GeometryDispatcherProps> = ({
           theme={theme}
           speed={params.halo.speed}
           radiusScale={params.halo.radius}
+          debugRing={params.halo.showGuide}
+          tilt={params.halo.tilt}
+          yaw={params.halo.yaw}
+          guideWidth={params.halo.guideWidth}
+          guideStyle={params.halo.guideStyle}
+          params={params.halo}
         />
       )
   }

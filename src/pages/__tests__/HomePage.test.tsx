@@ -6,8 +6,16 @@ import { ThemeProvider } from '../../context/ThemeContext'
 
 // Mock 3D SceneContainer in jsdom test environment
 vi.mock('../../components/canvas/SceneContainer', () => ({
-  SceneContainer: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="mock-scene-container">{children}</div>
+  SceneContainer: ({
+    children,
+    onBackgroundClick,
+  }: {
+    children: React.ReactNode
+    onBackgroundClick?: () => void
+  }) => (
+    <div data-testid="mock-scene-container" onClick={onBackgroundClick}>
+      {children}
+    </div>
   ),
 }))
 
@@ -133,7 +141,7 @@ describe('HomePage Component', () => {
 
     const newPrimary = document.documentElement.style.getPropertyValue('--theme-primary')
     expect(newPrimary).not.toBe('#e2f872')
-    expect(['#ff007f', '#39ff14', '#ff3c00']).toContain(newPrimary)
+    expect(['#d4adf0', '#83d4d4']).toContain(newPrimary)
 
     mathSpy.mockRestore()
     vi.useRealTimers()
@@ -249,6 +257,117 @@ describe('HomePage Component', () => {
     // Finger dragged away / gesture cancelled
     fireEvent.touchCancel(welcomeButton)
     expect(welcomeButton.className).toContain('scale-100')
+    expect(haloRing).toHaveAttribute('data-expanded', 'false')
+  })
+
+  it('supports powerMode and setPowerMode console commands', () => {
+    window.location.hash = '#/'
+    render(
+      <RouterProvider>
+        <ThemeProvider>
+          <HomePage />
+        </ThemeProvider>
+      </RouterProvider>
+    )
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const win = window as any
+    expect(typeof win.setPowerMode).toBe('function')
+    expect(typeof win.powerMode).toBe('function')
+
+    act(() => {
+      win.setPowerMode('eco')
+    })
+    expect(window.localStorage.getItem('trongngyn_power_mode')).toBe('eco')
+
+    act(() => {
+      win.setPowerMode('uncapped')
+    })
+    expect(window.localStorage.getItem('trongngyn_power_mode')).toBe('uncapped')
+  })
+
+  it('restores tuner visibility from legacy antigravity_tuner_visible key', () => {
+    window.location.hash = '#/'
+    window.localStorage.setItem('antigravity_tuner_visible', 'true')
+    render(
+      <RouterProvider>
+        <ThemeProvider>
+          <HomePage />
+        </ThemeProvider>
+      </RouterProvider>
+    )
+
+    expect(screen.getByTestId('geometry-tuner')).toBeInTheDocument()
+  })
+
+  it('collapses geometry when clicking the space background (SceneContainer)', () => {
+    window.location.hash = '#/?expanded=true'
+    render(
+      <RouterProvider>
+        <ThemeProvider>
+          <HomePage />
+        </ThemeProvider>
+      </RouterProvider>
+    )
+
+    const haloRing = screen.getByTestId('mock-halo-ring')
+    const welcomeButton = screen.getByTestId('welcome-trigger')
+    expect(haloRing).toHaveAttribute('data-expanded', 'true')
+    expect(welcomeButton.className).toContain('scale-0')
+
+    // Click space background
+    const sceneContainer = screen.getByTestId('mock-scene-container')
+    fireEvent.click(sceneContainer)
+
+    expect(haloRing).toHaveAttribute('data-expanded', 'false')
+    expect(welcomeButton.className).toContain('scale-100')
+  })
+
+  it('does not collapse geometry when clicking options in the tuner menu', () => {
+    window.location.hash = '#/?expanded=true&tuner=true'
+    render(
+      <RouterProvider>
+        <ThemeProvider>
+          <HomePage />
+        </ThemeProvider>
+      </RouterProvider>
+    )
+
+    const haloRing = screen.getByTestId('mock-halo-ring')
+    expect(haloRing).toHaveAttribute('data-expanded', 'true')
+
+    const tuner = screen.getByTestId('geometry-tuner')
+    expect(tuner).toBeInTheDocument()
+
+    // 1. Click gear button to open drawer
+    const gearBtn = screen.getByLabelText('Toggle parameter drawer')
+    fireEvent.click(gearBtn)
+    expect(screen.getByTestId('geometry-tuner-drawer')).toBeInTheDocument()
+    expect(haloRing).toHaveAttribute('data-expanded', 'true')
+
+    // 2. Click a geometry mode button inside the drawer (e.g. Trefoil)
+    const trefoilBtn = screen.getByRole('button', { name: 'trefoil' })
+    fireEvent.click(trefoilBtn)
+    expect(haloRing).toHaveAttribute('data-expanded', 'true')
+
+    // 3. Click VFX & Glitch tab
+    const vfxTab = screen.getByRole('button', { name: 'VFX & Glitch' })
+    fireEvent.click(vfxTab)
+    expect(haloRing).toHaveAttribute('data-expanded', 'true')
+
+    // 4. Click a theme color button
+    const purpleThemeBtn = screen.getByRole('button', { name: /purple/i })
+    fireEvent.click(purpleThemeBtn)
+    expect(haloRing).toHaveAttribute('data-expanded', 'true')
+
+    // 5. Click the geo cycle button on the pill
+    const cycleBtn = screen.getByRole('button', { name: /Current geometry:/i })
+    fireEvent.click(cycleBtn)
+    expect(haloRing).toHaveAttribute('data-expanded', 'true')
+
+    // Finally, clicking the space background DOES collapse it
+    const sceneContainer = screen.getByTestId('mock-scene-container')
+    fireEvent.click(sceneContainer)
     expect(haloRing).toHaveAttribute('data-expanded', 'false')
   })
 })

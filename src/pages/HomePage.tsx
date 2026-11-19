@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useRouter } from '../routes/Router'
 import { useTheme } from '../context/ThemeContext'
+import { usePowerManager, PowerMode } from '../hooks/usePowerManager'
 import { SceneContainer } from '../components/canvas/SceneContainer'
 import { GpuGlitchOverlay } from '../components/effects/GpuGlitchOverlay'
 import { GeometryDispatcher } from '../components/canvas/geometries/GeometryDispatcher'
-import { GeometryTuner } from '../components/ui/GeometryTuner'
+import { Tuner } from '../components/ui/Tuner'
 import {
   GeometryMode,
   AllGeometryParams,
@@ -17,9 +18,27 @@ import { scrambleGlyphs } from '../utils/glyphUtils'
 
 export const HomePage: React.FC = () => {
   const { navigate, queryParams } = useRouter()
-  const { currentTheme, randomizeTheme } = useTheme()
+  const {
+    currentTheme,
+    randomizeTheme,
+    setTheme,
+    setCustomColor,
+    isThemeLocked,
+    setIsThemeLocked,
+  } = useTheme()
+  const {
+    isDocumentVisible,
+    isBattery,
+    powerMode,
+    setPowerMode,
+    targetFps,
+    targetDpr,
+    isSleeping,
+  } = usePowerManager()
   const randomizeRef = useRef(randomizeTheme)
   randomizeRef.current = randomizeTheme
+  const isThemeLockedRef = useRef(isThemeLocked)
+  isThemeLockedRef.current = isThemeLocked
 
   // Active geometry mode (defaults to 'tesseract' if not specified or invalid)
   const activeGeoMode: GeometryMode = isValidGeometryMode(queryParams.geo)
@@ -35,7 +54,10 @@ export const HomePage: React.FC = () => {
     if (isTunerParam) return true
     if (typeof window !== 'undefined') {
       try {
-        return window.localStorage.getItem('antigravity_tuner_visible') === 'true'
+        return (
+          window.localStorage.getItem('trongngyn_tuner_visible') === 'true' ||
+          window.localStorage.getItem('antigravity_tuner_visible') === 'true'
+        )
       } catch {
         return false
       }
@@ -89,8 +111,22 @@ export const HomePage: React.FC = () => {
   const [isExpanded, setIsExpanded] = useState<boolean>(() => isHaloParam)
   const [isGlitching, setIsGlitching] = useState(false)
   const [glitchDuration, setGlitchDuration] = useState(360)
+  const [glitchInterval, setGlitchInterval] = useState<number>(8)
+  const [glitchImageRate, setGlitchImageRate] = useState<number>(1.0)
   const [isTouchHovered, setIsTouchHovered] = useState(false)
   const [welcomeDisplay, setWelcomeDisplay] = useState('welcome')
+
+  const handleTriggerGlitchBurst = () => {
+    const burstDuration = 1200
+    setGlitchDuration(burstDuration)
+    setIsGlitching(true)
+    window.setTimeout(() => {
+      setIsGlitching(false)
+      if (!isThemeLockedRef.current) {
+        randomizeRef.current()
+      }
+    }, burstDuration)
+  }
 
   // Scramble glyphs while touch-hovered (press-and-hold tactile feedback on mobile)
   useEffect(() => {
@@ -113,21 +149,22 @@ export const HomePage: React.FC = () => {
     }
   }, [isHaloParam])
 
-  // Periodic fullscreen GPU artifact glitch every 4–15 seconds (randomized), lasting 400ms to 3,000ms (3s)
+  // Periodic fullscreen GPU artifact glitch every `glitchInterval` seconds, lasting 400ms to 3,000ms
   useEffect(() => {
     const prefersReducedMotion =
       typeof window !== 'undefined' &&
       typeof window.matchMedia === 'function' &&
       window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
-    if (prefersReducedMotion) return
+    if (prefersReducedMotion || !isDocumentVisible) return
 
     let timerId: number
     let resetId: number
 
     const triggerGlitch = () => {
-      // Random interval between 4000ms and 15000ms
-      const nextInterval = 4000 + Math.random() * 11000
+      // Dynamic interval based on tuned glitchInterval (in seconds)
+      const baseMs = glitchInterval * 1000
+      const nextInterval = baseMs * 0.65 + Math.random() * (baseMs * 0.70)
       timerId = window.setTimeout(() => {
         // Glitch duration randomized up to 3.0 seconds (400ms to 3000ms)
         const burstDuration = 400 + Math.random() * 2600
@@ -135,8 +172,10 @@ export const HomePage: React.FC = () => {
         setIsGlitching(true)
         resetId = window.setTimeout(() => {
           setIsGlitching(false)
-          // Mutate to a new random neon color right after the glitch resolves
-          randomizeRef.current()
+          // Mutate to a new random neon color right after the glitch resolves (unless theme is locked)
+          if (!isThemeLockedRef.current) {
+            randomizeRef.current()
+          }
           triggerGlitch()
         }, burstDuration)
       }, nextInterval)
@@ -148,7 +187,7 @@ export const HomePage: React.FC = () => {
       window.clearTimeout(timerId)
       window.clearTimeout(resetId)
     }
-  }, [])
+  }, [glitchInterval, isDocumentVisible])
 
   const handleSelect = (path: string) => {
     navigate(path)
@@ -174,8 +213,10 @@ export const HomePage: React.FC = () => {
         const next = typeof show === 'boolean' ? show : !prev
         try {
           if (next) {
-            window.localStorage.setItem('antigravity_tuner_visible', 'true')
+            window.localStorage.setItem('trongngyn_tuner_visible', 'true')
+            window.localStorage.removeItem('antigravity_tuner_visible')
           } else {
+            window.localStorage.removeItem('trongngyn_tuner_visible')
             window.localStorage.removeItem('antigravity_tuner_visible')
           }
         } catch {
@@ -219,6 +260,23 @@ export const HomePage: React.FC = () => {
     win.hideTuner = () => toggleTuner(false)
     win.setGeo = setGeo
     win.geoList = geoList
+    win.glitch = handleTriggerGlitchBurst
+    win.triggerGlitch = handleTriggerGlitchBurst
+    win.setTheme = setTheme
+    win.setColor = (hex: string, highlight?: string) => setCustomColor(hex, highlight)
+    win.setCustomColor = (hex: string, highlight?: string) => setCustomColor(hex, highlight)
+    win.lockTheme = (locked?: boolean) =>
+      setIsThemeLocked((prev: boolean) => (typeof locked === 'boolean' ? locked : !prev))
+    win.setImageRate = (r: number) => setGlitchImageRate(Math.max(0, Math.min(1, r)))
+    win.setGlitchInterval = (s: number) => setGlitchInterval(Math.max(1, s))
+    win.setPowerMode = (mode: PowerMode) => setPowerMode(mode)
+    win.powerMode = () => {
+      console.log(
+        `%c[POWER MODE] ${powerMode.toUpperCase()}`,
+        'color: #39ff14; font-weight: bold;',
+        `\nSource: ${isBattery ? 'Battery' : 'AC Power'}\nTarget FPS: ${targetFps ? `${targetFps} FPS` : 'Uncapped (Native)'}\nTarget DPR: ${Array.isArray(targetDpr) ? targetDpr.join('-') : targetDpr}\nStatus: ${isSleeping ? 'Sleeping (Background Tab)' : 'Active'}`
+      )
+    }
 
     return () => {
       delete win.tuner
@@ -226,29 +284,44 @@ export const HomePage: React.FC = () => {
       delete win.hideTuner
       delete win.setGeo
       delete win.geoList
+      delete win.glitch
+      delete win.triggerGlitch
+      delete win.setTheme
+      delete win.setColor
+      delete win.setCustomColor
+      delete win.lockTheme
+      delete win.setImageRate
+      delete win.setGlitchInterval
+      delete win.setPowerMode
+      delete win.powerMode
     }
-  }, [handleModeChange])
+  }, [handleModeChange, setTheme, setCustomColor, setIsThemeLocked, setPowerMode, powerMode, isBattery, targetFps, targetDpr, isSleeping])
 
   return (
-    <main
-      className="relative w-full h-full min-h-dvh overflow-hidden bg-[#1c1b22] flex items-center justify-center select-none"
-      onClick={() => {
-        if (isExpanded) {
-          setIsExpanded(false)
-          setIsTouchHovered(false)
-          setWelcomeDisplay('welcome')
-        }
-      }}
-    >
+    <main className="relative w-full h-full min-h-dvh overflow-hidden bg-[#1c1b22] flex items-center justify-center select-none">
       {/* Fullscreen Random "Graphics Card Dying" Artifact Glitch Overlay */}
       <GpuGlitchOverlay
         isActive={isGlitching}
         duration={glitchDuration}
         primaryColor={currentTheme.primary}
+        imageProbability={glitchImageRate}
       />
 
       {/* 3D Canvas Background & Geometry Animation */}
-      <SceneContainer isGlitching={isGlitching} theme={currentTheme}>
+      <SceneContainer
+        isGlitching={isGlitching}
+        theme={currentTheme}
+        targetFps={targetFps}
+        targetDpr={targetDpr}
+        isSleeping={isSleeping}
+        onBackgroundClick={() => {
+          if (isExpanded) {
+            setIsExpanded(false)
+            setIsTouchHovered(false)
+            setWelcomeDisplay('welcome')
+          }
+        }}
+      >
         <GeometryDispatcher
           mode={activeGeoMode}
           params={geometryParams}
@@ -304,17 +377,35 @@ export const HomePage: React.FC = () => {
         </button>
       </div>
 
-      {/* Bottom-Right HUD Geometry Switcher & Parameter Tuner (Secret: unlock via `tuner()` in console) */}
+      {/* Bottom-Right HUD System Parameter Tuner (Secret: unlock via `tuner()` in console) */}
       {isTunerVisible && (
-        <GeometryTuner
+        <Tuner
           activeMode={activeGeoMode}
           onModeChange={handleModeChange}
           params={geometryParams}
           onParamChange={handleParamChange}
           onResetParams={handleResetParams}
+          currentThemeId={currentTheme.id}
+          currentThemePrimary={currentTheme.primary}
+          currentThemeHighlight={currentTheme.highlight}
+          onThemeChange={setTheme}
+          onCustomColorChange={setCustomColor}
+          isThemeLocked={isThemeLocked}
+          onToggleThemeLock={setIsThemeLocked}
+          glitchInterval={glitchInterval}
+          onGlitchIntervalChange={setGlitchInterval}
+          imageRate={glitchImageRate}
+          onImageRateChange={setGlitchImageRate}
+          onTriggerGlitch={handleTriggerGlitchBurst}
+          powerMode={powerMode}
+          onPowerModeChange={setPowerMode}
+          isBattery={isBattery}
+          targetFps={targetFps}
+          targetDpr={targetDpr}
           onClose={() => {
             setIsTunerVisible(false)
             try {
+              window.localStorage.removeItem('trongngyn_tuner_visible')
               window.localStorage.removeItem('antigravity_tuner_visible')
             } catch {
               // ignore localStorage errors

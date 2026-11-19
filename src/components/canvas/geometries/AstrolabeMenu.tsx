@@ -1,8 +1,9 @@
-import React, { useRef, useState, useMemo, useEffect } from 'react'
+import React, { useRef, useState } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { ThemeColor } from '@/context/ThemeContext'
 import { MenuItemBadge } from './MenuItemBadge'
+import { ProceduralGuide } from './ProceduralGuide'
 import { AstrolabeParams } from './geometryConfig'
 
 export interface AstrolabeMenuProps {
@@ -37,7 +38,6 @@ export const AstrolabeMenu: React.FC<AstrolabeMenuProps> = ({
   const rootGroupRef = useRef<THREE.Group>(null)
   const gimbalRefs = useRef<(THREE.Group | null)[]>([])
   const itemGroupRefs = useRef<(THREE.Group | null)[]>([])
-  const ringMatRefs = useRef<(THREE.MeshBasicMaterial | null)[]>([])
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
   const { viewport } = useThree()
 
@@ -55,22 +55,6 @@ export const AstrolabeMenu: React.FC<AstrolabeMenuProps> = ({
   const responsiveBase = Math.min(viewport.width * 0.42, viewport.height * 0.38, 2.0)
   const primaryColorHex = theme?.primary ?? '#e2f872'
 
-  // Procedural Ring Geometries
-  const torusGeometries = useMemo(() => {
-    return ASTROLABE_ITEMS.map((item) => {
-      const r = (item.baseRadius / 2.1) * responsiveBase * params.ringSpread
-      return new THREE.TorusGeometry(r, 0.012, 16, 120)
-    })
-  }, [responsiveBase, params.ringSpread])
-
-  // WebGL GPU memory cleanup
-  useEffect(() => {
-    return () => {
-      torusGeometries.forEach((geom) => geom.dispose())
-      ringMatRefs.current.forEach((mat) => mat?.dispose())
-    }
-  }, [torusGeometries])
-
   useFrame((_, delta) => {
     if (!rootGroupRef.current) return
 
@@ -82,42 +66,42 @@ export const AstrolabeMenu: React.FC<AstrolabeMenuProps> = ({
     rootGroupRef.current.scale.setScalar(currentScale.current)
     rootGroupRef.current.visible = currentScale.current > 0.06
 
-    // Update each gimbal ring
+    // Sleep guard: bypass calculations when collapsed and fully shrunk
+    if (!isExpanded && currentScale.current <= 0.051) {
+      if (rootGroupRef.current.visible) rootGroupRef.current.visible = false
+      return
+    }
+
+    const baseSpeed = hoveredIdx !== null ? params.speed * 0.25 : params.speed
+    const glitchJitter = isGlitching ? THREE.MathUtils.randFloatSpread(0.02) : 0
+
+    // Magnetic lock alignment when hovered
+    const isLocked = hoveredIdx !== null
+
     ASTROLABE_ITEMS.forEach((item, index) => {
       const gimbal = gimbalRefs.current[index]
       if (!gimbal) return
 
-      // Orbital progress along its own ring
-      const speed = params.speed * item.speedMult
-      const glitchJitter = isGlitching ? THREE.MathUtils.randFloatSpread(0.03) : 0
+      // Advance individual orbital angular velocities
+      orbitAngles.current[index] += (baseSpeed * item.speedMult * delta + glitchJitter)
 
-      // When hovered, slow orbit and magnetically align rings toward front-facing plane
-      const isAnyHovered = hoveredIdx !== null
-      const lerpFactor = Math.min(delta * 3.5, 1)
+      // Target Euler rotation for this gimbal
+      let targetX = (item.tilt[0] * Math.PI) / 180 * (params.tiltAngle / 45)
+      let targetY = (item.tilt[1] * Math.PI) / 180 * (params.tiltAngle / 45)
+      let targetZ = (item.tilt[2] * Math.PI) / 180 * (params.tiltAngle / 45)
 
-      if (isAnyHovered) {
-        orbitAngles.current[index] += speed * delta * 0.15
-        // Magnetic lock: align toward camera plane (tilt -> 0)
-        currentTilts.current[index].x = THREE.MathUtils.lerp(currentTilts.current[index].x, 0, lerpFactor)
-        currentTilts.current[index].y = THREE.MathUtils.lerp(currentTilts.current[index].y, 0, lerpFactor)
-        currentTilts.current[index].z = THREE.MathUtils.lerp(currentTilts.current[index].z, 0, lerpFactor)
-      } else {
-        orbitAngles.current[index] += speed * delta + glitchJitter
-        const targetTiltX = (item.tilt[0] * (params.tiltAngle / 45) * Math.PI) / 180
-        const targetTiltY = (item.tilt[1] * (params.tiltAngle / 45) * Math.PI) / 180
-        const targetTiltZ = (item.tilt[2] * (params.tiltAngle / 45) * Math.PI) / 180
-
-        currentTilts.current[index].x = THREE.MathUtils.lerp(currentTilts.current[index].x, targetTiltX, lerpFactor)
-        currentTilts.current[index].y = THREE.MathUtils.lerp(currentTilts.current[index].y, targetTiltY, lerpFactor)
-        currentTilts.current[index].z = THREE.MathUtils.lerp(currentTilts.current[index].z, targetTiltZ, lerpFactor)
+      if (isLocked) {
+        // Coplanar magnetic lock: align all 3 rings toward a shared plane
+        targetX = THREE.MathUtils.degToRad(20)
+        targetY = 0
+        targetZ = 0
       }
+
+      currentTilts.current[index].x = THREE.MathUtils.lerp(currentTilts.current[index].x, targetX, 0.08)
+      currentTilts.current[index].y = THREE.MathUtils.lerp(currentTilts.current[index].y, targetY, 0.08)
+      currentTilts.current[index].z = THREE.MathUtils.lerp(currentTilts.current[index].z, targetZ, 0.08)
 
       gimbal.rotation.copy(currentTilts.current[index])
-
-      const ringMat = ringMatRefs.current[index]
-      if (ringMat) {
-        ringMat.opacity = currentOpacity.current * (hoveredIdx === index ? 0.6 : 0.22)
-      }
 
       // Real-time update of badge position along this gimbal
       const radius = (item.baseRadius / 2.1) * responsiveBase * params.ringSpread
@@ -132,6 +116,7 @@ export const AstrolabeMenu: React.FC<AstrolabeMenuProps> = ({
   return (
     <group ref={rootGroupRef} position={[0, 0, 0]}>
       {ASTROLABE_ITEMS.map((item, index) => {
+        const radius = (item.baseRadius / 2.1) * responsiveBase * params.ringSpread
         return (
           <group
             key={item.label}
@@ -139,18 +124,18 @@ export const AstrolabeMenu: React.FC<AstrolabeMenuProps> = ({
               gimbalRefs.current[index] = el
             }}
           >
-            {/* Gimbal Ring Wireframe */}
+            {/* Gimbal Ring Wireframe via ProceduralGuide */}
             {params.showRings && (
-              <mesh geometry={torusGeometries[index]} visible={isExpanded}>
-                <meshBasicMaterial
-                  ref={(el) => {
-                    ringMatRefs.current[index] = el
-                  }}
-                  color={primaryColorHex}
-                  transparent={true}
-                  opacity={0.22}
-                />
-              </mesh>
+              <ProceduralGuide
+                style={params.ringStyle ?? 'solid'}
+                radius={radius}
+                width={params.ringWidth ?? 0.012}
+                color={primaryColorHex}
+                highlightColor={theme?.highlight ?? '#f5ff9e'}
+                opacity={currentOpacity}
+                visible={isExpanded}
+                rotation={[0, 0, 0]}
+              />
             )}
 
             {/* Orbiting Badge on this Gimbal */}

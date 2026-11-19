@@ -100,7 +100,7 @@ describe('GeometryTuner Component', () => {
     // Open drawer
     fireEvent.click(screen.getByLabelText('Toggle parameter drawer'))
 
-    const resetButton = screen.getByRole('button', { name: /reset/i })
+    const resetButton = screen.getByRole('button', { name: /Reset.*to Defaults/i })
     fireEvent.click(resetButton)
 
     expect(onResetParams).toHaveBeenCalledWith('tesseract')

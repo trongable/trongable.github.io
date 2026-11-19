@@ -42,4 +42,17 @@ describe('SceneContainer Component', () => {
     const container = screen.getByTestId('scene-container')
     expect(container.className).toContain('translate-x-[1.5px]')
   })
+
+  it('triggers onBackgroundClick when clicking the scene container', () => {
+    const handleBackgroundClick = vi.fn()
+    render(
+      <SceneContainer onBackgroundClick={handleBackgroundClick}>
+        <div>content</div>
+      </SceneContainer>
+    )
+
+    const container = screen.getByTestId('scene-container')
+    container.click()
+    expect(handleBackgroundClick).toHaveBeenCalledTimes(1)
+  })
 })

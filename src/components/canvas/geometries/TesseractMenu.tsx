@@ -79,7 +79,10 @@ export const TesseractMenu: React.FC<TesseractMenuProps> = ({
 }) => {
   const groupRef = useRef<THREE.Group>(null)
   const linesRef = useRef<THREE.LineSegments>(null)
-  const lineMatRef = useRef<THREE.LineBasicMaterial>(null)
+  const lineMatRef = useRef<THREE.LineBasicMaterial | THREE.LineDashedMaterial>(null)
+  const pointsRef = useRef<THREE.Points>(null)
+  const pointsGeomRef = useRef<THREE.BufferGeometry>(null)
+  const pointsMatRef = useRef<THREE.PointsMaterial>(null)
   const itemGroupRefs = useRef<(THREE.Group | null)[]>([])
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
 
@@ -91,6 +94,9 @@ export const TesseractMenu: React.FC<TesseractMenuProps> = ({
   // Positions array for the 32 edges (32 * 2 = 64 vertices * 3 coords = 192 floats)
   const linePositions = useMemo(() => new Float32Array(TESSERACT_EDGES.length * 6), [])
   const lineGeomRef = useRef<THREE.BufferGeometry>(null)
+
+  // Positions array for the 16 vertices (16 * 3 = 48 floats) for points mode
+  const pointsPositions = useMemo(() => new Float32Array(16 * 3), [])
 
   const primaryColorHex = theme?.primary ?? '#e2f872'
 
@@ -104,6 +110,8 @@ export const TesseractMenu: React.FC<TesseractMenuProps> = ({
     return () => {
       lineGeomRef.current?.dispose()
       lineMatRef.current?.dispose()
+      pointsGeomRef.current?.dispose()
+      pointsMatRef.current?.dispose()
     }
   }, [])
 
@@ -117,6 +125,12 @@ export const TesseractMenu: React.FC<TesseractMenuProps> = ({
 
     groupRef.current.scale.setScalar(currentScale.current)
     groupRef.current.visible = currentScale.current > 0.06
+
+    // Sleep guard: bypass calculations when collapsed and fully shrunk
+    if (!isExpanded && currentScale.current <= 0.051) {
+      if (groupRef.current.visible) groupRef.current.visible = false
+      return
+    }
 
     // Advance 4D rotation angles
     const speed = hoveredIdx !== null ? params.speed4D * 0.25 : params.speed4D
@@ -136,27 +150,50 @@ export const TesseractMenu: React.FC<TesseractMenuProps> = ({
       )
     }
 
-    // Update 3D wireframe line coordinates
-    if (lineGeomRef.current) {
-      let ptr = 0
-      for (let e = 0; e < TESSERACT_EDGES.length; e++) {
-        const [v1, v2] = TESSERACT_EDGES[e]
-        const p1 = projectedVertices.current[v1]
-        const p2 = projectedVertices.current[v2]
+    // Update 3D wireframe / points coordinates
+    if (params.showWires) {
+      if (params.wireStyle === 'points') {
+        if (pointsGeomRef.current) {
+          let ptr = 0
+          for (let i = 0; i < 16; i++) {
+            const p = projectedVertices.current[i]
+            pointsPositions[ptr++] = p.x
+            pointsPositions[ptr++] = p.y
+            pointsPositions[ptr++] = p.z
+          }
+          pointsGeomRef.current.attributes.position.needsUpdate = true
+        }
+        if (pointsMatRef.current) {
+          pointsMatRef.current.opacity = currentOpacity.current * 0.85
+          pointsMatRef.current.color.set(primaryColorHex)
+        }
+      } else {
+        if (lineGeomRef.current) {
+          let ptr = 0
+          for (let e = 0; e < TESSERACT_EDGES.length; e++) {
+            const [v1, v2] = TESSERACT_EDGES[e]
+            const p1 = projectedVertices.current[v1]
+            const p2 = projectedVertices.current[v2]
 
-        linePositions[ptr++] = p1.x
-        linePositions[ptr++] = p1.y
-        linePositions[ptr++] = p1.z
-        linePositions[ptr++] = p2.x
-        linePositions[ptr++] = p2.y
-        linePositions[ptr++] = p2.z
+            linePositions[ptr++] = p1.x
+            linePositions[ptr++] = p1.y
+            linePositions[ptr++] = p1.z
+            linePositions[ptr++] = p2.x
+            linePositions[ptr++] = p2.y
+            linePositions[ptr++] = p2.z
+          }
+
+          lineGeomRef.current.attributes.position.needsUpdate = true
+          if (params.wireStyle === 'dashed' && linesRef.current) {
+            linesRef.current.computeLineDistances()
+          }
+        }
+
+        if (lineMatRef.current) {
+          lineMatRef.current.opacity = currentOpacity.current * (params.wireStyle === 'dashed' ? 0.45 : 0.35)
+          lineMatRef.current.color.set(primaryColorHex)
+        }
       }
-
-      lineGeomRef.current.attributes.position.needsUpdate = true
-    }
-
-    if (lineMatRef.current) {
-      lineMatRef.current.opacity = currentOpacity.current * 0.35
     }
 
     // Update badge positions to match projected 4D vertices
@@ -171,21 +208,53 @@ export const TesseractMenu: React.FC<TesseractMenuProps> = ({
 
   return (
     <group ref={groupRef} position={[0, 0, 0]}>
-      {/* 32 Projected 4D-to-3D Hypercube Edges */}
-      <lineSegments ref={linesRef}>
-        <bufferGeometry ref={lineGeomRef}>
-          <bufferAttribute
-            attach="attributes-position"
-            args={[linePositions, 3]}
-          />
-        </bufferGeometry>
-        <lineBasicMaterial
-          ref={lineMatRef}
-          color={primaryColorHex}
-          transparent={true}
-          opacity={0}
-        />
-      </lineSegments>
+      {/* 32 Projected 4D-to-3D Hypercube Edges / Points */}
+      {params.showWires && (
+        params.wireStyle === 'points' ? (
+          <points ref={pointsRef}>
+            <bufferGeometry ref={pointsGeomRef}>
+              <bufferAttribute
+                attach="attributes-position"
+                args={[pointsPositions, 3]}
+              />
+            </bufferGeometry>
+            <pointsMaterial
+              ref={pointsMatRef}
+              color={primaryColorHex}
+              size={0.06}
+              sizeAttenuation={true}
+              transparent={true}
+              opacity={0}
+            />
+          </points>
+        ) : (
+          <lineSegments ref={linesRef}>
+            <bufferGeometry ref={lineGeomRef}>
+              <bufferAttribute
+                attach="attributes-position"
+                args={[linePositions, 3]}
+              />
+            </bufferGeometry>
+            {params.wireStyle === 'dashed' ? (
+              <lineDashedMaterial
+                ref={lineMatRef as any}
+                color={primaryColorHex}
+                dashSize={0.08}
+                gapSize={0.05}
+                transparent={true}
+                opacity={0}
+              />
+            ) : (
+              <lineBasicMaterial
+                ref={lineMatRef}
+                color={primaryColorHex}
+                transparent={true}
+                opacity={0}
+              />
+            )}
+          </lineSegments>
+        )
+      )}
 
       {/* Badges anchored to 4D projection vertices */}
       {ITEMS.map((item, index) => {

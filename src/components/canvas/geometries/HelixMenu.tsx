@@ -1,8 +1,9 @@
-import React, { useRef, useState, useMemo, useEffect } from 'react'
+import React, { useRef, useState, useMemo } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { ThemeColor } from '@/context/ThemeContext'
 import { MenuItemBadge } from './MenuItemBadge'
+import { ProceduralGuide } from './ProceduralGuide'
 import { HelixParams } from './geometryConfig'
 
 export interface HelixMenuProps {
@@ -66,30 +67,16 @@ export const HelixMenu: React.FC<HelixMenuProps> = ({
   // Pre-allocated vector cache for zero-allocation useFrame updates
   const itemPositions = useRef<THREE.Vector3[]>(ITEMS.map(() => new THREE.Vector3()))
 
-  // Pre-generate Helical Coil Curve for the wireframe tube
-  const coilLine = useMemo(() => {
+  // 3D Parametric Curve along the Toroidal Helix for ProceduralGuide
+  const helixCurve = useMemo(() => {
     const points: THREE.Vector3[] = []
     const segments = 240
     for (let i = 0; i <= segments; i++) {
       const th = (i / segments) * Math.PI * 2
       points.push(computeToroidalHelixPoint(th, R, r, n))
     }
-    const geom = new THREE.BufferGeometry().setFromPoints(points)
-    const mat = new THREE.LineBasicMaterial({
-      color: new THREE.Color(primaryColorHex),
-      transparent: true,
-      opacity: 0.3,
-    })
-    return new THREE.Line(geom, mat)
-  }, [R, r, n, primaryColorHex])
-
-  // WebGL GPU memory disposal
-  useEffect(() => {
-    return () => {
-      coilLine.geometry.dispose()
-      ;(coilLine.material as THREE.Material).dispose()
-    }
-  }, [coilLine])
+    return new THREE.CatmullRomCurve3(points, true)
+  }, [R, r, n])
 
   useFrame((_, delta) => {
     if (!groupRef.current) return
@@ -102,12 +89,10 @@ export const HelixMenu: React.FC<HelixMenuProps> = ({
     groupRef.current.scale.setScalar(currentScale.current)
     groupRef.current.visible = currentScale.current > 0.06
 
-    // Update coil line opacity and color
-    if (coilLine) {
-      coilLine.visible = isExpanded && params.showCoil
-      const mat = coilLine.material as THREE.LineBasicMaterial
-      mat.opacity = currentOpacity.current * 0.3
-      mat.color.set(primaryColorHex)
+    // Sleep guard: bypass calculations when collapsed and fully shrunk
+    if (!isExpanded && currentScale.current <= 0.051) {
+      if (groupRef.current.visible) groupRef.current.visible = false
+      return
     }
 
     // Advance transit angle along the corkscrew
@@ -131,8 +116,18 @@ export const HelixMenu: React.FC<HelixMenuProps> = ({
 
   return (
     <group ref={groupRef} position={[0, 0, 0]}>
-      {/* Glowing Corkscrew Accelerator Coil Wireframe */}
-      {params.showCoil && <primitive object={coilLine} />}
+      {/* Glowing Corkscrew Accelerator Coil via ProceduralGuide */}
+      {params.showCoil && (
+        <ProceduralGuide
+          style={params.coilStyle ?? 'solid'}
+          curve={helixCurve}
+          width={params.coilWidth ?? 0.012}
+          color={primaryColorHex}
+          highlightColor={theme?.highlight ?? '#f5ff9e'}
+          opacity={currentOpacity}
+          visible={isExpanded}
+        />
+      )}
 
       {/* Badges spiraling along the toroidal helix */}
       {ITEMS.map((item, index) => {
