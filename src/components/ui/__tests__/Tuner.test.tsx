@@ -431,4 +431,113 @@ describe('Tuner Component', () => {
     fireEvent.click(solidBtn)
     expect(onParamChange).toHaveBeenCalledWith('origami', 'wireStyle', 'solid')
   })
+
+  it('renders all 6 Sonny 3D container buttons and triggers onSonnyContainerChange', () => {
+    const onSonnyContainerChange = vi.fn()
+    render(
+      <Tuner
+        activeMode="halo"
+        onModeChange={vi.fn()}
+        params={DEFAULT_GEOMETRY_PARAMS}
+        onParamChange={vi.fn()}
+        onResetParams={vi.fn()}
+        sonnyContainer="diorama"
+        onSonnyContainerChange={onSonnyContainerChange}
+      />
+    )
+
+    fireEvent.click(screen.getByLabelText('Toggle parameter drawer'))
+    expect(screen.getByText('Sonny 3D Container')).toBeInTheDocument()
+
+    const dioramaBtn = screen.getByTestId('sonny-container-diorama')
+    const pedestalBtn = screen.getByTestId('sonny-container-pedestal')
+    const capsuleBtn = screen.getByTestId('sonny-container-capsule')
+    const wireboxBtn = screen.getByTestId('sonny-container-wirebox')
+    const crystalBtn = screen.getByTestId('sonny-container-crystal')
+    const noneBtn = screen.getByTestId('sonny-container-none')
+
+    expect(dioramaBtn).toBeInTheDocument()
+    expect(pedestalBtn).toBeInTheDocument()
+    expect(capsuleBtn).toBeInTheDocument()
+    expect(wireboxBtn).toBeInTheDocument()
+    expect(crystalBtn).toBeInTheDocument()
+    expect(noneBtn).toBeInTheDocument()
+
+    fireEvent.click(capsuleBtn)
+    expect(onSonnyContainerChange).toHaveBeenCalledWith('capsule')
+
+    fireEvent.click(crystalBtn)
+    expect(onSonnyContainerChange).toHaveBeenCalledWith('crystal')
+  })
+
+  it('renders Distance Labels (HUD) toggle and calls onToggleShowDistance', () => {
+    const onToggleShowDistance = vi.fn()
+    render(
+      <Tuner
+        activeMode="halo"
+        onModeChange={vi.fn()}
+        params={DEFAULT_GEOMETRY_PARAMS}
+        onParamChange={vi.fn()}
+        onResetParams={vi.fn()}
+        showDistance={false}
+        onToggleShowDistance={onToggleShowDistance}
+      />
+    )
+
+    fireEvent.click(screen.getByLabelText('Toggle parameter drawer'))
+    expect(screen.getByText('Distance Labels (HUD)')).toBeInTheDocument()
+
+    const toggleBtn = screen.getByTestId('toggle-distance-labels')
+    expect(toggleBtn).toHaveTextContent('OFF')
+
+    fireEvent.click(toggleBtn)
+    expect(onToggleShowDistance).toHaveBeenCalledWith(true)
+  })
+
+  it('renders distance metric buttons when showDistance is true and handles selection', () => {
+    const onDistanceMetricChange = vi.fn()
+    render(
+      <Tuner
+        activeMode="halo"
+        onModeChange={vi.fn()}
+        params={DEFAULT_GEOMETRY_PARAMS}
+        onParamChange={vi.fn()}
+        onResetParams={vi.fn()}
+        showDistance={true}
+        distanceMetric="euclid"
+        onDistanceMetricChange={onDistanceMetricChange}
+      />
+    )
+
+    fireEvent.click(screen.getByLabelText('Toggle parameter drawer'))
+    expect(screen.getByTestId('metric-euclid')).toBeInTheDocument()
+    expect(screen.getByTestId('metric-depth')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByTestId('metric-depth'))
+    expect(onDistanceMetricChange).toHaveBeenCalledWith('depth')
+  })
+
+  it('renders Coords (XYZ) toggle when showDistance is true and handles click', () => {
+    const onToggleShowCoordinates = vi.fn()
+    render(
+      <Tuner
+        activeMode="halo"
+        onModeChange={vi.fn()}
+        params={DEFAULT_GEOMETRY_PARAMS}
+        onParamChange={vi.fn()}
+        onResetParams={vi.fn()}
+        showDistance={true}
+        showCoordinates={true}
+        onToggleShowCoordinates={onToggleShowCoordinates}
+      />
+    )
+
+    fireEvent.click(screen.getByLabelText('Toggle parameter drawer'))
+    const coordsBtn = screen.getByTestId('toggle-coords')
+    expect(coordsBtn).toBeInTheDocument()
+    expect(coordsBtn).toHaveTextContent('ON')
+
+    fireEvent.click(coordsBtn)
+    expect(onToggleShowCoordinates).toHaveBeenCalledWith(false)
+  })
 })

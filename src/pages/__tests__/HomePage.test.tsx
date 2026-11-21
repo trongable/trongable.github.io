@@ -3,6 +3,8 @@ import { render, screen, fireEvent, act } from '@testing-library/react'
 import { HomePage } from '../HomePage'
 import { RouterProvider } from '../../routes/Router'
 import { ThemeProvider } from '../../context/ThemeContext'
+import { SonnyContainerProvider } from '../../context/SonnyContainerContext'
+import { DebugDistanceProvider } from '../../context/DebugDistanceContext'
 
 // Mock 3D SceneContainer in jsdom test environment
 vi.mock('../../components/canvas/SceneContainer', () => ({
@@ -369,5 +371,145 @@ describe('HomePage Component', () => {
     const sceneContainer = screen.getByTestId('mock-scene-container')
     fireEvent.click(sceneContainer)
     expect(haloRing).toHaveAttribute('data-expanded', 'false')
+  })
+
+  it('supports setSonnyContainer and sonnyContainers console commands', () => {
+    window.location.hash = '#/'
+    render(
+      <RouterProvider>
+        <ThemeProvider>
+          <SonnyContainerProvider>
+            <HomePage />
+          </SonnyContainerProvider>
+        </ThemeProvider>
+      </RouterProvider>
+    )
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const win = window as any
+    expect(typeof win.setSonnyContainer).toBe('function')
+    expect(typeof win.sonnyContainer).toBe('function')
+    expect(typeof win.sonnyContainers).toBe('function')
+
+    act(() => {
+      win.setSonnyContainer('capsule')
+    })
+    expect(window.localStorage.getItem('trongngyn_sonny_container')).toBe('capsule')
+
+    act(() => {
+      win.setSonnyContainer('crystal')
+    })
+    expect(window.localStorage.getItem('trongngyn_sonny_container')).toBe('crystal')
+
+    // Invalid style warning
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    act(() => {
+      win.setSonnyContainer('invalid-style')
+    })
+    expect(warnSpy).toHaveBeenCalled()
+    warnSpy.mockRestore()
+
+    // sonnyContainers console table
+    const tableSpy = vi.spyOn(console, 'table').mockImplementation(() => {})
+    act(() => {
+      win.sonnyContainers()
+    })
+    expect(tableSpy).toHaveBeenCalled()
+    tableSpy.mockRestore()
+  })
+
+  it('initializes sonny container from query parameter', () => {
+    window.location.hash = '#/?container=wirebox'
+    render(
+      <RouterProvider>
+        <ThemeProvider>
+          <SonnyContainerProvider>
+            <HomePage />
+          </SonnyContainerProvider>
+        </ThemeProvider>
+      </RouterProvider>
+    )
+
+    expect(window.localStorage.getItem('trongngyn_sonny_container')).toBe('wirebox')
+  })
+
+  it('supports toggleDistance and showDistance console commands', () => {
+    window.location.hash = '#/'
+    render(
+      <RouterProvider>
+        <ThemeProvider>
+          <SonnyContainerProvider>
+            <DebugDistanceProvider>
+              <HomePage />
+            </DebugDistanceProvider>
+          </SonnyContainerProvider>
+        </ThemeProvider>
+      </RouterProvider>
+    )
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const win = window as any
+    expect(typeof win.toggleDistance).toBe('function')
+    expect(typeof win.showDistance).toBe('function')
+
+    act(() => {
+      win.toggleDistance()
+    })
+    expect(window.localStorage.getItem('trongngyn_debug_distance')).toBe('true')
+
+    act(() => {
+      win.toggleDistance()
+    })
+    expect(window.localStorage.getItem('trongngyn_debug_distance')).toBe('false')
+
+    act(() => {
+      win.showDistance(true)
+    })
+    expect(window.localStorage.getItem('trongngyn_debug_distance')).toBe('true')
+
+    expect(typeof win.setDistanceMetric).toBe('function')
+    expect(typeof win.toggleDistanceMetric).toBe('function')
+    expect(typeof win.distanceMetric).toBe('function')
+
+    act(() => {
+      win.setDistanceMetric('depth')
+    })
+    expect(window.localStorage.getItem('trongngyn_debug_distance_metric')).toBe('depth')
+    expect(win.distanceMetric()).toBe('depth')
+
+    act(() => {
+      win.toggleDistanceMetric()
+    })
+    expect(window.localStorage.getItem('trongngyn_debug_distance_metric')).toBe('euclid')
+
+    expect(typeof win.toggleCoords).toBe('function')
+    expect(typeof win.showCoords).toBe('function')
+
+    act(() => {
+      win.toggleCoords()
+    })
+    expect(window.localStorage.getItem('trongngyn_debug_distance_coords')).toBe('false')
+
+    act(() => {
+      win.showCoords(true)
+    })
+    expect(window.localStorage.getItem('trongngyn_debug_distance_coords')).toBe('true')
+  })
+
+  it('initializes debug distance from ?dist=true query parameter', () => {
+    window.location.hash = '#/?dist=true'
+    render(
+      <RouterProvider>
+        <ThemeProvider>
+          <SonnyContainerProvider>
+            <DebugDistanceProvider>
+              <HomePage />
+            </DebugDistanceProvider>
+          </SonnyContainerProvider>
+        </ThemeProvider>
+      </RouterProvider>
+    )
+
+    expect(window.localStorage.getItem('trongngyn_debug_distance')).toBe('true')
   })
 })

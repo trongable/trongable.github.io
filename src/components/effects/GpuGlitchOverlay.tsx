@@ -252,6 +252,7 @@ function generateRandomFrame(progress: number = 0.5, primaryColor: string = '#e2
 export const GLITCH_MEMORY_IMAGES = [
   '/images/glitch/memory-01.jpg',
   '/images/glitch/memory-02.jpg',
+  '/images/sonny.png',
 ]
 
 export interface GpuGlitchOverlayProps {

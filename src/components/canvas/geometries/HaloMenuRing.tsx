@@ -12,12 +12,14 @@ export { scrambleGlyphs, SCRAMBLE_GLYPHS }
 export interface HaloItem {
   label: string
   path: string
+  imageUrl?: string
   isExternal?: boolean
 }
 
 export const HALO_ITEMS: HaloItem[] = [
   { label: 'about', path: '/about' },
   { label: 'more', path: '/more' },
+  { label: 'sonny', path: '/sonny', imageUrl: '/images/sonny.png' },
   { label: 'dchc', path: 'https://dc-hardcore.com', isExternal: true },
 ]
 
@@ -157,6 +159,7 @@ export const HaloMenuRing: React.FC<HaloMenuRingProps> = ({
             <MenuItemBadge
               label={item.label}
               path={item.path}
+              imageUrl={item.imageUrl}
               opacity={currentOpacity}
               isHovered={hoveredIdx === index}
               isExpanded={isExpanded}

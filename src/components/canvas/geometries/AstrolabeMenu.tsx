@@ -17,6 +17,7 @@ export interface AstrolabeMenuProps {
 export interface AstrolabeItem {
   label: string
   path: string
+  imageUrl?: string
   baseRadius: number
   speedMult: number
   tilt: [number, number, number]
@@ -24,8 +25,9 @@ export interface AstrolabeItem {
 
 export const ASTROLABE_ITEMS: AstrolabeItem[] = [
   { label: 'about', path: '/about', baseRadius: 2.1, speedMult: 0.85, tilt: [35, 10, 20] },
-  { label: 'more', path: '/more', baseRadius: 1.55, speedMult: -1.15, tilt: [-40, 45, -15] },
-  { label: 'dchc', path: 'https://dc-hardcore.com', baseRadius: 1.05, speedMult: 1.45, tilt: [65, -30, 40] },
+  { label: 'more', path: '/more', baseRadius: 1.65, speedMult: -1.15, tilt: [-40, 45, -15] },
+  { label: 'sonny', path: '/sonny', imageUrl: '/images/sonny.png', baseRadius: 1.30, speedMult: -1.35, tilt: [15, -60, -25] },
+  { label: 'dchc', path: 'https://dc-hardcore.com', baseRadius: 0.95, speedMult: 1.65, tilt: [65, -30, 40] },
 ]
 
 export const AstrolabeMenu: React.FC<AstrolabeMenuProps> = ({
@@ -43,7 +45,7 @@ export const AstrolabeMenu: React.FC<AstrolabeMenuProps> = ({
 
   const currentScale = useRef(0)
   const currentOpacity = useRef(0)
-  const orbitAngles = useRef<number[]>([0, 0, 0])
+  const orbitAngles = useRef<number[]>(ASTROLABE_ITEMS.map(() => 0))
   const currentTilts = useRef<THREE.Euler[]>(
     ASTROLABE_ITEMS.map((item) => new THREE.Euler(
       (item.tilt[0] * Math.PI) / 180,
@@ -147,6 +149,7 @@ export const AstrolabeMenu: React.FC<AstrolabeMenuProps> = ({
               <MenuItemBadge
                 label={item.label}
                 path={item.path}
+                imageUrl={item.imageUrl}
                 opacity={currentOpacity}
                 isHovered={hoveredIdx === index}
                 isExpanded={isExpanded}

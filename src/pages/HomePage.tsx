@@ -14,6 +14,12 @@ import {
   isValidGeometryMode,
   GEOMETRY_MODES,
 } from '../components/canvas/geometries/geometryConfig'
+import {
+  useSonnyContainer,
+  isValidSonnyContainer,
+  SONNY_CONTAINER_STYLES,
+} from '../context/SonnyContainerContext'
+import { useDebugDistance } from '../context/DebugDistanceContext'
 import { scrambleGlyphs } from '../utils/glyphUtils'
 
 export const HomePage: React.FC = () => {
@@ -39,6 +45,21 @@ export const HomePage: React.FC = () => {
   randomizeRef.current = randomizeTheme
   const isThemeLockedRef = useRef(isThemeLocked)
   isThemeLockedRef.current = isThemeLocked
+
+  const { containerStyle: sonnyContainer, setContainerStyle: setSonnyContainer } =
+    useSonnyContainer()
+
+  const {
+    showDistance,
+    setShowDistance,
+    toggleDistance,
+    distanceMetric,
+    setDistanceMetric,
+    toggleDistanceMetric,
+    showCoordinates,
+    setShowCoordinates,
+    toggleCoordinates,
+  } = useDebugDistance()
 
   // Active geometry mode (defaults to 'tesseract' if not specified or invalid)
   const activeGeoMode: GeometryMode = isValidGeometryMode(queryParams.geo)
@@ -149,6 +170,27 @@ export const HomePage: React.FC = () => {
     }
   }, [isHaloParam])
 
+  // Synchronize container query param
+  useEffect(() => {
+    if (queryParams.container && isValidSonnyContainer(queryParams.container)) {
+      setSonnyContainer(queryParams.container)
+      setIsExpanded(true)
+    }
+  }, [queryParams.container, setSonnyContainer])
+
+  // Synchronize debug distance query param
+  useEffect(() => {
+    const isDistParam =
+      queryParams.dist === 'true' ||
+      queryParams.dist === '1' ||
+      queryParams.debugDistance === 'true' ||
+      queryParams.debugDistance === '1'
+    if (isDistParam) {
+      setShowDistance(true)
+      setIsExpanded(true)
+    }
+  }, [queryParams.dist, queryParams.debugDistance, setShowDistance])
+
   // Periodic fullscreen GPU artifact glitch every `glitchInterval` seconds, lasting 400ms to 3,000ms
   useEffect(() => {
     const prefersReducedMotion =
@@ -228,7 +270,7 @@ export const HomePage: React.FC = () => {
             'color: #39ff14; font-weight: bold; background: #1c1b22; padding: 2px 6px; border-radius: 4px;'
           )
           console.log(
-            'Animation menu is now visible in the bottom-right HUD.\nCommands:\n  tuner()        - Toggle visibility\n  setGeo(mode)   - Switch topology\n  geoList()      - List all topologies\n  hideTuner()    - Hide HUD tuner'
+            'Animation menu is now visible in the bottom-right HUD.\nCommands:\n  tuner()                  - Toggle visibility\n  setGeo(mode)             - Switch topology\n  geoList()                - List all topologies\n  setSonnyContainer(style) - Switch Sonny 3D container\n  sonnyContainers()        - List all Sonny containers\n  toggleDistance()         - Toggle distance debug labels\n  showDistance(boolean)    - Set distance debug labels\n  hideTuner()              - Hide HUD tuner'
           )
         } else {
           console.log(
@@ -253,6 +295,28 @@ export const HomePage: React.FC = () => {
       console.table(GEOMETRY_MODES.map((m) => ({ id: m.id, name: m.name, description: m.description })))
     }
 
+    const setSonnyContainerCmd = (style: string) => {
+      if (isValidSonnyContainer(style)) {
+        setSonnyContainer(style)
+        console.log(`%c[SONNY CONTAINER] Switched to '${style}'`, 'color: #39ff14')
+      } else {
+        console.warn(
+          `[SONNY CONTAINER] Invalid container '${style}'. Available:`,
+          SONNY_CONTAINER_STYLES.map((s) => s.id)
+        )
+      }
+    }
+
+    const sonnyContainers = () => {
+      console.table(
+        SONNY_CONTAINER_STYLES.map((s) => ({
+          id: s.id,
+          name: s.name,
+          description: s.description,
+        }))
+      )
+    }
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const win = window as any
     win.tuner = toggleTuner
@@ -260,6 +324,26 @@ export const HomePage: React.FC = () => {
     win.hideTuner = () => toggleTuner(false)
     win.setGeo = setGeo
     win.geoList = geoList
+    win.setSonnyContainer = setSonnyContainerCmd
+    win.sonnyContainer = setSonnyContainerCmd
+    win.sonnyContainers = sonnyContainers
+    win.toggleDistance = toggleDistance
+    win.showDistance = (show?: boolean) => setShowDistance(typeof show === 'boolean' ? show : true)
+    win.setDistanceMetric = (metric: string) => {
+      if (metric === 'depth' || metric === 'euclid') {
+        setDistanceMetric(metric)
+        console.log(`%c[DISTANCE METRIC] Switched to '${metric}'`, 'color: #39ff14')
+      } else {
+        console.warn(`[DISTANCE METRIC] Invalid metric '${metric}'. Available: 'euclid', 'depth'`)
+      }
+    }
+    win.toggleDistanceMetric = () => {
+      toggleDistanceMetric()
+      console.log('%c[DISTANCE METRIC] Toggled metric', 'color: #39ff14')
+    }
+    win.distanceMetric = () => distanceMetric
+    win.toggleCoords = toggleCoordinates
+    win.showCoords = (show?: boolean) => setShowCoordinates(typeof show === 'boolean' ? show : true)
     win.glitch = handleTriggerGlitchBurst
     win.triggerGlitch = handleTriggerGlitchBurst
     win.setTheme = setTheme
@@ -284,6 +368,16 @@ export const HomePage: React.FC = () => {
       delete win.hideTuner
       delete win.setGeo
       delete win.geoList
+      delete win.setSonnyContainer
+      delete win.sonnyContainer
+      delete win.sonnyContainers
+      delete win.toggleDistance
+      delete win.showDistance
+      delete win.setDistanceMetric
+      delete win.toggleDistanceMetric
+      delete win.distanceMetric
+      delete win.toggleCoords
+      delete win.showCoords
       delete win.glitch
       delete win.triggerGlitch
       delete win.setTheme
@@ -295,7 +389,21 @@ export const HomePage: React.FC = () => {
       delete win.setPowerMode
       delete win.powerMode
     }
-  }, [handleModeChange, setTheme, setCustomColor, setIsThemeLocked, setPowerMode, powerMode, isBattery, targetFps, targetDpr, isSleeping])
+  }, [
+    handleModeChange,
+    setSonnyContainer,
+    toggleDistance,
+    setShowDistance,
+    setTheme,
+    setCustomColor,
+    setIsThemeLocked,
+    setPowerMode,
+    powerMode,
+    isBattery,
+    targetFps,
+    targetDpr,
+    isSleeping,
+  ])
 
   return (
     <main className="relative w-full h-full min-h-dvh overflow-hidden bg-[#1c1b22] flex items-center justify-center select-none">
@@ -336,6 +444,7 @@ export const HomePage: React.FC = () => {
       <nav className="sr-only" aria-label="Direct Destinations">
         <button onClick={() => handleSelect('/about')}>about</button>
         <button onClick={() => handleSelect('/more')}>more</button>
+        <button onClick={() => handleSelect('/sonny')}>sonny</button>
         <a href="https://dc-hardcore.com" target="_blank" rel="noopener noreferrer">dchc</a>
       </nav>
 
@@ -402,6 +511,14 @@ export const HomePage: React.FC = () => {
           isBattery={isBattery}
           targetFps={targetFps}
           targetDpr={targetDpr}
+          sonnyContainer={sonnyContainer}
+          onSonnyContainerChange={setSonnyContainer}
+          showDistance={showDistance}
+          onToggleShowDistance={setShowDistance}
+          distanceMetric={distanceMetric}
+          onDistanceMetricChange={setDistanceMetric}
+          showCoordinates={showCoordinates}
+          onToggleShowCoordinates={setShowCoordinates}
           onClose={() => {
             setIsTunerVisible(false)
             try {

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
-import { GpuGlitchOverlay } from '../GpuGlitchOverlay'
+import { GpuGlitchOverlay, GLITCH_MEMORY_IMAGES } from '../GpuGlitchOverlay'
 
 describe('GpuGlitchOverlay Component', () => {
   it('renders nothing when inactive', () => {
@@ -52,12 +52,13 @@ describe('GpuGlitchOverlay Component', () => {
   })
 
   it('renders a distorted memory image by default (100% chance)', () => {
+    expect(GLITCH_MEMORY_IMAGES).toContain('/images/sonny.png')
     render(<GpuGlitchOverlay isActive={true} />)
     const imgContainer = screen.getByTestId('glitch-memory-image')
     expect(imgContainer).toBeInTheDocument()
     const img = imgContainer.querySelector('img')
     expect(img).toBeInTheDocument()
-    expect(img?.getAttribute('src')).toMatch(/\/images\/glitch\/memory-0[12]\.jpg/)
+    expect(GLITCH_MEMORY_IMAGES).toContain(img?.getAttribute('src'))
   })
 
   it('suppresses memory image when imageProbability is 0', () => {

@@ -1,9 +1,12 @@
 import React from 'react'
 import { RouterProvider, useRouter } from './routes/Router'
 import { ThemeProvider } from './context/ThemeContext'
+import { SonnyContainerProvider } from './context/SonnyContainerContext'
+import { DebugDistanceProvider } from './context/DebugDistanceContext'
 import { HomePage } from './pages/HomePage'
 import { AboutPage } from './pages/AboutPage'
 import { MorePage } from './pages/MorePage'
+import { SonnyPage } from './pages/SonnyPage'
 
 const AppContent: React.FC = () => {
   const { currentPath } = useRouter()
@@ -14,6 +17,8 @@ const AppContent: React.FC = () => {
         return <AboutPage />
       case '/more':
         return <MorePage />
+      case '/sonny':
+        return <SonnyPage />
       case '/':
       default:
         return <HomePage />
@@ -31,7 +36,11 @@ export const App: React.FC = () => {
   return (
     <RouterProvider>
       <ThemeProvider>
-        <AppContent />
+        <SonnyContainerProvider>
+          <DebugDistanceProvider>
+            <AppContent />
+          </DebugDistanceProvider>
+        </SonnyContainerProvider>
       </ThemeProvider>
     </RouterProvider>
   )

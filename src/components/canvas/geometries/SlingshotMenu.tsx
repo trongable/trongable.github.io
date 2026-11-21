@@ -16,8 +16,9 @@ export interface SlingshotMenuProps {
 
 const ITEMS = [
   { label: 'about', path: '/about', orbitTilt: [25, 0, 15], phaseOffset: 0 },
-  { label: 'more', path: '/more', orbitTilt: [-30, 40, -10], phaseOffset: (Math.PI * 2) / 3 },
-  { label: 'dchc', path: 'https://dc-hardcore.com', orbitTilt: [50, -45, 30], phaseOffset: (Math.PI * 4) / 3 },
+  { label: 'more', path: '/more', orbitTilt: [-30, 40, -10], phaseOffset: (Math.PI * 2) / 4 },
+  { label: 'sonny', path: '/sonny', imageUrl: '/images/sonny.png', orbitTilt: [-15, -50, 35], phaseOffset: (Math.PI * 4) / 4 },
+  { label: 'dchc', path: 'https://dc-hardcore.com', orbitTilt: [50, -45, 30], phaseOffset: (Math.PI * 6) / 4 },
 ]
 
 const STATIC_TILT_EULERS = ITEMS.map(
@@ -86,7 +87,7 @@ export const SlingshotMenu: React.FC<SlingshotMenuProps> = ({
 
   const currentScale = useRef(0)
   const currentOpacity = useRef(0)
-  const meanAnomalies = useRef<number[]>([0, (Math.PI * 2) / 3, (Math.PI * 4) / 3])
+  const meanAnomalies = useRef<number[]>(ITEMS.map((item) => item.phaseOffset))
 
   const responsiveBase = Math.min(viewport.width * 0.44, viewport.height * 0.40, 2.0)
   const semiMajorAxis = (params.axis * 0.75) * responsiveBase
@@ -169,6 +170,7 @@ export const SlingshotMenu: React.FC<SlingshotMenuProps> = ({
               <MenuItemBadge
                 label={item.label}
                 path={item.path}
+                imageUrl={item.imageUrl}
                 opacity={currentOpacity}
                 isHovered={hoveredIdx === index}
                 isExpanded={isExpanded}

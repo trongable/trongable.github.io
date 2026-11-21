@@ -12,6 +12,7 @@ This repository hosts a personal web platform and interactive 3D mathematical ge
   - `/` (Home): Minimalist, understated `"welcome"` prompt that dynamically expands on hover into one of 8 interactive 3D mathematical topologies.
   - `/about`: Clean minimalist page shell.
   - `/more`: Clean minimalist page shell.
+  - `/sonny`: Clean minimalist page shell.
   - `dchc`: External direct navigation link to `https://dc-hardcore.com`.
 
 ---
@@ -24,7 +25,7 @@ The site features 8 procedural mathematical topologies dispatched dynamically vi
 | :--- | :--- | :--- |
 | **`halo`** | Planar orbital ring | Flat horizontal ring in the X-Z plane with constant angular velocity, 3D upright tilt, and 7 procedural guide styles. |
 | **`trefoil`** | Torus Knot | Non-trivial $(2, 3)$ Torus Knot in $\mathbb{R}^3$ parameterized along a closed periodic loop. |
-| **`tesseract`** | 4D Hypercube Projection | 16 vertices and 32 edges of a 4-dimensional hypercube projected into 3D via 4D plane rotations ($X$-$W$ and $Y$-$Z$) and perspective division. |
+| **`tesseract`** | 4D Hypercube Projection | 16 vertices and 32 edges of a 4-dimensional hypercube projected into 3D via 4D plane rotations ($X$-$W$ and $Y$-$Z$) and perspective division; 4 menu badges anchored to a balanced 4-phase Clifford quad (`[13, 7, 10, 0]`) with $\sim 90^\circ$ cyclical cadence. |
 | **`astrolabe`** | Tri-Axial Astrolabe | 3 concentric tilted gimbal rings with orbital velocities and magnetic locking alignment on hover. |
 | **`lorenz`** | Strange Attractor | Deterministic differential chaos manifold modeled via the Lorenz attractor system ($\sigma=10, \beta=8/3, \rho=28$) with particle trail ribbons. |
 | **`origami`** | Polyhedral Blossom | 20-faced icosahedral crystal core that mechanically unfolds into floating facet panels. |
@@ -63,10 +64,19 @@ A secret diagnostic and tuning HUD positioned in the bottom-right corner, elevat
   - `powerMode()`: Print active power state, FPS cap, DPR, and battery status.
   - `setGeo('trefoil')`: Switch active topology.
   - `geoList()`: Output all 8 topologies to console.
+  - `setSonnyContainer('capsule')`: Switch Sonny 3D container (`capsule`, `diorama`, `pedestal`, `wirebox`, `crystal`, `none`).
+  - `sonnyContainers()`: Output all Sonny container styles to console.
+  - `toggleDistance()`: Toggle real-time distance telemetry labels (`d: X.XX` / `z: X.XX`) above all 3D objects.
+  - `showDistance(boolean)`: Explicitly set distance label visibility.
+  - `setDistanceMetric('euclid' | 'depth')`: Switch distance metric between radial Euclidean (`d: X.XX`) and camera view-plane depth (`z: X.XX`).
+  - `toggleDistanceMetric()`: Toggle distance metric.
+  - `distanceMetric()`: Print active distance metric.
+  - `toggleCoords()`: Toggle real-time 3D $(x, y, z)$ coordinate readout in telemetry labels.
+  - `showCoords(boolean)`: Explicitly set $(x, y, z)$ coordinate readout visibility.
   - `hideTuner()`: Dismiss HUD.
-- **Unlock via URL**: Append `?tuner=true` or `?tuner=1` to the URL.
+- **Unlock via URL**: Append `?tuner=true`, `?geo=...`, `?container=...`, `?dist=true`, `?metric=depth`, or `?coords=false` to the URL.
 - **Tuning Drawer**:
-  - **`3D Topologies` Tab**: Real-time sliders for animation speeds, radii, scales, chaos parameters, wireframe toggles, and dedicated `↺ Reset {name} to Defaults` buttons for every topology.
+  - **`3D Topologies` Tab**: Real-time sliders for animation speeds, radii, scales, chaos parameters, wireframe toggles, dedicated `↺ Reset {name} to Defaults` buttons, **Sonny 3D Container** selector (6 styles), and **Distance Labels (HUD)** telemetry toggle with **Metric Switcher** (`Euclid (d:)` vs `View Depth (z:)`) and **Coords (XYZ)** toggle.
   - **`VFX & Glitch` Tab**: Preset theme palettes, custom hex text entry + native color picker with real-time auto-computed highlight color preview, theme locking toggle, glitch frequency interval slider (2s–20s), memory picture appearance rate slider (0%–100%), manual `⚡ Trigger Glitch` button, and **Power & Performance Manager** with 3 modes (`Auto` [default: uncapped FPS, managed DPR], `Eco` [Tuner only: uncapped FPS, reduced DPR 1.0], and `Uncapped` [Tuner only: uncapped FPS, forced DPR 2.0 on battery]).
 
 ---
@@ -111,6 +121,19 @@ A secret diagnostic and tuning HUD positioned in the bottom-right corner, elevat
 ```
 trongable.github.io/
 ├── .github/workflows/deploy.yml   # CI/CD: Lint -> Typecheck -> Test (Coverage) -> Build -> Deploy
+├── docs/                          # Exhaustive Technical Documentation & Engineering Chronicles
+│   ├── README.md                  # Master documentation directory & architecture flowchart
+│   ├── tuner-manual.md            # Complete Tuner Manual & Settings Calibration Reference
+│   └── chronicles/                # Chronological deep-dive engineering whitepapers
+│       ├── 01-procedural-topologies-and-manifolds.md         # Milestone 1: 8 geometry engines & math
+│       ├── 02-mobile-touch-and-viewport-architecture.md      # Milestone 2: dvh, touch-action, hit targets
+│       ├── 03-cyber-gpu-glitch-vfx-and-memory-corruption.md  # Milestone 3: 100% orthogonal VRAM glitch
+│       ├── 04-dynamic-theming-color-science-and-tuner-hud.md # Milestone 4: Relative luminance, Tuner HUD
+│       ├── 05-zero-allocation-and-energy-governance.md        # Milestone 5: 0% GPU sleep, useFrame zero GC, Node watcher CPU fix
+│       ├── 06-sonny-3d-containers-and-turntable-animation.md # Milestone 6: 6 containers, 15-frame turntable
+│       ├── 07-pure-optical-perspective-scaling.md             # Milestone 7: Pure optical scaling & sorting
+│       ├── 08-tesseract-4d-degeneracy-and-clifford-quad.md    # Milestone 8: 4D collapse proof & Clifford Quad
+│       └── 09-realtime-3d-telemetry-hud-and-coordinates.md    # Milestone 9: Pitch skew derivation & XYZ HUD
 ├── public/
 │   ├── 404.html                   # GitHub Pages SPA redirect fallback
 │   └── fonts/
@@ -210,3 +233,69 @@ npm run preview
 - **Zero Allocations in Loops**: When modifying animation frames, write in-place to pre-allocated vectors and cached targets.
 - **Preserve Tests**: Whenever adding new features, topologies, or routes, add corresponding unit and component tests in `<feature>/__tests__/`.
 - **Verify Before Finishing**: Always ensure `npm run lint`, `npm run typecheck`, `npm run test:coverage`, and `npm run build` pass with zero errors.
+
+---
+
+## Developer & Agent Cookbook
+
+### How to Add a New Link to the 3D Geometry (Text or Image)
+
+1. **Assets (If image-based)**:
+   Place the PNG/SVG asset into `public/images/<name>.png` (or sequential flipbook animation frames into `public/images/<name>/frame-01.png` ... `frame-XX.png`).
+2. **Define Item in Geometry Menus**:
+   In `HaloMenuRing.tsx` (and other geometries):
+   ```ts
+   // Text Badge:
+   { label: 'work', path: '/work' }
+   // Single Image Badge:
+   { label: 'item', path: '/item', imageUrl: '/images/item.png' }
+   // Animated Flipbook Image Badge (e.g., Sonny 14-frame turntable):
+   { label: 'sonny', path: '/sonny', imageUrl: '/images/sonny.png' }
+   ```
+   `MenuItemBadge` automatically detects `imageUrl` / `imageFrames`:
+   - Renders one of **6 switchable 3D container styles** (`SonnyContainerStyle`):
+     - **`diorama`**: Architectural L-shaped cyber diorama combining a vertical back wall ($0.39 \times 0.69$) and horizontal square floor base ($0.39 \times 0.39$) at $z = 0.19$.
+     - **`pedestal`**: Floating circular hologram projector disc ($r=0.24$) with concentric glowing neon emitter ring (no back wall).
+     - **`capsule`** (default): Sci-fi cylindrical stasis cryo-pod with top/bottom metallic caps and translucent cylindrical glass shell.
+     - **`wirebox`**: Orthogonal 3D neon wireframe hypercube vitrine / museum display case ($0.44 \times 0.72 \times 0.44$).
+     - **`crystal`**: Polyhedral origami crystal cage with glowing gem lattice and translucent crystalline facets.
+     - **`none`**: Pure floating holographic sprite with zero background geometry.
+   - Switchable in real-time via the Developer Tuner HUD (`3D Topologies` tab), browser console (`setSonnyContainer(style)`, `sonnyContainers()`), URL query param (`?container=crystal`), and persisted in `localStorage` (`trongngyn_sonny_container`).
+   - The character sprite plane ($0.39 \times 0.69$) stands directly inside the active container.
+   - On **hover** or during **glitch bursts**, smoothly cycles through sequential turntable animation frames at high framerate with zero allocations in `useFrame` and zero React re-renders, immediately resting in the front-facing pose when idle.
+   - Otherwise, text badges render the standard cyber text card.
+3. **Register Route in Router**:
+   In `src/routes/Router.tsx`, add the path to `RoutePath`:
+   ```ts
+   export type RoutePath = '/' | '/about' | '/more' | '/sonny'
+   ```
+4. **Create Page Component**:
+   In `src/pages/<Name>Page.tsx`, follow the minimal shell pattern with `useRouter()` and `← home` back button.
+5. **Mount in App Router**:
+   In `src/App.tsx`, import `<Name>Page` and add `case '/<name>': return <<Name>Page />`.
+6. **Accessibility**:
+   In `src/pages/HomePage.tsx`, add `<button onClick={() => handleSelect('/<name>')}>name</button>` to `<nav className="sr-only">`.
+7. **Add Unit Tests**:
+   Add test file in `src/pages/__tests__/<Name>Page.test.tsx` and update `Routing.test.tsx`.
+
+---
+
+### How to Add a New Image to the Glitch Overlay Rotation
+
+1. **Place the Image**:
+   Add the image file (JPG or PNG) to `public/images/glitch/` or `public/images/`.
+2. **Register in Glitch Images Array**:
+   In `src/components/effects/GpuGlitchOverlay.tsx`, append the absolute public path to `GLITCH_MEMORY_IMAGES`:
+   ```ts
+   export const GLITCH_MEMORY_IMAGES = [
+     '/images/glitch/memory-01.jpg',
+     '/images/glitch/memory-02.jpg',
+     '/images/sonny.png',
+     '/images/glitch/<new-image>.jpg',
+   ]
+   ```
+3. **Update Test Assertion**:
+   In `src/components/effects/__tests__/GpuGlitchOverlay.test.tsx`, ensure `GLITCH_MEMORY_IMAGES` is verified:
+   ```ts
+   expect(GLITCH_MEMORY_IMAGES).toContain(img?.getAttribute('src'))
+   ```

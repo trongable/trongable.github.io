@@ -2,9 +2,10 @@ import { describe, it, expect } from 'vitest'
 import { scrambleGlyphs, SCRAMBLE_GLYPHS, HALO_ITEMS, CONSTANT_ANGULAR_VELOCITY } from '../HaloMenuRing'
 
 describe('HaloMenuRing Topology', () => {
-  it('defines 3 primary orbital navigation items', () => {
-    expect(HALO_ITEMS).toHaveLength(3)
-    expect(HALO_ITEMS.map((i) => i.label)).toEqual(['about', 'more', 'dchc'])
+  it('defines 4 primary orbital navigation items including sonny', () => {
+    expect(HALO_ITEMS).toHaveLength(4)
+    expect(HALO_ITEMS.map((i) => i.label)).toEqual(['about', 'more', 'sonny', 'dchc'])
+    expect(HALO_ITEMS.find((i) => i.label === 'sonny')?.imageUrl).toBe('/images/sonny.png')
   })
 
   it('defines non-zero constant angular velocity', () => {

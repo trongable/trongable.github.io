@@ -13,11 +13,14 @@ export interface TesseractMenuProps {
   params: TesseractParams
 }
 
-const ITEMS = [
-  { label: 'about', path: '/about', vertexIdx: 0 },
-  { label: 'more', path: '/more', vertexIdx: 6 },
-  { label: 'dchc', path: 'https://dc-hardcore.com', vertexIdx: 15 },
+export const TESSERACT_ITEMS = [
+  { label: 'about', path: '/about', vertexIdx: 13 },
+  { label: 'more', path: '/more', vertexIdx: 7 },
+  { label: 'sonny', path: '/sonny', imageUrl: '/images/sonny.png', vertexIdx: 10 },
+  { label: 'dchc', path: 'https://dc-hardcore.com', vertexIdx: 0 },
 ]
+
+const ITEMS = TESSERACT_ITEMS
 
 // 16 vertices of a 4D Hypercube (+-1, +-1, +-1, +-1)
 export const TESSERACT_4D_VERTICES: number[][] = []
@@ -268,6 +271,7 @@ export const TesseractMenu: React.FC<TesseractMenuProps> = ({
             <MenuItemBadge
               label={item.label}
               path={item.path}
+              imageUrl={item.imageUrl}
               opacity={currentOpacity}
               isHovered={hoveredIdx === index}
               isExpanded={isExpanded}

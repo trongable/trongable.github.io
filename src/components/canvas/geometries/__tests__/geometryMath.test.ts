@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import * as THREE from 'three'
 import { getTrefoilPoint } from '../TrefoilMenu'
-import { project4D, TESSERACT_4D_VERTICES, TESSERACT_EDGES } from '../TesseractMenu'
+import { project4D, TESSERACT_4D_VERTICES, TESSERACT_EDGES, TESSERACT_ITEMS } from '../TesseractMenu'
 import { stepLorenz } from '../LorenzMenu'
 import { computeKeplerPosition } from '../SlingshotMenu'
 import { computeToroidalHelixPoint } from '../HelixMenu'
@@ -53,6 +53,65 @@ describe('Geometry Mathematical Topologies', () => {
       const target = new THREE.Vector3()
       const res = project4D(TESSERACT_4D_VERTICES[0], 0.1, 0.2, 2.0, 1.0, target)
       expect(res).toBe(target)
+    })
+
+    it('maps badges to a non-degenerate, balanced 4D Clifford quad with centroid at origin', () => {
+      expect(TESSERACT_ITEMS).toHaveLength(4)
+      const assignedCoords = TESSERACT_ITEMS.map((item) => TESSERACT_4D_VERTICES[item.vertexIdx])
+
+      // 1. Centroid is exactly at the 4D origin (0, 0, 0, 0)
+      const sum = [0, 0, 0, 0]
+      assignedCoords.forEach((v) => {
+        sum[0] += v[0]
+        sum[1] += v[1]
+        sum[2] += v[2]
+        sum[3] += v[3]
+      })
+      expect(sum).toEqual([0, 0, 0, 0])
+
+      // 2. Rank check: unlike the degenerate set (rank 2, flat 2D plane),
+      // the balanced set forms a 3-simplex (tetrahedron) with rank 3 in 4D space
+      const mat = assignedCoords.map((row) => [...row])
+      let rank = 0
+      for (let c = 0; c < 4 && rank < 4; c++) {
+        let pivot = rank
+        while (pivot < 4 && mat[pivot][c] === 0) pivot++
+        if (pivot === 4) continue
+        const temp = mat[rank]
+        mat[rank] = mat[pivot]
+        mat[pivot] = temp
+        const val = mat[rank][c]
+        for (let i = 0; i < 4; i++) mat[rank][i] /= val
+        for (let i = 0; i < 4; i++) {
+          if (i !== rank && mat[i][c] !== 0) {
+            const factor = mat[i][c]
+            for (let j = 0; j < 4; j++) mat[i][j] -= factor * mat[rank][j]
+          }
+        }
+        rank++
+      }
+      expect(rank).toBe(3)
+
+      // 3. 4-Phase orthogonal coverage across both rotation planes:
+      // Each vertex occupies a distinct 90-degree quadrant in (X, W) and (Y, Z)
+      const xwAngles = assignedCoords.map((v) => Math.round((Math.atan2(v[3], v[0]) * 180) / Math.PI + 360) % 360)
+      const yzAngles = assignedCoords.map((v) => Math.round((Math.atan2(v[2], v[1]) * 180) / Math.PI + 360) % 360)
+      expect(new Set(xwAngles).size).toBe(4)
+      expect(new Set(yzAngles).size).toBe(4)
+
+      // 4. Bounded distance spread across rotation cycle
+      const camPos = new THREE.Vector3(0, 2.55, 5.45)
+      let maxSpread = 0
+      for (let deg = 0; deg < 360; deg += 10) {
+        const rad = (deg * Math.PI) / 180
+        const dists = assignedCoords.map((v) => {
+          const p = project4D(v, rad, rad * 0.7, 2.5, 1.0)
+          return p.distanceTo(camPos)
+        })
+        const spread = Math.max(...dists) - Math.min(...dists)
+        if (spread > maxSpread) maxSpread = spread
+      }
+      expect(maxSpread).toBeLessThan(2.3) // Never spikes to 3.84 like the old degenerate set
     })
   })
 
@@ -137,7 +196,7 @@ describe('Geometry Mathematical Topologies', () => {
     })
 
     it('has normalized 3D facet normals', () => {
-      expect(ORIGAMI_ITEMS).toHaveLength(3)
+      expect(ORIGAMI_ITEMS).toHaveLength(4)
       ORIGAMI_ITEMS.forEach((item) => {
         expect(item.normal.length()).toBeCloseTo(1.0, 4)
       })
@@ -145,8 +204,8 @@ describe('Geometry Mathematical Topologies', () => {
   })
 
   describe('Tri-Axial Astrolabe (Concept 3)', () => {
-    it('defines 3 concentric gimbal rings with distinct radii and non-zero tilts', () => {
-      expect(ASTROLABE_ITEMS).toHaveLength(3)
+    it('defines concentric gimbal rings with distinct radii and non-zero tilts', () => {
+      expect(ASTROLABE_ITEMS).toHaveLength(4)
       ASTROLABE_ITEMS.forEach((item) => {
         expect(item.baseRadius).toBeGreaterThan(0)
         expect(item.speedMult).not.toBe(0)

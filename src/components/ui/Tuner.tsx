@@ -8,6 +8,12 @@ import {
   FACET_GUIDE_STYLES,
 } from '../canvas/geometries/geometryConfig'
 import { ThemeId, THEME_PALETTES, THEME_IDS } from '@/context/ThemeContext'
+import {
+  SonnyContainerStyle,
+  SONNY_CONTAINER_STYLES,
+  useSonnyContainer,
+} from '@/context/SonnyContainerContext'
+import { useDebugDistance, DistanceMetric } from '@/context/DebugDistanceContext'
 import { PowerMode } from '@/hooks/usePowerManager'
 import {
   computeHighlightColor,
@@ -46,6 +52,16 @@ export interface TunerProps {
   isBattery?: boolean
   targetFps?: number | null
   targetDpr?: number | [number, number]
+  // Sonny 3D Container Controls
+  sonnyContainer?: SonnyContainerStyle
+  onSonnyContainerChange?: (style: SonnyContainerStyle) => void
+  // Debug & Telemetry Controls
+  showDistance?: boolean
+  onToggleShowDistance?: (show: boolean) => void
+  distanceMetric?: DistanceMetric
+  onDistanceMetricChange?: (metric: DistanceMetric) => void
+  showCoordinates?: boolean
+  onToggleShowCoordinates?: (show: boolean) => void
 }
 
 export const Tuner: React.FC<TunerProps> = ({
@@ -72,7 +88,61 @@ export const Tuner: React.FC<TunerProps> = ({
   isBattery = false,
   targetFps = 60,
   targetDpr = [1, 2],
+  sonnyContainer,
+  onSonnyContainerChange,
+  showDistance,
+  onToggleShowDistance,
+  distanceMetric,
+  onDistanceMetricChange,
+  showCoordinates,
+  onToggleShowCoordinates,
 }) => {
+  const { containerStyle: ctxContainerStyle, setContainerStyle: ctxSetContainerStyle } = useSonnyContainer()
+  const activeSonnyContainer = sonnyContainer ?? ctxContainerStyle
+  const handleContainerChange = (style: SonnyContainerStyle) => {
+    if (onSonnyContainerChange) {
+      onSonnyContainerChange(style)
+    } else {
+      ctxSetContainerStyle(style)
+    }
+  }
+
+  const {
+    showDistance: ctxShowDistance,
+    toggleDistance: ctxToggleDistance,
+    distanceMetric: ctxDistanceMetric,
+    setDistanceMetric: ctxSetDistanceMetric,
+    showCoordinates: ctxShowCoordinates,
+    toggleCoordinates: ctxToggleCoordinates,
+  } = useDebugDistance()
+  const activeShowDistance = typeof showDistance === 'boolean' ? showDistance : ctxShowDistance
+  const activeDistanceMetric = distanceMetric ?? ctxDistanceMetric ?? 'euclid'
+  const activeShowCoords = typeof showCoordinates === 'boolean' ? showCoordinates : ctxShowCoordinates
+
+  const handleToggleDistance = () => {
+    if (onToggleShowDistance) {
+      onToggleShowDistance(!activeShowDistance)
+    } else {
+      ctxToggleDistance()
+    }
+  }
+
+  const handleSetMetric = (metric: DistanceMetric) => {
+    if (onDistanceMetricChange) {
+      onDistanceMetricChange(metric)
+    } else {
+      ctxSetDistanceMetric(metric)
+    }
+  }
+
+  const handleToggleCoords = () => {
+    if (onToggleShowCoordinates) {
+      onToggleShowCoordinates(!activeShowCoords)
+    } else {
+      ctxToggleCoordinates()
+    }
+  }
+
   const [isOpen, setIsOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<'geo' | 'vfx'>('geo')
   const [customHexInput, setCustomHexInput] = useState<string>(() => currentThemePrimary || '#e2f872')
@@ -200,6 +270,118 @@ export const Tuner: React.FC<TunerProps> = ({
                     </button>
                   )
                 })}
+              </div>
+
+              {/* Sonny 3D Container Selector */}
+              <div className="mb-3 pt-2.5 border-t border-[var(--theme-primary)]/20">
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="font-semibold uppercase tracking-wider text-[10px]">
+                    Sonny 3D Container
+                  </span>
+                  <span className="text-[10px] opacity-70 lowercase">
+                    {activeSonnyContainer}
+                  </span>
+                </div>
+                <div className="grid grid-cols-3 gap-1 text-[10px]">
+                  {SONNY_CONTAINER_STYLES.map((style) => {
+                    const isContainerActive = activeSonnyContainer === style.id
+                    return (
+                      <button
+                        key={style.id}
+                        type="button"
+                        data-testid={`sonny-container-${style.id}`}
+                        onClick={() => handleContainerChange(style.id)}
+                        className={`px-1 py-1 rounded transition-colors cursor-pointer text-center truncate capitalize ${
+                          isContainerActive
+                            ? 'bg-[var(--theme-primary)] text-[#1c1b22] font-semibold'
+                            : 'border border-[var(--theme-primary)]/30 opacity-70 hover:opacity-100 hover:border-[var(--theme-primary)]'
+                        }`}
+                        title={style.description}
+                      >
+                        {style.label}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Debug Telemetry Controls */}
+              <div className="mb-3 pt-2.5 border-t border-[var(--theme-primary)]/20">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="font-semibold uppercase tracking-wider text-[10px] block">
+                      Distance Labels (HUD)
+                    </span>
+                    <span className="text-[9px] opacity-60">
+                      Show camera distance above objects
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    data-testid="toggle-distance-labels"
+                    onClick={handleToggleDistance}
+                    className={`px-2.5 py-1 rounded text-[10px] font-semibold transition-colors cursor-pointer ${
+                      activeShowDistance
+                        ? 'bg-[var(--theme-primary)] text-[#1c1b22]'
+                        : 'border border-[var(--theme-primary)]/30 opacity-70 hover:opacity-100 hover:border-[var(--theme-primary)]'
+                    }`}
+                  >
+                    {activeShowDistance ? 'ON' : 'OFF'}
+                  </button>
+                </div>
+
+                {activeShowDistance && (
+                  <>
+                    <div className="flex items-center justify-between mt-2 pt-1.5 border-t border-[var(--theme-primary)]/10 text-[9px]">
+                      <span className="opacity-70">Metric:</span>
+                      <div className="flex gap-1">
+                        <button
+                          type="button"
+                          data-testid="metric-euclid"
+                          onClick={() => handleSetMetric('euclid')}
+                          className={`px-2 py-0.5 rounded text-[9px] font-mono transition-colors cursor-pointer ${
+                            activeDistanceMetric === 'euclid'
+                              ? 'bg-[var(--theme-primary)] text-[#1c1b22] font-bold'
+                              : 'border border-[var(--theme-primary)]/30 opacity-60 hover:opacity-100'
+                          }`}
+                          title="Radial 3D Euclidean distance (d: X.XX)"
+                        >
+                          Euclid (d:)
+                        </button>
+                        <button
+                          type="button"
+                          data-testid="metric-depth"
+                          onClick={() => handleSetMetric('depth')}
+                          className={`px-2 py-0.5 rounded text-[9px] font-mono transition-colors cursor-pointer ${
+                            activeDistanceMetric === 'depth'
+                              ? 'bg-[var(--theme-primary)] text-[#1c1b22] font-bold'
+                              : 'border border-[var(--theme-primary)]/30 opacity-60 hover:opacity-100'
+                          }`}
+                          title="Camera view-plane perpendicular depth (z: X.XX)"
+                        >
+                          View Depth (z:)
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between mt-1.5 pt-1.5 border-t border-[var(--theme-primary)]/10 text-[9px]">
+                      <span className="opacity-70">Coords (XYZ):</span>
+                      <button
+                        type="button"
+                        data-testid="toggle-coords"
+                        onClick={handleToggleCoords}
+                        className={`px-2 py-0.5 rounded text-[9px] font-mono transition-colors cursor-pointer ${
+                          activeShowCoords
+                            ? 'bg-[var(--theme-primary)] text-[#1c1b22] font-bold'
+                            : 'border border-[var(--theme-primary)]/30 opacity-60 hover:opacity-100'
+                        }`}
+                        title="Display real-time 3D (x, y, z) coordinates"
+                      >
+                        {activeShowCoords ? 'ON' : 'OFF'}
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
 
               {/* Mode-Specific Sliders */}

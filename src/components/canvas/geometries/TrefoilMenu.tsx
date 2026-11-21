@@ -17,6 +17,7 @@ export interface GeometryProps {
 const ITEMS = [
   { label: 'about', path: '/about' },
   { label: 'more', path: '/more' },
+  { label: 'sonny', path: '/sonny', imageUrl: '/images/sonny.png' },
   { label: 'dchc', path: 'https://dc-hardcore.com' },
 ]
 
@@ -126,6 +127,7 @@ export const TrefoilMenu: React.FC<GeometryProps> = ({
             <MenuItemBadge
               label={item.label}
               path={item.path}
+              imageUrl={item.imageUrl}
               opacity={currentOpacity}
               isHovered={hoveredIdx === index}
               isExpanded={isExpanded}
