@@ -18,6 +18,7 @@ export interface HaloItem {
 
 export const HALO_ITEMS: HaloItem[] = [
   { label: 'about', path: '/about' },
+  { label: 'videos', path: '/videos' },
   { label: 'more', path: '/more' },
   { label: 'sonny', path: '/sonny', imageUrl: '/images/sonny.png' },
   { label: 'dchc', path: 'https://dc-hardcore.com', isExternal: true },
@@ -31,6 +32,7 @@ export interface HaloMenuRingProps {
   onSelect: (path: string) => void
   debugRing?: boolean
   isGlitching?: boolean
+  isPaused?: boolean
   theme?: ThemeColor
   speed?: number
   radiusScale?: number
@@ -46,6 +48,7 @@ export const HaloMenuRing: React.FC<HaloMenuRingProps> = ({
   onSelect,
   debugRing,
   isGlitching,
+  isPaused = false,
   theme,
   speed,
   radiusScale = 1,
@@ -111,9 +114,11 @@ export const HaloMenuRing: React.FC<HaloMenuRingProps> = ({
       return
     }
 
-    const velocity = activeSpeed
-    const glitchJitter = isGlitching ? THREE.MathUtils.randFloatSpread(0.015) : 0
-    currentAngle.current += (velocity * delta + glitchJitter)
+    if (!isPaused) {
+      const velocity = activeSpeed
+      const glitchJitter = isGlitching ? THREE.MathUtils.randFloatSpread(0.015) : 0
+      currentAngle.current += (velocity * delta + glitchJitter)
+    }
 
     // Apply 3D upright tilt and yaw rotation
     const tiltRad = THREE.MathUtils.degToRad(activeTilt)

@@ -56,8 +56,12 @@ describe('Geometry Mathematical Topologies', () => {
     })
 
     it('maps badges to a non-degenerate, balanced 4D Clifford quad with centroid at origin', () => {
-      expect(TESSERACT_ITEMS).toHaveLength(4)
-      const assignedCoords = TESSERACT_ITEMS.map((item) => TESSERACT_4D_VERTICES[item.vertexIdx])
+      // The 4 core navigation badges form the balanced 4D Clifford quad [13, 7, 10, 0]
+      const quadItems = TESSERACT_ITEMS.filter((item) =>
+        [13, 7, 10, 0].includes(item.vertexIdx)
+      )
+      expect(quadItems).toHaveLength(4)
+      const assignedCoords = quadItems.map((item) => TESSERACT_4D_VERTICES[item.vertexIdx])
 
       // 1. Centroid is exactly at the 4D origin (0, 0, 0, 0)
       const sum = [0, 0, 0, 0]
@@ -196,7 +200,7 @@ describe('Geometry Mathematical Topologies', () => {
     })
 
     it('has normalized 3D facet normals', () => {
-      expect(ORIGAMI_ITEMS).toHaveLength(4)
+      expect(ORIGAMI_ITEMS).toHaveLength(5)
       ORIGAMI_ITEMS.forEach((item) => {
         expect(item.normal.length()).toBeCloseTo(1.0, 4)
       })
@@ -205,7 +209,7 @@ describe('Geometry Mathematical Topologies', () => {
 
   describe('Tri-Axial Astrolabe (Concept 3)', () => {
     it('defines concentric gimbal rings with distinct radii and non-zero tilts', () => {
-      expect(ASTROLABE_ITEMS).toHaveLength(4)
+      expect(ASTROLABE_ITEMS).toHaveLength(5)
       ASTROLABE_ITEMS.forEach((item) => {
         expect(item.baseRadius).toBeGreaterThan(0)
         expect(item.speedMult).not.toBe(0)

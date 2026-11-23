@@ -10,12 +10,14 @@ export interface HelixMenuProps {
   isExpanded: boolean
   onSelect: (path: string) => void
   isGlitching?: boolean
+  isPaused?: boolean
   theme?: ThemeColor
   params: HelixParams
 }
 
 const ITEMS = [
   { label: 'about', path: '/about' },
+  { label: 'videos', path: '/videos' },
   { label: 'more', path: '/more' },
   { label: 'sonny', path: '/sonny', imageUrl: '/images/sonny.png' },
   { label: 'dchc', path: 'https://dc-hardcore.com' },
@@ -46,6 +48,7 @@ export const HelixMenu: React.FC<HelixMenuProps> = ({
   isExpanded,
   onSelect,
   isGlitching = false,
+  isPaused = false,
   theme,
   params,
 }) => {
@@ -101,7 +104,9 @@ export const HelixMenu: React.FC<HelixMenuProps> = ({
     const speed = isAnyHovered ? params.speed * 0.25 : params.speed
     const glitchJitter = isGlitching ? THREE.MathUtils.randFloatSpread(0.02) : 0
 
-    currentTheta.current += speed * delta + glitchJitter
+    if (!isPaused) {
+      currentTheta.current += speed * delta + glitchJitter
+    }
 
     // Update badge positions continuously along the toroidal helix (in-place)
     ITEMS.forEach((_, index) => {

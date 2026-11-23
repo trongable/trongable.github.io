@@ -3,8 +3,12 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 export const DEBUG_DISTANCE_STORAGE_KEY = 'trongngyn_debug_distance'
 export const DEBUG_DISTANCE_METRIC_KEY = 'trongngyn_debug_distance_metric'
 export const DEBUG_DISTANCE_COORDS_KEY = 'trongngyn_debug_distance_coords'
+export const DEBUG_DISTANCE_FRAME_KEY = 'trongngyn_debug_distance_coord_frame'
+export const DEBUG_DISTANCE_ELEVATION_KEY = 'trongngyn_camera_elevation'
 
 export type DistanceMetric = 'euclid' | 'depth'
+export type CoordFrame = 'view' | 'world'
+export type CameraElevation = 'elevated' | 'eye-level'
 
 export interface DebugDistanceContextValue {
   showDistance: boolean
@@ -16,6 +20,12 @@ export interface DebugDistanceContextValue {
   showCoordinates: boolean
   setShowCoordinates: (show: boolean) => void
   toggleCoordinates: () => void
+  coordFrame: CoordFrame
+  setCoordFrame: (frame: CoordFrame) => void
+  toggleCoordFrame: () => void
+  cameraElevation: CameraElevation
+  setCameraElevation: (elevation: CameraElevation) => void
+  toggleCameraElevation: () => void
 }
 
 const DebugDistanceContext = createContext<DebugDistanceContextValue>({
@@ -28,6 +38,12 @@ const DebugDistanceContext = createContext<DebugDistanceContextValue>({
   showCoordinates: true,
   setShowCoordinates: () => {},
   toggleCoordinates: () => {},
+  coordFrame: 'view',
+  setCoordFrame: () => {},
+  toggleCoordFrame: () => {},
+  cameraElevation: 'elevated',
+  setCameraElevation: () => {},
+  toggleCameraElevation: () => {},
 })
 
 export const DebugDistanceProvider: React.FC<{
@@ -35,7 +51,16 @@ export const DebugDistanceProvider: React.FC<{
   initialShow?: boolean
   initialMetric?: DistanceMetric
   initialShowCoords?: boolean
-}> = ({ children, initialShow, initialMetric, initialShowCoords }) => {
+  initialFrame?: CoordFrame
+  initialElevation?: CameraElevation
+}> = ({
+  children,
+  initialShow,
+  initialMetric,
+  initialShowCoords,
+  initialFrame,
+  initialElevation,
+}) => {
   const [showDistance, setShowDistanceState] = useState<boolean>(() => {
     if (typeof initialShow === 'boolean') {
       return initialShow
@@ -114,6 +139,54 @@ export const DebugDistanceProvider: React.FC<{
     return true
   })
 
+  const [coordFrame, setCoordFrameState] = useState<CoordFrame>(() => {
+    if (initialFrame === 'view' || initialFrame === 'world') {
+      return initialFrame
+    }
+
+    if (typeof window !== 'undefined') {
+      try {
+        const queryParams = new URLSearchParams(window.location.search)
+        const frameParam = queryParams.get('frame') ?? queryParams.get('coordFrame')
+        if (frameParam === 'world' || frameParam === 'view') {
+          return frameParam
+        }
+
+        const stored = window.localStorage.getItem(DEBUG_DISTANCE_FRAME_KEY)
+        if (stored === 'world' || stored === 'view') {
+          return stored
+        }
+      } catch {
+        // Ignore localStorage / window access errors
+      }
+    }
+    return 'view'
+  })
+
+  const [cameraElevation, setCameraElevationState] = useState<CameraElevation>(() => {
+    if (initialElevation === 'elevated' || initialElevation === 'eye-level') {
+      return initialElevation
+    }
+
+    if (typeof window !== 'undefined') {
+      try {
+        const queryParams = new URLSearchParams(window.location.search)
+        const elevParam = queryParams.get('elevation') ?? queryParams.get('camera')
+        if (elevParam === 'eye-level' || elevParam === 'elevated') {
+          return elevParam
+        }
+
+        const stored = window.localStorage.getItem(DEBUG_DISTANCE_ELEVATION_KEY)
+        if (stored === 'eye-level' || stored === 'elevated') {
+          return stored
+        }
+      } catch {
+        // Ignore localStorage / window access errors
+      }
+    }
+    return 'elevated'
+  })
+
   const setShowDistance = useCallback((show: boolean) => {
     setShowDistanceState(show)
     if (typeof window !== 'undefined') {
@@ -189,6 +262,56 @@ export const DebugDistanceProvider: React.FC<{
     })
   }, [])
 
+  const setCoordFrame = useCallback((frame: CoordFrame) => {
+    setCoordFrameState(frame)
+    if (typeof window !== 'undefined') {
+      try {
+        window.localStorage.setItem(DEBUG_DISTANCE_FRAME_KEY, frame)
+      } catch {
+        // Ignore localStorage errors
+      }
+    }
+  }, [])
+
+  const toggleCoordFrame = useCallback(() => {
+    setCoordFrameState((prev) => {
+      const next = prev === 'view' ? 'world' : 'view'
+      if (typeof window !== 'undefined') {
+        try {
+          window.localStorage.setItem(DEBUG_DISTANCE_FRAME_KEY, next)
+        } catch {
+          // Ignore localStorage errors
+        }
+      }
+      return next
+    })
+  }, [])
+
+  const setCameraElevation = useCallback((elevation: CameraElevation) => {
+    setCameraElevationState(elevation)
+    if (typeof window !== 'undefined') {
+      try {
+        window.localStorage.setItem(DEBUG_DISTANCE_ELEVATION_KEY, elevation)
+      } catch {
+        // Ignore localStorage errors
+      }
+    }
+  }, [])
+
+  const toggleCameraElevation = useCallback(() => {
+    setCameraElevationState((prev) => {
+      const next = prev === 'elevated' ? 'eye-level' : 'elevated'
+      if (typeof window !== 'undefined') {
+        try {
+          window.localStorage.setItem(DEBUG_DISTANCE_ELEVATION_KEY, next)
+        } catch {
+          // Ignore localStorage errors
+        }
+      }
+      return next
+    })
+  }, [])
+
   // Keep in sync with storage across tabs/windows
   useEffect(() => {
     const handleStorage = (e: StorageEvent) => {
@@ -200,6 +323,12 @@ export const DebugDistanceProvider: React.FC<{
       }
       if (e.key === DEBUG_DISTANCE_COORDS_KEY && e.newValue !== null) {
         setShowCoordinatesState(e.newValue === 'true')
+      }
+      if (e.key === DEBUG_DISTANCE_FRAME_KEY && (e.newValue === 'view' || e.newValue === 'world')) {
+        setCoordFrameState(e.newValue)
+      }
+      if (e.key === DEBUG_DISTANCE_ELEVATION_KEY && (e.newValue === 'elevated' || e.newValue === 'eye-level')) {
+        setCameraElevationState(e.newValue)
       }
     }
     window.addEventListener('storage', handleStorage)
@@ -217,6 +346,12 @@ export const DebugDistanceProvider: React.FC<{
       showCoordinates,
       setShowCoordinates,
       toggleCoordinates,
+      coordFrame,
+      setCoordFrame,
+      toggleCoordFrame,
+      cameraElevation,
+      setCameraElevation,
+      toggleCameraElevation,
     }),
     [
       showDistance,
@@ -228,6 +363,12 @@ export const DebugDistanceProvider: React.FC<{
       showCoordinates,
       setShowCoordinates,
       toggleCoordinates,
+      coordFrame,
+      setCoordFrame,
+      toggleCoordFrame,
+      cameraElevation,
+      setCameraElevation,
+      toggleCameraElevation,
     ]
   )
 

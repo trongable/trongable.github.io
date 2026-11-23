@@ -540,4 +540,289 @@ describe('Tuner Component', () => {
     fireEvent.click(coordsBtn)
     expect(onToggleShowCoordinates).toHaveBeenCalledWith(false)
   })
+
+  it('renders Coord Frame buttons when showCoordinates is true and handles selection', () => {
+    const onCoordFrameChange = vi.fn()
+    render(
+      <Tuner
+        activeMode="halo"
+        onModeChange={vi.fn()}
+        params={DEFAULT_GEOMETRY_PARAMS}
+        onParamChange={vi.fn()}
+        onResetParams={vi.fn()}
+        showDistance={true}
+        showCoordinates={true}
+        coordFrame="view"
+        onCoordFrameChange={onCoordFrameChange}
+      />
+    )
+
+    fireEvent.click(screen.getByLabelText('Toggle parameter drawer'))
+    expect(screen.getByTestId('frame-view')).toBeInTheDocument()
+    expect(screen.getByTestId('frame-world')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByTestId('frame-world'))
+    expect(onCoordFrameChange).toHaveBeenCalledWith('world')
+  })
+
+  it('renders animation pause button next to launcher pill and responds to click', () => {
+    const onTogglePause = vi.fn()
+    const { rerender } = render(
+      <Tuner
+        activeMode="halo"
+        onModeChange={vi.fn()}
+        params={DEFAULT_GEOMETRY_PARAMS}
+        onParamChange={vi.fn()}
+        onResetParams={vi.fn()}
+        isPaused={false}
+        onTogglePause={onTogglePause}
+      />
+    )
+
+    const pauseBtn = screen.getByTestId('animation-pause-button')
+    expect(pauseBtn).toBeInTheDocument()
+    expect(pauseBtn).toHaveTextContent('⏸')
+    expect(pauseBtn).toHaveAttribute('aria-label', 'Pause all animations and visual effects')
+
+    fireEvent.click(pauseBtn)
+    expect(onTogglePause).toHaveBeenCalledWith(true)
+
+    // Re-render as paused
+    rerender(
+      <Tuner
+        activeMode="halo"
+        onModeChange={vi.fn()}
+        params={DEFAULT_GEOMETRY_PARAMS}
+        onParamChange={vi.fn()}
+        onResetParams={vi.fn()}
+        isPaused={true}
+        onTogglePause={onTogglePause}
+      />
+    )
+
+    expect(pauseBtn).toHaveTextContent('▶')
+    expect(pauseBtn).toHaveAttribute('aria-label', 'Resume animations and visual effects')
+
+    fireEvent.click(pauseBtn)
+    expect(onTogglePause).toHaveBeenCalledWith(false)
+  })
+
+  it('renders Animation Engine toggle row in VFX tab and handles click', () => {
+    const onTogglePause = vi.fn()
+    const { rerender } = render(
+      <Tuner
+        activeMode="halo"
+        onModeChange={vi.fn()}
+        params={DEFAULT_GEOMETRY_PARAMS}
+        onParamChange={vi.fn()}
+        onResetParams={vi.fn()}
+        isPaused={false}
+        onTogglePause={onTogglePause}
+      />
+    )
+
+    fireEvent.click(screen.getByLabelText('Toggle parameter drawer'))
+    fireEvent.click(screen.getByRole('button', { name: 'VFX & Glitch' }))
+
+    const engineToggle = screen.getByTestId('toggle-pause-drawer')
+    expect(engineToggle).toBeInTheDocument()
+    expect(engineToggle).toHaveTextContent('RUNNING (LIVE)')
+
+    fireEvent.click(engineToggle)
+    expect(onTogglePause).toHaveBeenCalledWith(true)
+
+    // Re-render as paused
+    rerender(
+      <Tuner
+        activeMode="halo"
+        onModeChange={vi.fn()}
+        params={DEFAULT_GEOMETRY_PARAMS}
+        onParamChange={vi.fn()}
+        onResetParams={vi.fn()}
+        isPaused={true}
+        onTogglePause={onTogglePause}
+      />
+    )
+
+    expect(engineToggle).toHaveTextContent('PAUSED (FROZEN)')
+  })
+
+  it('renders Camera Elevation buttons in 3D tab and handles selection', () => {
+    const onCameraElevationChange = vi.fn()
+    render(
+      <Tuner
+        activeMode="halo"
+        onModeChange={vi.fn()}
+        params={DEFAULT_GEOMETRY_PARAMS}
+        onParamChange={vi.fn()}
+        onResetParams={vi.fn()}
+        showDistance={true}
+        cameraElevation="elevated"
+        onCameraElevationChange={onCameraElevationChange}
+      />
+    )
+
+    fireEvent.click(screen.getByLabelText('Toggle parameter drawer'))
+    expect(screen.getByText(/Camera Angle/)).toBeInTheDocument()
+
+    const eyeLevelBtn = screen.getByTestId('elevation-eye-level')
+    const elevatedBtn = screen.getByTestId('elevation-elevated')
+
+    expect(eyeLevelBtn).toBeInTheDocument()
+    expect(elevatedBtn).toBeInTheDocument()
+
+    fireEvent.click(eyeLevelBtn)
+    expect(onCameraElevationChange).toHaveBeenCalledWith('eye-level')
+
+    fireEvent.click(elevatedBtn)
+    expect(onCameraElevationChange).toHaveBeenCalledWith('elevated')
+  })
+
+  it('renders Camera Orbit Inspection drawer controls when paused and handles angle adjustments', () => {
+    const onCameraAnglesChange = vi.fn()
+    const onResetCameraAngles = vi.fn()
+    render(
+      <Tuner
+        activeMode="halo"
+        onModeChange={vi.fn()}
+        params={DEFAULT_GEOMETRY_PARAMS}
+        onParamChange={vi.fn()}
+        onResetParams={vi.fn()}
+        isPaused={true}
+        cameraAngles={{ yaw: 0, pitch: 25, distance: 6 }}
+        onCameraAnglesChange={onCameraAnglesChange}
+        onResetCameraAngles={onResetCameraAngles}
+      />
+    )
+
+    fireEvent.click(screen.getByLabelText('Toggle parameter drawer'))
+    expect(screen.getByTestId('camera-orbit-inspection-drawer')).toBeInTheDocument()
+
+    // Yaw slider
+    const yawSlider = screen.getByTestId('slider-yaw')
+    fireEvent.change(yawSlider, { target: { value: '45' } })
+    expect(onCameraAnglesChange).toHaveBeenCalledWith({ yaw: 45, pitch: 25, distance: 6 })
+
+    // Pitch slider
+    const pitchSlider = screen.getByTestId('slider-pitch')
+    fireEvent.change(pitchSlider, { target: { value: '60' } })
+    expect(onCameraAnglesChange).toHaveBeenCalledWith({ yaw: 0, pitch: 60, distance: 6 })
+
+    // Distance slider
+    const distSlider = screen.getByTestId('slider-distance')
+    fireEvent.change(distSlider, { target: { value: '8.5' } })
+    expect(onCameraAnglesChange).toHaveBeenCalledWith({ yaw: 0, pitch: 25, distance: 8.5 })
+
+    // Preset Front
+    fireEvent.click(screen.getByTestId('preset-front'))
+    expect(onCameraAnglesChange).toHaveBeenCalledWith({ yaw: 0, pitch: 0, distance: 6 })
+
+    // Preset Side
+    fireEvent.click(screen.getByTestId('preset-side'))
+    expect(onCameraAnglesChange).toHaveBeenCalledWith({ yaw: 90, pitch: 0, distance: 6 })
+
+    // Preset Top
+    fireEvent.click(screen.getByTestId('preset-top'))
+    expect(onCameraAnglesChange).toHaveBeenCalledWith({ yaw: 0, pitch: 85, distance: 6 })
+
+    // Reset button
+    fireEvent.click(screen.getByTestId('reset-camera-angles'))
+    expect(onResetCameraAngles).toHaveBeenCalled()
+  })
+
+  it('renders compact floating inspection dock when isPaused is true and drawer is closed', () => {
+    const onCameraAnglesChange = vi.fn()
+    const onResetCameraAngles = vi.fn()
+    const { rerender } = render(
+      <Tuner
+        activeMode="halo"
+        onModeChange={vi.fn()}
+        params={DEFAULT_GEOMETRY_PARAMS}
+        onParamChange={vi.fn()}
+        onResetParams={vi.fn()}
+        isPaused={true}
+        cameraAngles={{ yaw: 0, pitch: 25, distance: 6 }}
+        onCameraAnglesChange={onCameraAnglesChange}
+        onResetCameraAngles={onResetCameraAngles}
+      />
+    )
+
+    expect(screen.getByTestId('compact-inspection-dock')).toBeInTheDocument()
+
+    // Compact yaw slider
+    const compactYaw = screen.getByTestId('compact-slider-yaw')
+    fireEvent.change(compactYaw, { target: { value: '30' } })
+    expect(onCameraAnglesChange).toHaveBeenCalledWith({ yaw: 30, pitch: 25, distance: 6 })
+
+    // Compact pitch slider
+    const compactPitch = screen.getByTestId('compact-slider-pitch')
+    fireEvent.change(compactPitch, { target: { value: '45' } })
+    expect(onCameraAnglesChange).toHaveBeenCalledWith({ yaw: 0, pitch: 45, distance: 6 })
+
+    // Compact reset button
+    fireEvent.click(screen.getByTestId('compact-reset-btn'))
+    expect(onResetCameraAngles).toHaveBeenCalled()
+
+    // Opening the drawer should hide the compact dock to avoid overlap
+    fireEvent.click(screen.getByLabelText('Toggle parameter drawer'))
+    expect(screen.queryByTestId('compact-inspection-dock')).not.toBeInTheDocument()
+
+    // Not paused: compact dock should not render
+    rerender(
+      <Tuner
+        activeMode="halo"
+        onModeChange={vi.fn()}
+        params={DEFAULT_GEOMETRY_PARAMS}
+        onParamChange={vi.fn()}
+        onResetParams={vi.fn()}
+        isPaused={false}
+      />
+    )
+    expect(screen.queryByTestId('compact-inspection-dock')).not.toBeInTheDocument()
+  })
+
+  it('renders Video Chamber tab and controls when isVideosPage is true', () => {
+    const onVideoParamChange = vi.fn()
+    const onResetVideoParams = vi.fn()
+
+    const { rerender } = render(
+      <Tuner
+        isVideosPage={true}
+        onVideoParamChange={onVideoParamChange}
+        onResetVideoParams={onResetVideoParams}
+      />
+    )
+
+    // Bottom pill displays chamber: video
+    expect(screen.getByText('chamber:')).toBeInTheDocument()
+    expect(screen.getByText('video')).toBeInTheDocument()
+
+    // Open drawer
+    fireEvent.click(screen.getByLabelText('Toggle parameter drawer'))
+    expect(screen.getByRole('button', { name: 'Video Chamber' })).toBeInTheDocument()
+    expect(screen.getByText('Sphere Radius')).toBeInTheDocument()
+    expect(screen.getByText('Thumbnail Scale')).toBeInTheDocument()
+
+    // Change sphere radius slider
+    const radiusSlider = screen.getByLabelText('Sphere Radius')
+    fireEvent.change(radiusSlider, { target: { value: '4.8' } })
+    expect(onVideoParamChange).toHaveBeenCalledWith('sphereRadius', 4.8)
+
+    // Reset video parameters
+    const resetBtn = screen.getByRole('button', { name: /Reset Video Chamber/i })
+    fireEvent.click(resetBtn)
+    expect(onResetVideoParams).toHaveBeenCalled()
+
+    // When paused, pause button uses cyber emerald green accent
+    rerender(
+      <Tuner
+        isVideosPage={true}
+        isPaused={true}
+        onVideoParamChange={onVideoParamChange}
+        onResetVideoParams={onResetVideoParams}
+      />
+    )
+    const pauseBtn = screen.getByTestId('animation-pause-button')
+    expect(pauseBtn.className).toContain('text-[#10b981]')
+  })
 })

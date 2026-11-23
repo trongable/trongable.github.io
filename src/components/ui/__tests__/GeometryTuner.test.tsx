@@ -78,10 +78,11 @@ describe('GeometryTuner Component', () => {
     // Open drawer
     fireEvent.click(screen.getByLabelText('Toggle parameter drawer'))
 
-    const speedSliders = screen.getAllByRole('slider')
-    expect(speedSliders.length).toBeGreaterThan(0)
+    const speedLabel = screen.getByText('transit speed')
+    const speedSlider = speedLabel.closest('div')?.parentElement?.querySelector('input[type="range"]') as HTMLInputElement
+    expect(speedSlider).toBeInTheDocument()
 
-    fireEvent.change(speedSliders[0], { target: { value: '0.35' } })
+    fireEvent.change(speedSlider, { target: { value: '0.35' } })
     expect(onParamChange).toHaveBeenCalledWith('trefoil', 'speed', 0.35)
   })
 

@@ -9,12 +9,14 @@ export interface TesseractMenuProps {
   isExpanded: boolean
   onSelect: (path: string) => void
   isGlitching?: boolean
+  isPaused?: boolean
   theme?: ThemeColor
   params: TesseractParams
 }
 
 export const TESSERACT_ITEMS = [
   { label: 'about', path: '/about', vertexIdx: 13 },
+  { label: 'videos', path: '/videos', vertexIdx: 15 },
   { label: 'more', path: '/more', vertexIdx: 7 },
   { label: 'sonny', path: '/sonny', imageUrl: '/images/sonny.png', vertexIdx: 10 },
   { label: 'dchc', path: 'https://dc-hardcore.com', vertexIdx: 0 },
@@ -77,6 +79,7 @@ export const TesseractMenu: React.FC<TesseractMenuProps> = ({
   isExpanded,
   onSelect,
   isGlitching = false,
+  isPaused = false,
   theme,
   params,
 }) => {
@@ -136,10 +139,12 @@ export const TesseractMenu: React.FC<TesseractMenuProps> = ({
     }
 
     // Advance 4D rotation angles
-    const speed = hoveredIdx !== null ? params.speed4D * 0.25 : params.speed4D
-    const glitchJitter = isGlitching ? THREE.MathUtils.randFloatSpread(0.04) : 0
-    angleXW.current += (speed * delta + glitchJitter)
-    angleYZ.current += (speed * 0.7 * delta + glitchJitter * 0.5)
+    if (!isPaused) {
+      const speed = hoveredIdx !== null ? params.speed4D * 0.25 : params.speed4D
+      const glitchJitter = isGlitching ? THREE.MathUtils.randFloatSpread(0.04) : 0
+      angleXW.current += (speed * delta + glitchJitter)
+      angleYZ.current += (speed * 0.7 * delta + glitchJitter * 0.5)
+    }
 
     // Project all 16 vertices to 3D in-place with zero allocations
     for (let i = 0; i < 16; i++) {
@@ -261,6 +266,10 @@ export const TesseractMenu: React.FC<TesseractMenuProps> = ({
 
       {/* Badges anchored to 4D projection vertices */}
       {ITEMS.map((item, index) => {
+        const v4 = TESSERACT_4D_VERTICES[item.vertexIdx]
+        const cellTag = v4 && v4[3] > 0 ? 'outer' : 'inner'
+        const vertexTag = `V${item.vertexIdx} ${cellTag}`
+
         return (
           <group
             key={item.label}
@@ -273,6 +282,7 @@ export const TesseractMenu: React.FC<TesseractMenuProps> = ({
               path={item.path}
               imageUrl={item.imageUrl}
               opacity={currentOpacity}
+              vertexTag={vertexTag}
               isHovered={hoveredIdx === index}
               isExpanded={isExpanded}
               isGlitching={isGlitching}

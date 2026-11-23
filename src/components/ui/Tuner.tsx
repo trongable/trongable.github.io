@@ -3,6 +3,7 @@ import {
   GeometryMode,
   GEOMETRY_MODES,
   AllGeometryParams,
+  DEFAULT_GEOMETRY_PARAMS,
   GUIDE_STYLES,
   LINE_GUIDE_STYLES,
   FACET_GUIDE_STYLES,
@@ -13,8 +14,19 @@ import {
   SONNY_CONTAINER_STYLES,
   useSonnyContainer,
 } from '@/context/SonnyContainerContext'
-import { useDebugDistance, DistanceMetric } from '@/context/DebugDistanceContext'
+import {
+  useDebugDistance,
+  DistanceMetric,
+  CoordFrame,
+  CameraElevation,
+} from '@/context/DebugDistanceContext'
+import { CameraAngles } from '../canvas/SceneContainer'
 import { PowerMode } from '@/hooks/usePowerManager'
+import {
+  VideoChamberParams,
+  DEFAULT_VIDEO_CHAMBER_PARAMS,
+  VIDEO_CHAMBER_PARAM_BOUNDS,
+} from '../videos/videoTunerConfig'
 import {
   computeHighlightColor,
   isValidHex,
@@ -23,15 +35,15 @@ import {
 } from '@/utils/colorUtils'
 
 export interface TunerProps {
-  activeMode: GeometryMode
-  onModeChange: (mode: GeometryMode) => void
-  params: AllGeometryParams
-  onParamChange: <M extends GeometryMode, K extends keyof AllGeometryParams[M]>(
+  activeMode?: GeometryMode
+  onModeChange?: (mode: GeometryMode) => void
+  params?: AllGeometryParams
+  onParamChange?: <M extends GeometryMode, K extends keyof AllGeometryParams[M]>(
     mode: M,
     key: K,
     val: AllGeometryParams[M][K]
   ) => void
-  onResetParams: (mode: GeometryMode) => void
+  onResetParams?: (mode: GeometryMode) => void
   onClose?: () => void
   // VFX & Glitch Controls
   currentThemeId?: ThemeId
@@ -62,14 +74,30 @@ export interface TunerProps {
   onDistanceMetricChange?: (metric: DistanceMetric) => void
   showCoordinates?: boolean
   onToggleShowCoordinates?: (show: boolean) => void
+  coordFrame?: CoordFrame
+  onCoordFrameChange?: (frame: CoordFrame) => void
+  cameraElevation?: CameraElevation
+  onCameraElevationChange?: (elevation: CameraElevation) => void
+  // Camera Orbit Inspection
+  cameraAngles?: CameraAngles
+  onCameraAnglesChange?: (angles: CameraAngles) => void
+  onResetCameraAngles?: () => void
+  // Animation / Effect Pause
+  isPaused?: boolean
+  onTogglePause?: (paused?: boolean) => void
+  // Video Chamber Specific Controls
+  isVideosPage?: boolean
+  videoParams?: VideoChamberParams
+  onVideoParamChange?: <K extends keyof VideoChamberParams>(key: K, val: VideoChamberParams[K]) => void
+  onResetVideoParams?: () => void
 }
 
 export const Tuner: React.FC<TunerProps> = ({
-  activeMode,
-  onModeChange,
-  params,
-  onParamChange,
-  onResetParams,
+  activeMode = 'halo',
+  onModeChange = () => {},
+  params = DEFAULT_GEOMETRY_PARAMS,
+  onParamChange = () => {},
+  onResetParams = () => {},
   onClose,
   currentThemeId = 'yellow',
   currentThemePrimary,
@@ -96,6 +124,19 @@ export const Tuner: React.FC<TunerProps> = ({
   onDistanceMetricChange,
   showCoordinates,
   onToggleShowCoordinates,
+  coordFrame,
+  onCoordFrameChange,
+  cameraElevation,
+  onCameraElevationChange,
+  cameraAngles,
+  onCameraAnglesChange,
+  onResetCameraAngles,
+  isPaused = false,
+  onTogglePause,
+  isVideosPage = false,
+  videoParams = DEFAULT_VIDEO_CHAMBER_PARAMS,
+  onVideoParamChange = () => {},
+  onResetVideoParams = () => {},
 }) => {
   const { containerStyle: ctxContainerStyle, setContainerStyle: ctxSetContainerStyle } = useSonnyContainer()
   const activeSonnyContainer = sonnyContainer ?? ctxContainerStyle
@@ -114,10 +155,16 @@ export const Tuner: React.FC<TunerProps> = ({
     setDistanceMetric: ctxSetDistanceMetric,
     showCoordinates: ctxShowCoordinates,
     toggleCoordinates: ctxToggleCoordinates,
+    coordFrame: ctxCoordFrame,
+    setCoordFrame: ctxSetCoordFrame,
+    cameraElevation: ctxCameraElevation,
+    setCameraElevation: ctxSetCameraElevation,
   } = useDebugDistance()
   const activeShowDistance = typeof showDistance === 'boolean' ? showDistance : ctxShowDistance
   const activeDistanceMetric = distanceMetric ?? ctxDistanceMetric ?? 'euclid'
   const activeShowCoords = typeof showCoordinates === 'boolean' ? showCoordinates : ctxShowCoordinates
+  const activeCoordFrame = coordFrame ?? ctxCoordFrame ?? 'view'
+  const activeCameraElevation = cameraElevation ?? ctxCameraElevation ?? 'elevated'
 
   const handleToggleDistance = () => {
     if (onToggleShowDistance) {
@@ -140,6 +187,22 @@ export const Tuner: React.FC<TunerProps> = ({
       onToggleShowCoordinates(!activeShowCoords)
     } else {
       ctxToggleCoordinates()
+    }
+  }
+
+  const handleSetCoordFrame = (frame: CoordFrame) => {
+    if (onCoordFrameChange) {
+      onCoordFrameChange(frame)
+    } else {
+      ctxSetCoordFrame(frame)
+    }
+  }
+
+  const handleSetCameraElevation = (elevation: CameraElevation) => {
+    if (onCameraElevationChange) {
+      onCameraElevationChange(elevation)
+    } else {
+      ctxSetCameraElevation(elevation)
     }
   }
 
@@ -173,6 +236,7 @@ export const Tuner: React.FC<TunerProps> = ({
 
   // Cycle to next mode
   const handleCycle = () => {
+    if (!onModeChange) return
     const currentIndex = GEOMETRY_MODES.findIndex((m) => m.id === activeMode)
     const nextIndex = (currentIndex + 1) % GEOMETRY_MODES.length
     onModeChange(GEOMETRY_MODES[nextIndex].id)
@@ -196,14 +260,26 @@ export const Tuner: React.FC<TunerProps> = ({
             <div>
               <span className="font-bold tracking-wider uppercase text-[11px]">System Tuner</span>
               <p className="text-[10px] opacity-70 mt-0.5">
-                {activeTab === 'geo' ? currentMeta.name : 'VFX & Glitch Controls'}
+                {activeTab === 'geo'
+                  ? isVideosPage
+                    ? 'Video Chamber 3D Laboratory'
+                    : currentMeta.name
+                  : isVideosPage
+                  ? 'VFX & Theme Controls'
+                  : 'VFX & Glitch Controls'}
               </p>
             </div>
             <div className="flex items-center gap-2">
               {activeTab === 'geo' && (
                 <button
                   type="button"
-                  onClick={() => onResetParams(activeMode)}
+                  onClick={() => {
+                    if (isVideosPage) {
+                      onResetVideoParams?.()
+                    } else if (onResetParams && activeMode) {
+                      onResetParams(activeMode)
+                    }
+                  }}
                   className="text-[10px] uppercase tracking-wider opacity-60 hover:opacity-100 hover:text-[var(--theme-highlight)] cursor-pointer"
                   title="Reset to default parameters"
                 >
@@ -232,7 +308,7 @@ export const Tuner: React.FC<TunerProps> = ({
                   : 'border-transparent opacity-60 hover:opacity-100'
               }`}
             >
-              3D Topologies
+              {isVideosPage ? 'Video Chamber' : '3D Topologies'}
             </button>
             <button
               type="button"
@@ -243,12 +319,197 @@ export const Tuner: React.FC<TunerProps> = ({
                   : 'border-transparent opacity-60 hover:opacity-100'
               }`}
             >
-              VFX & Glitch
+              {isVideosPage ? 'VFX & Theme' : 'VFX & Glitch'}
             </button>
           </div>
 
-          {/* Tab 1: 3D Topologies */}
-          {activeTab === 'geo' && (
+          {/* Tab 1: Video Chamber Controls (for Videos Page) */}
+          {activeTab === 'geo' && isVideosPage && videoParams && onVideoParamChange && (
+            <div data-testid="video-chamber-tuner-tab" className="space-y-2.5">
+              <div>
+                <div className="flex justify-between text-[11px] mb-1">
+                  <span className="opacity-80">Sphere Radius</span>
+                  <span className="font-semibold">{videoParams.sphereRadius.toFixed(1)}</span>
+                </div>
+                <input
+                  type="range"
+                  aria-label="Sphere Radius"
+                  min={VIDEO_CHAMBER_PARAM_BOUNDS.sphereRadius.min}
+                  max={VIDEO_CHAMBER_PARAM_BOUNDS.sphereRadius.max}
+                  step={VIDEO_CHAMBER_PARAM_BOUNDS.sphereRadius.step}
+                  value={videoParams.sphereRadius}
+                  onChange={(e) => onVideoParamChange('sphereRadius', parseFloat(e.target.value))}
+                  className="w-full accent-[var(--theme-primary)] cursor-pointer"
+                />
+              </div>
+
+              <div>
+                <div className="flex justify-between text-[11px] mb-1">
+                  <span className="opacity-80">Thumbnail Scale</span>
+                  <span className="font-semibold">{videoParams.thumbnailScale.toFixed(2)}x</span>
+                </div>
+                <input
+                  type="range"
+                  aria-label="Thumbnail Scale"
+                  min={VIDEO_CHAMBER_PARAM_BOUNDS.thumbnailScale.min}
+                  max={VIDEO_CHAMBER_PARAM_BOUNDS.thumbnailScale.max}
+                  step={VIDEO_CHAMBER_PARAM_BOUNDS.thumbnailScale.step}
+                  value={videoParams.thumbnailScale}
+                  onChange={(e) => onVideoParamChange('thumbnailScale', parseFloat(e.target.value))}
+                  className="w-full accent-[var(--theme-primary)] cursor-pointer"
+                />
+              </div>
+
+              <div>
+                <div className="flex justify-between text-[11px] mb-1">
+                  <span className="opacity-80">Horizontal Wrap Arc</span>
+                  <span className="font-semibold">{videoParams.arcDegrees}°</span>
+                </div>
+                <input
+                  type="range"
+                  aria-label="Horizontal Wrap Arc"
+                  min={VIDEO_CHAMBER_PARAM_BOUNDS.arcDegrees.min}
+                  max={VIDEO_CHAMBER_PARAM_BOUNDS.arcDegrees.max}
+                  step={VIDEO_CHAMBER_PARAM_BOUNDS.arcDegrees.step}
+                  value={videoParams.arcDegrees}
+                  onChange={(e) => onVideoParamChange('arcDegrees', parseFloat(e.target.value))}
+                  className="w-full accent-[var(--theme-primary)] cursor-pointer"
+                />
+              </div>
+
+              <div>
+                <div className="flex justify-between text-[11px] mb-1">
+                  <span className="opacity-80">Row Separation</span>
+                  <span className="font-semibold">{videoParams.rowSeparation.toFixed(2)}</span>
+                </div>
+                <input
+                  type="range"
+                  aria-label="Row Separation"
+                  min={VIDEO_CHAMBER_PARAM_BOUNDS.rowSeparation.min}
+                  max={VIDEO_CHAMBER_PARAM_BOUNDS.rowSeparation.max}
+                  step={VIDEO_CHAMBER_PARAM_BOUNDS.rowSeparation.step}
+                  value={videoParams.rowSeparation}
+                  onChange={(e) => onVideoParamChange('rowSeparation', parseFloat(e.target.value))}
+                  className="w-full accent-[var(--theme-primary)] cursor-pointer"
+                />
+              </div>
+
+              <div>
+                <div className="flex justify-between text-[11px] mb-1">
+                  <span className="opacity-80">Pan Sensitivity</span>
+                  <span className="font-semibold">{videoParams.panSensitivity.toFixed(1)}x</span>
+                </div>
+                <input
+                  type="range"
+                  aria-label="Pan Sensitivity"
+                  min={VIDEO_CHAMBER_PARAM_BOUNDS.panSensitivity.min}
+                  max={VIDEO_CHAMBER_PARAM_BOUNDS.panSensitivity.max}
+                  step={VIDEO_CHAMBER_PARAM_BOUNDS.panSensitivity.step}
+                  value={videoParams.panSensitivity}
+                  onChange={(e) => onVideoParamChange('panSensitivity', parseFloat(e.target.value))}
+                  className="w-full accent-[var(--theme-primary)] cursor-pointer"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <div className="flex justify-between text-[11px] mb-1">
+                    <span className="opacity-80">Max Yaw</span>
+                    <span className="font-semibold">±{videoParams.maxYawDeg}°</span>
+                  </div>
+                  <input
+                    type="range"
+                    aria-label="Max Yaw"
+                    min={VIDEO_CHAMBER_PARAM_BOUNDS.maxYawDeg.min}
+                    max={VIDEO_CHAMBER_PARAM_BOUNDS.maxYawDeg.max}
+                    step={VIDEO_CHAMBER_PARAM_BOUNDS.maxYawDeg.step}
+                    value={videoParams.maxYawDeg}
+                    onChange={(e) => onVideoParamChange('maxYawDeg', parseFloat(e.target.value))}
+                    className="w-full accent-[var(--theme-primary)] cursor-pointer"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-[11px] mb-1">
+                    <span className="opacity-80">Max Pitch</span>
+                    <span className="font-semibold">±{videoParams.maxPitchDeg}°</span>
+                  </div>
+                  <input
+                    type="range"
+                    aria-label="Max Pitch"
+                    min={VIDEO_CHAMBER_PARAM_BOUNDS.maxPitchDeg.min}
+                    max={VIDEO_CHAMBER_PARAM_BOUNDS.maxPitchDeg.max}
+                    step={VIDEO_CHAMBER_PARAM_BOUNDS.maxPitchDeg.step}
+                    value={videoParams.maxPitchDeg}
+                    onChange={(e) => onVideoParamChange('maxPitchDeg', parseFloat(e.target.value))}
+                    className="w-full accent-[var(--theme-primary)] cursor-pointer"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <div className="flex justify-between text-[11px] mb-1">
+                  <span className="opacity-80">Flight Transit Speed</span>
+                  <span className="font-semibold">{videoParams.transitSpeed}</span>
+                </div>
+                <input
+                  type="range"
+                  aria-label="Flight Transit Speed"
+                  min={VIDEO_CHAMBER_PARAM_BOUNDS.transitSpeed.min}
+                  max={VIDEO_CHAMBER_PARAM_BOUNDS.transitSpeed.max}
+                  step={VIDEO_CHAMBER_PARAM_BOUNDS.transitSpeed.step}
+                  value={videoParams.transitSpeed}
+                  onChange={(e) => onVideoParamChange('transitSpeed', parseFloat(e.target.value))}
+                  className="w-full accent-[var(--theme-primary)] cursor-pointer"
+                />
+              </div>
+
+              <div>
+                <div className="flex justify-between text-[11px] mb-1">
+                  <span className="opacity-80">Dim Intensity</span>
+                  <span className="font-semibold">{(videoParams.dimIntensity * 100).toFixed(0)}%</span>
+                </div>
+                <input
+                  type="range"
+                  aria-label="Dim Intensity"
+                  min={VIDEO_CHAMBER_PARAM_BOUNDS.dimIntensity.min}
+                  max={VIDEO_CHAMBER_PARAM_BOUNDS.dimIntensity.max}
+                  step={VIDEO_CHAMBER_PARAM_BOUNDS.dimIntensity.step}
+                  value={videoParams.dimIntensity}
+                  onChange={(e) => onVideoParamChange('dimIntensity', parseFloat(e.target.value))}
+                  className="w-full accent-[var(--theme-primary)] cursor-pointer"
+                />
+              </div>
+
+              <div>
+                <div className="flex justify-between text-[11px] mb-1">
+                  <span className="opacity-80">Synaptic Particles</span>
+                  <span className="font-semibold">{videoParams.particleCount}</span>
+                </div>
+                <input
+                  type="range"
+                  aria-label="Synaptic Particles"
+                  min={VIDEO_CHAMBER_PARAM_BOUNDS.particleCount.min}
+                  max={VIDEO_CHAMBER_PARAM_BOUNDS.particleCount.max}
+                  step={VIDEO_CHAMBER_PARAM_BOUNDS.particleCount.step}
+                  value={videoParams.particleCount}
+                  onChange={(e) => onVideoParamChange('particleCount', parseInt(e.target.value, 10))}
+                  className="w-full accent-[var(--theme-primary)] cursor-pointer"
+                />
+              </div>
+
+              <button
+                type="button"
+                onClick={onResetVideoParams}
+                className="w-full mt-3 py-1.5 px-3 rounded border border-[var(--theme-primary)]/40 hover:bg-[var(--theme-primary)] hover:text-[#1c1b22] text-xs font-semibold cursor-pointer transition-all active:scale-[0.98] text-center"
+              >
+                ↺ Reset Video Chamber
+              </button>
+            </div>
+          )}
+
+          {/* Tab 1: 3D Topologies (for Home Page) */}
+          {activeTab === 'geo' && !isVideosPage && (
             <div>
               {/* Direct Mode Selector Grid */}
               <div className="grid grid-cols-4 gap-1.5 mb-3">
@@ -380,8 +641,231 @@ export const Tuner: React.FC<TunerProps> = ({
                         {activeShowCoords ? 'ON' : 'OFF'}
                       </button>
                     </div>
+
+                    {activeShowCoords && (
+                      <div className="flex items-center justify-between mt-1.5 pt-1.5 border-t border-[var(--theme-primary)]/10 text-[9px]">
+                        <span className="opacity-70">Coord Frame:</span>
+                        <div className="flex gap-1">
+                          <button
+                            type="button"
+                            data-testid="frame-view"
+                            onClick={() => handleSetCoordFrame('view')}
+                            className={`px-2 py-0.5 rounded text-[9px] font-mono transition-colors cursor-pointer ${
+                              activeCoordFrame === 'view'
+                                ? 'bg-[var(--theme-primary)] text-[#1c1b22] font-bold'
+                                : 'border border-[var(--theme-primary)]/30 opacity-60 hover:opacity-100'
+                            }`}
+                            title="Screen View Space: Screen-relative coordinates (x: right, y: up, z: front)"
+                          >
+                            View (Screen)
+                          </button>
+                          <button
+                            type="button"
+                            data-testid="frame-world"
+                            onClick={() => handleSetCoordFrame('world')}
+                            className={`px-2 py-0.5 rounded text-[9px] font-mono transition-colors cursor-pointer ${
+                              activeCoordFrame === 'world'
+                                ? 'bg-[var(--theme-primary)] text-[#1c1b22] font-bold'
+                                : 'border border-[var(--theme-primary)]/30 opacity-60 hover:opacity-100'
+                            }`}
+                            title="World Space: Global manifold coordinates (x, y, z)"
+                          >
+                            World (Global)
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-between mt-1.5 pt-1.5 border-t border-[var(--theme-primary)]/10 text-[9px]">
+                      <span className="opacity-70">Camera Angle:</span>
+                      <div className="flex gap-1">
+                        <button
+                          type="button"
+                          data-testid="elevation-elevated"
+                          onClick={() => handleSetCameraElevation('elevated')}
+                          className={`px-2 py-0.5 rounded text-[9px] font-mono transition-colors cursor-pointer ${
+                            activeCameraElevation === 'elevated'
+                              ? 'bg-[var(--theme-primary)] text-[#1c1b22] font-bold'
+                              : 'border border-[var(--theme-primary)]/30 opacity-60 hover:opacity-100'
+                          }`}
+                          title="Elevated (25° downward pitch): [0, 2.55, 5.45] looking down at scene origin"
+                        >
+                          Elevated (25°)
+                        </button>
+                        <button
+                          type="button"
+                          data-testid="elevation-eye-level"
+                          onClick={() => handleSetCameraElevation('eye-level')}
+                          className={`px-2 py-0.5 rounded text-[9px] font-mono transition-colors cursor-pointer ${
+                            activeCameraElevation === 'eye-level'
+                              ? 'bg-[var(--theme-primary)] text-[#1c1b22] font-bold'
+                              : 'border border-[var(--theme-primary)]/30 opacity-60 hover:opacity-100'
+                          }`}
+                          title="Eye-Level (0° pitch): Pure horizontal perspective [0, 0, 6.0] eliminating vertical elevation skew"
+                        >
+                          Eye-Level (0°)
+                        </button>
+                      </div>
+                    </div>
                   </>
                 )}
+              </div>
+
+              {/* 360° Camera Orbit Inspection */}
+              <div
+                data-testid="camera-orbit-inspection-drawer"
+                className={`p-2.5 rounded border mb-3 transition-colors ${
+                  isPaused
+                    ? 'border-[#10b981]/50 bg-[#10b981]/5 shadow-sm'
+                    : 'border-[var(--theme-primary)]/20 bg-[var(--theme-primary)]/5'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[11px] font-semibold opacity-90">Camera Orbit Inspection</span>
+                    {isPaused && (
+                      <span className="text-[9px] px-1.5 py-0.2 rounded font-mono font-bold bg-[#10b981] text-white">
+                        PAUSED
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    data-testid="reset-camera-angles"
+                    onClick={onResetCameraAngles}
+                    className="text-[9px] uppercase tracking-wider opacity-60 hover:opacity-100 hover:text-[var(--theme-highlight)] cursor-pointer"
+                    title="Reset camera angles to default view"
+                  >
+                    ↺ reset
+                  </button>
+                </div>
+
+                {/* Yaw Slider (-180° to +180°) */}
+                <div className="mb-2">
+                  <div className="flex justify-between mb-0.5 text-[10px] font-mono">
+                    <span className="opacity-70">Yaw (Azimuth)</span>
+                    <span className="text-[var(--theme-primary)] font-bold">
+                      {cameraAngles?.yaw !== undefined ? `${cameraAngles.yaw > 0 ? '+' : ''}${cameraAngles.yaw.toFixed(0)}°` : '0°'}
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    data-testid="slider-yaw"
+                    min="-180"
+                    max="180"
+                    step="1"
+                    value={cameraAngles?.yaw ?? 0}
+                    onChange={(e) =>
+                      onCameraAnglesChange?.({
+                        ...(cameraAngles ?? { yaw: 0, pitch: 25.07, distance: 6.017 }),
+                        yaw: parseFloat(e.target.value),
+                      })
+                    }
+                    className="w-full accent-[var(--theme-primary)] cursor-pointer h-1 bg-[var(--theme-primary)]/20 rounded-lg appearance-none"
+                  />
+                </div>
+
+                {/* Pitch Slider (-85° to +85°) */}
+                <div className="mb-2">
+                  <div className="flex justify-between mb-0.5 text-[10px] font-mono">
+                    <span className="opacity-70">Pitch (Elevation)</span>
+                    <span className="text-[var(--theme-primary)] font-bold">
+                      {cameraAngles?.pitch !== undefined ? `${cameraAngles.pitch > 0 ? '+' : ''}${cameraAngles.pitch.toFixed(0)}°` : '25°'}
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    data-testid="slider-pitch"
+                    min="-85"
+                    max="85"
+                    step="1"
+                    value={cameraAngles?.pitch ?? 25.07}
+                    onChange={(e) =>
+                      onCameraAnglesChange?.({
+                        ...(cameraAngles ?? { yaw: 0, pitch: 25.07, distance: 6.017 }),
+                        pitch: parseFloat(e.target.value),
+                      })
+                    }
+                    className="w-full accent-[var(--theme-primary)] cursor-pointer h-1 bg-[var(--theme-primary)]/20 rounded-lg appearance-none"
+                  />
+                </div>
+
+                {/* Distance Slider (2.5 to 12.0) */}
+                <div className="mb-2">
+                  <div className="flex justify-between mb-0.5 text-[10px] font-mono">
+                    <span className="opacity-70">Distance (Zoom)</span>
+                    <span className="text-[var(--theme-primary)] font-bold">
+                      {cameraAngles?.distance !== undefined ? `${cameraAngles.distance.toFixed(1)}x` : '6.0x'}
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    data-testid="slider-distance"
+                    min="2.5"
+                    max="12.0"
+                    step="0.1"
+                    value={cameraAngles?.distance ?? 6.017}
+                    onChange={(e) =>
+                      onCameraAnglesChange?.({
+                        ...(cameraAngles ?? { yaw: 0, pitch: 25.07, distance: 6.017 }),
+                        distance: parseFloat(e.target.value),
+                      })
+                    }
+                    className="w-full accent-[var(--theme-primary)] cursor-pointer h-1 bg-[var(--theme-primary)]/20 rounded-lg appearance-none"
+                  />
+                </div>
+
+                {/* Angle Presets */}
+                <div className="flex gap-1 pt-1 border-t border-[var(--theme-primary)]/10 text-[9px] font-mono">
+                  <button
+                    type="button"
+                    data-testid="preset-front"
+                    onClick={() =>
+                      onCameraAnglesChange?.({
+                        ...(cameraAngles ?? { distance: 6.017 }),
+                        yaw: 0,
+                        pitch: 0,
+                        distance: cameraAngles?.distance ?? 6.0,
+                      })
+                    }
+                    className="flex-1 py-0.5 rounded border border-[var(--theme-primary)]/30 opacity-70 hover:opacity-100 hover:border-[var(--theme-primary)] cursor-pointer text-center"
+                    title="Front Eye-Level (Yaw 0°, Pitch 0°)"
+                  >
+                    Front
+                  </button>
+                  <button
+                    type="button"
+                    data-testid="preset-side"
+                    onClick={() =>
+                      onCameraAnglesChange?.({
+                        ...(cameraAngles ?? { distance: 6.017 }),
+                        yaw: 90,
+                        pitch: 0,
+                        distance: cameraAngles?.distance ?? 6.0,
+                      })
+                    }
+                    className="flex-1 py-0.5 rounded border border-[var(--theme-primary)]/30 opacity-70 hover:opacity-100 hover:border-[var(--theme-primary)] cursor-pointer text-center"
+                    title="Side Profile (Yaw 90°, Pitch 0°)"
+                  >
+                    Side
+                  </button>
+                  <button
+                    type="button"
+                    data-testid="preset-top"
+                    onClick={() =>
+                      onCameraAnglesChange?.({
+                        ...(cameraAngles ?? { distance: 6.017 }),
+                        yaw: 0,
+                        pitch: 85,
+                        distance: cameraAngles?.distance ?? 6.0,
+                      })
+                    }
+                    className="flex-1 py-0.5 rounded border border-[var(--theme-primary)]/30 opacity-70 hover:opacity-100 hover:border-[var(--theme-primary)] cursor-pointer text-center"
+                    title="Top Birds-Eye (Pitch 85°)"
+                  >
+                    Top
+                  </button>
+                </div>
               </div>
 
               {/* Mode-Specific Sliders */}
@@ -1278,6 +1762,29 @@ export const Tuner: React.FC<TunerProps> = ({
                 </div>
               </div>
 
+              {/* Animation Engine Pause/Resume */}
+              <div className="pt-2 border-t border-[var(--theme-primary)]/20">
+                <div className="flex items-center justify-between mb-1.5">
+                  <div>
+                    <span className="text-[11px] font-semibold opacity-90">Animation Engine</span>
+                    <span className="block text-[9px] opacity-60">Freeze 3D canvas & all visual effects</span>
+                  </div>
+                  <button
+                    type="button"
+                    data-testid="toggle-pause-drawer"
+                    onClick={() => onTogglePause?.(!isPaused)}
+                    className={`px-2.5 py-1 rounded text-[10px] font-semibold transition-colors cursor-pointer ${
+                      isPaused
+                        ? 'bg-[#10b981] text-white font-bold shadow'
+                        : 'bg-[var(--theme-primary)] text-[#1c1b22] font-bold shadow'
+                    }`}
+                    title={isPaused ? 'Resume animations & visual effects' : 'Pause animations & visual effects'}
+                  >
+                    {isPaused ? 'PAUSED (FROZEN)' : 'RUNNING (LIVE)'}
+                  </button>
+                </div>
+              </div>
+
               {/* Instant Trigger Glitch Burst */}
               {onTriggerGlitch && (
                 <button
@@ -1293,42 +1800,194 @@ export const Tuner: React.FC<TunerProps> = ({
         </div>
       )}
 
-      {/* Persistent Bottom-Right HUD Switcher Pill */}
-      <div className="flex items-center rounded-full border border-[var(--theme-primary)]/40 bg-[#1c1b22]/90 p-1 shadow-lg backdrop-blur-md">
-        <button
-          type="button"
-          onClick={handleCycle}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-[var(--theme-primary)] hover:text-[var(--theme-highlight)] cursor-pointer transition-colors"
-          title="Click to cycle to next 3D geometry"
-          aria-label={`Current geometry: ${currentMeta.name}. Click to switch.`}
+      {/* Floating Compact Inspection Dock when Paused (outside open drawer) */}
+      {isPaused && !isOpen && (
+        <div
+          data-testid="compact-inspection-dock"
+          className="mb-2 p-2.5 rounded-xl border border-[#10b981]/40 bg-[#1c1b22]/95 backdrop-blur-md shadow-2xl w-64 text-left pointer-events-auto"
         >
-          <span className="opacity-60">geo:</span>
-          <span className="font-semibold">{currentMeta.label}</span>
-        </button>
+          <div className="flex items-center justify-between mb-2 pb-1 border-b border-[#10b981]/20">
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] font-bold text-[#10b981] uppercase tracking-wider">Inspect Orbit</span>
+              <span className="text-[9px] font-mono opacity-60">Paused</span>
+            </div>
+            <button
+              type="button"
+              data-testid="compact-reset-btn"
+              onClick={onResetCameraAngles}
+              className="text-[9px] uppercase tracking-wider text-[var(--theme-primary)] opacity-70 hover:opacity-100 cursor-pointer"
+              title="Reset camera angles"
+            >
+              ↺ reset
+            </button>
+          </div>
 
+          {/* Compact Yaw Slider */}
+          <div className="mb-1.5">
+            <div className="flex justify-between text-[9px] font-mono mb-0.5">
+              <span className="opacity-70">Yaw</span>
+              <span className="text-[var(--theme-primary)] font-bold">
+                {cameraAngles?.yaw !== undefined ? `${cameraAngles.yaw > 0 ? '+' : ''}${cameraAngles.yaw.toFixed(0)}°` : '0°'}
+              </span>
+            </div>
+            <input
+              type="range"
+              data-testid="compact-slider-yaw"
+              min="-180"
+              max="180"
+              step="1"
+              value={cameraAngles?.yaw ?? 0}
+              onChange={(e) =>
+                onCameraAnglesChange?.({
+                  ...(cameraAngles ?? { yaw: 0, pitch: 25.07, distance: 6.017 }),
+                  yaw: parseFloat(e.target.value),
+                })
+              }
+              className="w-full accent-[var(--theme-primary)] cursor-pointer h-1 bg-[var(--theme-primary)]/20 rounded-lg appearance-none"
+            />
+          </div>
+
+          {/* Compact Pitch Slider */}
+          <div className="mb-1.5">
+            <div className="flex justify-between text-[9px] font-mono mb-0.5">
+              <span className="opacity-70">Pitch</span>
+              <span className="text-[var(--theme-primary)] font-bold">
+                {cameraAngles?.pitch !== undefined ? `${cameraAngles.pitch > 0 ? '+' : ''}${cameraAngles.pitch.toFixed(0)}°` : '25°'}
+              </span>
+            </div>
+            <input
+              type="range"
+              data-testid="compact-slider-pitch"
+              min="-85"
+              max="85"
+              step="1"
+              value={cameraAngles?.pitch ?? 25.07}
+              onChange={(e) =>
+                onCameraAnglesChange?.({
+                  ...(cameraAngles ?? { yaw: 0, pitch: 25.07, distance: 6.017 }),
+                  pitch: parseFloat(e.target.value),
+                })
+              }
+              className="w-full accent-[var(--theme-primary)] cursor-pointer h-1 bg-[var(--theme-primary)]/20 rounded-lg appearance-none"
+            />
+          </div>
+
+          {/* Compact Presets */}
+          <div className="flex gap-1 pt-1 text-[8px] font-mono">
+            <button
+              type="button"
+              data-testid="compact-preset-front"
+              onClick={() =>
+                onCameraAnglesChange?.({
+                  ...(cameraAngles ?? { distance: 6.017 }),
+                  yaw: 0,
+                  pitch: 0,
+                  distance: cameraAngles?.distance ?? 6.0,
+                })
+              }
+              className="flex-1 py-0.5 rounded border border-[var(--theme-primary)]/30 opacity-70 hover:opacity-100 hover:border-[var(--theme-primary)] cursor-pointer text-center"
+            >
+              Front
+            </button>
+            <button
+              type="button"
+              data-testid="compact-preset-side"
+              onClick={() =>
+                onCameraAnglesChange?.({
+                  ...(cameraAngles ?? { distance: 6.017 }),
+                  yaw: 90,
+                  pitch: 0,
+                  distance: cameraAngles?.distance ?? 6.0,
+                })
+              }
+              className="flex-1 py-0.5 rounded border border-[var(--theme-primary)]/30 opacity-70 hover:opacity-100 hover:border-[var(--theme-primary)] cursor-pointer text-center"
+            >
+              Side
+            </button>
+            <button
+              type="button"
+              data-testid="compact-preset-top"
+              onClick={() =>
+                onCameraAnglesChange?.({
+                  ...(cameraAngles ?? { distance: 6.017 }),
+                  yaw: 0,
+                  pitch: 85,
+                  distance: cameraAngles?.distance ?? 6.0,
+                })
+              }
+              className="flex-1 py-0.5 rounded border border-[var(--theme-primary)]/30 opacity-70 hover:opacity-100 hover:border-[var(--theme-primary)] cursor-pointer text-center"
+            >
+              Top
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Persistent Bottom-Right HUD Switcher Pill & Dedicated Pause Button */}
+      <div className="flex items-center gap-2">
         <button
           type="button"
-          onClick={() => setIsOpen((prev) => !prev)}
-          className={`flex h-7 w-7 items-center justify-center rounded-full border border-[var(--theme-primary)]/30 text-[var(--theme-primary)] hover:text-[var(--theme-highlight)] hover:border-[var(--theme-primary)] cursor-pointer transition-colors ${
-            isOpen ? 'bg-[var(--theme-primary)] text-[#1c1b22] font-bold' : ''
+          data-testid="animation-pause-button"
+          onClick={() => onTogglePause?.(!isPaused)}
+          className={`flex h-9 w-9 items-center justify-center rounded-full border shadow-lg backdrop-blur-md cursor-pointer transition-all active:scale-95 ${
+            isPaused
+              ? 'border-[#10b981] bg-[#10b981]/20 text-[#10b981] hover:bg-[#10b981]/30 font-bold'
+              : 'border-[var(--theme-primary)]/40 bg-[#1c1b22]/90 text-[var(--theme-primary)] hover:text-[var(--theme-highlight)] hover:border-[var(--theme-primary)]'
           }`}
-          title="Tune live parameters"
-          aria-label="Toggle parameter drawer"
+          title={isPaused ? 'Resume animations & visual effects' : 'Pause all animations & visual effects'}
+          aria-label={isPaused ? 'Resume animations and visual effects' : 'Pause all animations and visual effects'}
         >
-          ⚙
+          <span className="text-sm select-none" aria-hidden="true">
+            {isPaused ? '▶' : '⏸'}
+          </span>
         </button>
 
-        {onClose && (
+        <div className="flex items-center rounded-full border border-[var(--theme-primary)]/40 bg-[#1c1b22]/90 p-1 shadow-lg backdrop-blur-md">
+          {isVideosPage ? (
+            <div
+              data-testid="video-chamber-hud-pill"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-[var(--theme-primary)]"
+            >
+              <span className="opacity-60">chamber:</span>
+              <span className="font-semibold">video</span>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={handleCycle}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-[var(--theme-primary)] hover:text-[var(--theme-highlight)] cursor-pointer transition-colors"
+              title="Click to cycle to next 3D geometry"
+              aria-label={`Current geometry: ${currentMeta.name}. Click to switch.`}
+            >
+              <span className="opacity-60">geo:</span>
+              <span className="font-semibold">{currentMeta.label}</span>
+            </button>
+          )}
+
           <button
             type="button"
-            onClick={onClose}
-            className="flex h-7 w-7 items-center justify-center rounded-full text-[var(--theme-primary)] hover:text-[#ff007f] hover:bg-[#ff007f]/10 cursor-pointer transition-colors text-xs ml-0.5"
-            title="Hide HUD menu (reopen via console: tuner())"
-            aria-label="Hide tuner menu"
+            onClick={() => setIsOpen((prev) => !prev)}
+            className={`flex h-7 w-7 items-center justify-center rounded-full border border-[var(--theme-primary)]/30 text-[var(--theme-primary)] hover:text-[var(--theme-highlight)] hover:border-[var(--theme-primary)] cursor-pointer transition-colors ${
+              isOpen ? 'bg-[var(--theme-primary)] text-[#1c1b22] font-bold' : ''
+            }`}
+            title="Tune live parameters"
+            aria-label="Toggle parameter drawer"
           >
-            ✕
+            ⚙
           </button>
-        )}
+
+          {onClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex h-7 w-7 items-center justify-center rounded-full text-[var(--theme-primary)] hover:text-[#ff0055] hover:bg-[#ff0055]/10 cursor-pointer transition-colors text-xs ml-0.5"
+              title="Hide HUD menu"
+              aria-label="Hide tuner menu"
+            >
+              ✕
+            </button>
+          )}
+        </div>
       </div>
     </div>
   )

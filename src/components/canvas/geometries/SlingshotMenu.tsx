@@ -10,15 +10,17 @@ export interface SlingshotMenuProps {
   isExpanded: boolean
   onSelect: (path: string) => void
   isGlitching?: boolean
+  isPaused?: boolean
   theme?: ThemeColor
   params: SlingshotParams
 }
 
 const ITEMS = [
   { label: 'about', path: '/about', orbitTilt: [25, 0, 15], phaseOffset: 0 },
-  { label: 'more', path: '/more', orbitTilt: [-30, 40, -10], phaseOffset: (Math.PI * 2) / 4 },
-  { label: 'sonny', path: '/sonny', imageUrl: '/images/sonny.png', orbitTilt: [-15, -50, 35], phaseOffset: (Math.PI * 4) / 4 },
-  { label: 'dchc', path: 'https://dc-hardcore.com', orbitTilt: [50, -45, 30], phaseOffset: (Math.PI * 6) / 4 },
+  { label: 'videos', path: '/videos', orbitTilt: [10, 25, -20], phaseOffset: (Math.PI * 2) / 5 },
+  { label: 'more', path: '/more', orbitTilt: [-30, 40, -10], phaseOffset: (Math.PI * 4) / 5 },
+  { label: 'sonny', path: '/sonny', imageUrl: '/images/sonny.png', orbitTilt: [-15, -50, 35], phaseOffset: (Math.PI * 6) / 5 },
+  { label: 'dchc', path: 'https://dc-hardcore.com', orbitTilt: [50, -45, 30], phaseOffset: (Math.PI * 8) / 5 },
 ]
 
 const STATIC_TILT_EULERS = ITEMS.map(
@@ -77,6 +79,7 @@ export const SlingshotMenu: React.FC<SlingshotMenuProps> = ({
   isExpanded,
   onSelect,
   isGlitching = false,
+  isPaused = false,
   theme,
   params,
 }) => {
@@ -133,7 +136,9 @@ export const SlingshotMenu: React.FC<SlingshotMenuProps> = ({
       const angularSpeed = (0.28 * params.acceleration * speedMult) / (normalizedR * normalizedR)
       const glitchJitter = isGlitching ? THREE.MathUtils.randFloatSpread(0.04) : 0
 
-      meanAnomalies.current[idx] += angularSpeed * delta + glitchJitter
+      if (!isPaused) {
+        meanAnomalies.current[idx] += angularSpeed * delta + glitchJitter
+      }
 
       computeKeplerPosition(meanAnomalies.current[idx], semiMajorAxis, e, cached)
       const itemGroup = itemGroupRefs.current[idx]

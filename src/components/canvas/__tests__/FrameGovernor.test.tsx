@@ -32,6 +32,12 @@ describe('FrameGovernor', () => {
     expect(mockInvalidate).not.toHaveBeenCalled()
   })
 
+  it('does not schedule renders when isPaused is true', () => {
+    render(<FrameGovernor targetFps={60} isSleeping={false} isPaused={true} />)
+    vi.advanceTimersByTime(100)
+    expect(mockInvalidate).not.toHaveBeenCalled()
+  })
+
   it('schedules renders when active at 60 FPS', () => {
     render(<FrameGovernor targetFps={60} isSleeping={false} />)
 

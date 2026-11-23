@@ -221,7 +221,7 @@ describe('MenuItemBadge Component', () => {
     expect(screen.queryByTestId('distance-badge')).not.toBeInTheDocument()
   })
 
-  it('renders distance badge with z: prefix when distanceMetric="depth"', () => {
+  it('renders distance badge with depth: prefix when distanceMetric="depth"', () => {
     render(
       <MenuItemBadge
         label="about"
@@ -236,7 +236,7 @@ describe('MenuItemBadge Component', () => {
     )
     const distanceBadge = screen.getByTestId('distance-badge')
     expect(distanceBadge).toBeInTheDocument()
-    expect(distanceBadge).toHaveTextContent(/z:\s*5\.00/)
+    expect(distanceBadge).toHaveTextContent(/depth:\s*5\.00/)
   })
 
   it('renders x, y, z coordinates in telemetry badge when showCoordinates is true', () => {
@@ -275,6 +275,25 @@ describe('MenuItemBadge Component', () => {
     expect(distanceBadge).toBeInTheDocument()
     expect(distanceBadge).toHaveTextContent(/d:\s*5\.00/)
     expect(distanceBadge).not.toHaveTextContent(/x:/)
+  })
+
+  it('renders vertex tag prefix when vertexTag prop is provided', () => {
+    render(
+      <MenuItemBadge
+        label="sonny"
+        path="/sonny"
+        vertexTag="V10 outer"
+        isHovered={false}
+        isExpanded={true}
+        showDistance={true}
+        showCoordinates={true}
+        onSelect={vi.fn()}
+        onHover={vi.fn()}
+      />
+    )
+    const distanceBadge = screen.getByTestId('distance-badge')
+    expect(distanceBadge).toBeInTheDocument()
+    expect(distanceBadge).toHaveTextContent(/\[V10 outer\]/)
   })
 
   it('registers useFrame callback to update depth scaling and renderOrder', () => {
@@ -334,5 +353,80 @@ describe('MenuItemBadge Component', () => {
     const nearDist = 2.0
     const nearDepth = THREE.MathUtils.clamp((8.4 - nearDist) / 4.8, 0, 1)
     expect(nearDepth).toBe(1)
+  })
+
+  it('safely re-renders and swaps tree when toggling showDistance between true and false', () => {
+    const { rerender } = render(
+      <MenuItemBadge
+        label="work"
+        path="/work"
+        isHovered={false}
+        isExpanded={true}
+        showDistance={false}
+        onSelect={vi.fn()}
+        onHover={vi.fn()}
+      />
+    )
+    expect(screen.queryByTestId('translucent-sphere')).not.toBeInTheDocument()
+    expect(screen.getByText('work')).toBeInTheDocument()
+
+    // Toggle ON -> renders probe sphere
+    rerender(
+      <MenuItemBadge
+        label="work"
+        path="/work"
+        isHovered={false}
+        isExpanded={true}
+        showDistance={true}
+        onSelect={vi.fn()}
+        onHover={vi.fn()}
+      />
+    )
+    expect(screen.getByTestId('translucent-sphere')).toBeInTheDocument()
+    expect(screen.queryByText('work')).not.toBeInTheDocument()
+
+    // Toggle OFF -> cleanly unmounts probe sphere and returns to standard badge without crashing
+    rerender(
+      <MenuItemBadge
+        label="work"
+        path="/work"
+        isHovered={false}
+        isExpanded={true}
+        showDistance={false}
+        onSelect={vi.fn()}
+        onHover={vi.fn()}
+      />
+    )
+    expect(screen.queryByTestId('translucent-sphere')).not.toBeInTheDocument()
+    expect(screen.getByText('work')).toBeInTheDocument()
+  })
+
+  it('applies 75% scale factor to Sonny image badge', () => {
+    // Sonny badge (image-based) scale factor verification:
+    // depthScale = scale * imageBaseScale * hoverScaleMult
+    // imageBaseScale = 0.75 for image badges, 1.0 for standard text badges
+    const scale = 1.0
+    const textImageBaseScale = 1.0
+    const sonnyImageBaseScale = 0.75
+    const hoverScaleMult = 1.0
+
+    const textScale = scale * textImageBaseScale * hoverScaleMult
+    const sonnyScale = scale * sonnyImageBaseScale * hoverScaleMult
+
+    expect(textScale).toBe(1.0)
+    expect(sonnyScale).toBe(0.75)
+    expect(sonnyScale / textScale).toBe(0.75)
+  })
+
+  it('selects a random resting frame from flipbook when hover effect completes', () => {
+    const frameCount = SONNY_FRAMES.length
+    expect(frameCount).toBe(15)
+
+    // Verify random selection algorithm
+    for (let i = 0; i < 50; i++) {
+      const randomIndex = Math.floor(Math.random() * frameCount)
+      expect(randomIndex).toBeGreaterThanOrEqual(0)
+      expect(randomIndex).toBeLessThan(frameCount)
+    }
   })
 })

@@ -29,9 +29,10 @@ export function computeStarColors(
   return target
 }
 
-export const ParticleField: React.FC<{ count?: number; theme?: ThemeColor }> = ({
+export const ParticleField: React.FC<{ count?: number; theme?: ThemeColor; isPaused?: boolean }> = ({
   count = 750,
   theme,
+  isPaused = false,
 }) => {
   const pointsRef = useRef<THREE.Points>(null)
   const geomRef = useRef<THREE.BufferGeometry>(null)
@@ -113,7 +114,7 @@ export const ParticleField: React.FC<{ count?: number; theme?: ThemeColor }> = (
   }
 
   useFrame((_, delta) => {
-    if (pointsRef.current) {
+    if (!isPaused && pointsRef.current) {
       pointsRef.current.rotation.y += delta * 0.008
       pointsRef.current.rotation.x += delta * 0.004
     }

@@ -123,7 +123,7 @@ if (effectiveMetric === 'depth' && typeof camera.getWorldDirection === 'function
 ```
 
 - When `metric === 'euclid'`: Label displays prefix `d: 5.45`.
-- When `metric === 'depth'`: Label displays prefix `z: 5.45`.
+- When `metric === 'depth'`: Label displays prefix `depth: 5.45` (disambiguated from coordinate `z:`).
 - Swappable in real time via Tuner HUD or console (`setDistanceMetric('depth')`).
 
 ---
@@ -177,7 +177,7 @@ if (distTimerRef.current >= 0.06) {
     lastYRef.current = worldPos.current.y
     lastZRef.current = worldPos.current.z
 
-    const prefix = effectiveMetric === 'depth' ? 'z:' : 'd:'
+    const prefix = effectiveMetric === 'depth' ? 'depth:' : 'd:'
     const distStr = `${prefix} ${distToCamera.toFixed(2)}`
     if (effectiveShowCoords) {
       distTextRef.current.text = `${distStr}\nx: ${lastXRef.current.toFixed(2)}  y: ${lastYRef.current.toFixed(2)}  z: ${lastZRef.current.toFixed(2)}`
@@ -191,4 +191,73 @@ if (distTimerRef.current >= 0.06) {
 
 1. **Time Gate**: Limits string updates to at most ~16 Hz (every 60ms), perfectly readable to human eyes while cutting GPU re-triangulation workload by **87%**.
 2. **Spatial Delta Epsilon Gate ($|\Delta| \ge 0.01$)**: When badges are stationary or rotating slowly near apoapsis, updates are completely halted.
-3. **Zero Heap Allocation**: Cached vector coordinates (`worldPos.current`) mutate in-place, generating zero garbage collection churn.
+3. **Zero Heap Allocation**: Cached vector coordinates (`worldPos.current`, `viewPos.current`, `originViewPos.current`) mutate in-place, generating zero garbage collection churn.
+
+---
+
+## 6. The Perceptual Depth Paradox: Resolving Inverted Z via Camera View Space
+
+### 6.1 The Paradox
+
+Developers observed an unintuitive phenomenon when monitoring the 3D coordinate readouts on certain topologies (such as the Tesseract 4D Clifford quad):
+
+> *"There are times where one of the badges is clearly in front of another on the screen, but it has a lower $z$ value."*
+
+For instance, in the Tesseract topology, vertex 7 visually appears closer to the viewer than vertex 13. Yet inspecting raw world coordinates revealed:
+- Vertex 7: $(x_w = 1.05, y_w = 0.74, z_w = 0.74)$
+- Vertex 13: $(x_w = 0.44, y_w = -0.58, z_w = 1.06)$
+
+Vertex 13 had $z_w = 1.06$, while Vertex 7 had $z_w = 0.74$. Under a naive assumption where $+Z$ equates to "depth toward the viewer," this looked inverted ($z_7 < z_{13}$).
+
+### 6.2 The Mathematical Root Cause: Camera Elevation & Pitch Coupling
+
+The anomaly originates from the camera orientation derived in Section 2. The camera is not gazing horizontally along the $Z$-axis; it is elevated at $\vec{C} = (0, 2.55, 5.45)$ and pitched downward by $25.07^\circ$.
+
+Recall the perpendicular view depth equation from Section 2.2:
+$$z_{\text{view}}(\vec{P}) = -0.4238 y_w - 0.9058 z_w + 6.017$$
+
+In world coordinates:
+1. Increasing $z_w$ brings the object closer to the camera (depth decreases by $0.9058 \Delta z_w$).
+2. **Increasing $y_w$ also brings the object closer to the camera** (depth decreases by $0.4238 \Delta y_w$) because the camera is looking down from an elevation of $+2.55$!
+
+Evaluating actual perpendicular depth from the camera:
+$$z_{\text{view}}(\text{Vertex 7}) = -0.4238(0.74) - 0.9058(0.74) + 6.017 = -0.3136 - 0.6703 + 6.017 = \mathbf{5.033\text{ units}}$$
+$$z_{\text{view}}(\text{Vertex 13}) = -0.4238(-0.58) - 0.9058(1.06) + 6.017 = +0.2458 - 0.9601 + 6.017 = \mathbf{5.303\text{ units}}$$
+
+$$\Delta z_{\text{view}} = 5.303 - 5.033 = \mathbf{0.270\text{ units}}$$
+
+Vertex 7 is **$0.270$ units closer to the camera** than Vertex 13! Even though Vertex 13 has a slightly larger world $z_w$, Vertex 7's high positive elevation ($y_w = +0.74$ vs $y_w = -0.58$) overcomes the horizontal difference, placing Vertex 7 physically closer and visually in front.
+
+When viewing world $(x_w, y_w, z_w)$ coordinates on a 2D display, human intuition assumes the screen plane corresponds directly to the $(x, y)$ axes and depth corresponds to $z$. In a pitched camera system, this assumption fails.
+
+### 6.3 The Solution: Camera View Space Relative to Origin
+
+To align the displayed coordinates with human perception on screen, the telemetry engine introduces a **Coordinate Frame Switcher**:
+1. **`view` (Screen Space — Default)**: Transforms world coordinates into the camera's local reference frame, normalized relative to the scene origin $(0, 0, 0)$:
+   $$\vec{P}_{\text{view}} = \mathbf{V} \cdot \begin{pmatrix} x_w \\ y_w \\ z_w \\ 1 \end{pmatrix}, \quad \vec{O}_{\text{view}} = \mathbf{V} \cdot \begin{pmatrix} 0 \\ 0 \\ 0 \\ 1 \end{pmatrix}$$
+   $$x = \vec{P}_{\text{view}}.x, \quad y = \vec{P}_{\text{view}}.y, \quad z = \vec{P}_{\text{view}}.z - \vec{O}_{\text{view}}.z$$
+2. **`world` (Global Manifold)**: Displays raw global manifold coordinates $(x_w, y_w, z_w)$ for inspecting intrinsic geometry equations.
+
+#### Why View Space Invariance Holds:
+In OpenGL / Three.js camera view space, the camera is positioned at $(0, 0, 0)$ gazing down the negative $Z$-axis ($-Z_{\text{view}}$). Therefore:
+- The closer an object is to the camera, the less negative its view $Z$ coordinate is.
+- By computing $z = \vec{P}_{\text{view}}.z - \vec{O}_{\text{view}}.z$, objects closer to the camera than the origin receive positive values ($z > 0$), and objects farther receive negative values ($z < 0$).
+- **Crucially, $Z_{\text{front}} > Z_{\text{back}}$ holds strictly invariant across all 8 topologies, all camera pitch angles, and all rotations.**
+
+```
+┌────────────────────────────────────────────────────────┐
+│                      d: 5.03                           │  ← Row 1: Camera Distance
+│       x: 1.05    y: 0.28    z: 0.98                    │  ← Row 2: View-Space Coordinates
+└────────────────────────────────────────────────────────┘
+```
+
+### 6.4 Developer Controls & Persistence
+
+The Coordinate Frame can be toggled via:
+- **Tuner HUD**: `Coord Frame` segmented button (`View (Screen)` vs `World (Global)`) under the `3D Topologies` tab.
+- **Console API**:
+  - `setCoordFrame('view' | 'world')`: Explicitly set coordinate mode.
+  - `toggleCoordFrame()`: Toggle between view and world modes.
+  - `coordFrame()`: Print active coordinate mode.
+- **URL Parameter**: `?frame=view` or `?frame=world` (also supports `?coordFrame=...`).
+- **Persistence**: Saved across sessions in `localStorage` key `trongngyn_debug_distance_coord_frame`.

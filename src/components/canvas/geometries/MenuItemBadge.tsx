@@ -4,7 +4,7 @@ import { Text, Billboard } from '@react-three/drei'
 import * as THREE from 'three'
 import { ThemeColor } from '@/context/ThemeContext'
 import { useSonnyContainer, SonnyContainerStyle } from '@/context/SonnyContainerContext'
-import { useDebugDistance, DistanceMetric } from '@/context/DebugDistanceContext'
+import { useDebugDistance, DistanceMetric, CoordFrame } from '@/context/DebugDistanceContext'
 import { scrambleGlyphs } from '@/utils/glyphUtils'
 
 const INITIAL_WIDTHS: Record<string, number> = {
@@ -48,6 +48,8 @@ export interface MenuItemBadgeProps {
   showDistance?: boolean
   distanceMetric?: DistanceMetric
   showCoordinates?: boolean
+  coordFrame?: CoordFrame
+  vertexTag?: string
   onSelect: (path: string) => void
   onHover: (hover: boolean) => void
 }
@@ -69,6 +71,8 @@ export const MenuItemBadge: React.FC<MenuItemBadgeProps> = ({
   showDistance,
   distanceMetric,
   showCoordinates,
+  coordFrame,
+  vertexTag,
   onSelect,
   onHover,
 }) => {
@@ -78,10 +82,12 @@ export const MenuItemBadge: React.FC<MenuItemBadgeProps> = ({
     showDistance: globalShowDistance,
     distanceMetric: globalMetric,
     showCoordinates: globalShowCoords,
+    coordFrame: globalCoordFrame,
   } = useDebugDistance()
   const effectiveShowDistance = showDistance ?? globalShowDistance ?? false
   const effectiveMetric: DistanceMetric = distanceMetric ?? globalMetric ?? 'euclid'
   const effectiveShowCoords = showCoordinates ?? globalShowCoords ?? true
+  const effectiveCoordFrame: CoordFrame = coordFrame ?? globalCoordFrame ?? 'view'
 
   const itemGroupRef = useRef<THREE.Group>(null)
   const textGroupRef = useRef<THREE.Group>(null)
@@ -92,6 +98,11 @@ export const MenuItemBadge: React.FC<MenuItemBadgeProps> = ({
   const accentMaterialRef = useRef<THREE.MeshBasicMaterial>(null)
   const glassMaterialRef = useRef<THREE.MeshBasicMaterial>(null)
   const imgMaterialRef = useRef<THREE.MeshBasicMaterial>(null)
+  const sphereMeshRef = useRef<THREE.Mesh>(null)
+  const sphereMaterialRef = useRef<THREE.MeshBasicMaterial>(null)
+  const sphereWireMaterialRef = useRef<THREE.MeshBasicMaterial>(null)
+  const sphereColor = useRef(new THREE.Color())
+  const sphereWireColor = useRef(new THREE.Color())
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const textRef = useRef<any>(null)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -117,6 +128,8 @@ export const MenuItemBadge: React.FC<MenuItemBadgeProps> = ({
   )
 
   const worldPos = useRef(new THREE.Vector3())
+  const viewPos = useRef(new THREE.Vector3())
+  const originViewPos = useRef(new THREE.Vector3())
   const camDir = useRef(new THREE.Vector3())
   const toBadge = useRef(new THREE.Vector3())
   const dioramaColor = useRef(new THREE.Color())
@@ -125,6 +138,7 @@ export const MenuItemBadge: React.FC<MenuItemBadgeProps> = ({
   const glassColor = useRef(new THREE.Color())
   const frameIndexRef = useRef(0)
   const frameTimerRef = useRef(0)
+  const wasGlitchedOrHoveredRef = useRef(false)
 
   // Resolve frame sources for image-based badges
   const resolvedFrames = useMemo(() => {
@@ -154,6 +168,8 @@ export const MenuItemBadge: React.FC<MenuItemBadgeProps> = ({
       accentMaterialRef.current?.dispose()
       glassMaterialRef.current?.dispose()
       imgMaterialRef.current?.dispose()
+      sphereMaterialRef.current?.dispose()
+      sphereWireMaterialRef.current?.dispose()
       imageTextures.forEach((tex) => tex.dispose())
     }
   }, [imageTextures])
@@ -172,7 +188,7 @@ export const MenuItemBadge: React.FC<MenuItemBadgeProps> = ({
 
   // Glyph Scrambling (Dimension 6): cyber glyph swaps on hover and during glitch
   useEffect(() => {
-    if (isImageBadge) return
+    if (isImageBadge || effectiveShowDistance) return
     if (!isHovered && !isGlitching) {
       setDisplayLabel(label)
       return
@@ -230,9 +246,11 @@ export const MenuItemBadge: React.FC<MenuItemBadgeProps> = ({
     const currentDepth = typeof normalizedDepth === 'number' ? normalizedDepth : computedDepth
 
     const isGlitchedOrHovered = isGlitching || isHovered
-    const hoverScaleMult = isImageBadge && isGlitchedOrHovered ? 1.12 : 1.0
+    const hoverScaleMult = (isImageBadge || effectiveShowDistance) && isGlitchedOrHovered ? 1.12 : 1.0
     // Option 2 (Pure Optical): 100% of scaling is driven by the camera's perspective projection
-    const depthScale = scale * hoverScaleMult
+    // Sonny image badge is scaled to 75% base size per design requirements
+    const imageBaseScale = isImageBadge ? 0.75 : 1.0
+    const depthScale = scale * imageBaseScale * hoverScaleMult
     itemGroupRef.current.scale.setScalar(depthScale)
     itemGroupRef.current.renderOrder = Math.round(currentDepth * 100)
 
@@ -241,26 +259,42 @@ export const MenuItemBadge: React.FC<MenuItemBadgeProps> = ({
       distTimerRef.current += delta
       if (distTimerRef.current >= 0.06) {
         distTimerRef.current = 0
+
+        // Compute coordinate values based on active coordinate frame
+        let xVal = worldPos.current.x
+        let yVal = worldPos.current.y
+        let zVal = worldPos.current.z
+
+        if (effectiveCoordFrame === 'view' && camera?.matrixWorldInverse) {
+          viewPos.current.copy(worldPos.current).applyMatrix4(camera.matrixWorldInverse)
+          originViewPos.current.set(0, 0, 0).applyMatrix4(camera.matrixWorldInverse)
+          xVal = viewPos.current.x
+          yVal = viewPos.current.y
+          // Relative to scene center along camera line-of-sight: +Z towards viewer, -Z away into screen
+          zVal = viewPos.current.z - originViewPos.current.z
+        }
+
         const distDelta = Math.abs(distToCamera - lastDistRef.current)
-        const xDelta = Math.abs(worldPos.current.x - lastXRef.current)
-        const yDelta = Math.abs(worldPos.current.y - lastYRef.current)
-        const zDelta = Math.abs(worldPos.current.z - lastZRef.current)
+        const xDelta = Math.abs(xVal - lastXRef.current)
+        const yDelta = Math.abs(yVal - lastYRef.current)
+        const zDelta = Math.abs(zVal - lastZRef.current)
 
         if (
           distDelta >= 0.01 ||
           (effectiveShowCoords && (xDelta >= 0.01 || yDelta >= 0.01 || zDelta >= 0.01))
         ) {
           lastDistRef.current = distToCamera
-          lastXRef.current = worldPos.current.x
-          lastYRef.current = worldPos.current.y
-          lastZRef.current = worldPos.current.z
+          lastXRef.current = xVal
+          lastYRef.current = yVal
+          lastZRef.current = zVal
 
-          const prefix = effectiveMetric === 'depth' ? 'z:' : 'd:'
-          const distStr = `${prefix} ${distToCamera.toFixed(2)}`
+          const prefix = effectiveMetric === 'depth' ? 'depth:' : 'd:'
+          const tagPrefix = vertexTag ? `[${vertexTag}] ` : ''
+          const distStr = `${tagPrefix}${prefix} ${distToCamera.toFixed(2)}`
           if (effectiveShowCoords) {
-            const xStr = worldPos.current.x.toFixed(2)
-            const yStr = worldPos.current.y.toFixed(2)
-            const zStr = worldPos.current.z.toFixed(2)
+            const xStr = xVal.toFixed(2)
+            const yStr = yVal.toFixed(2)
+            const zStr = effectiveCoordFrame === 'view' && zVal > 0.005 ? `+${zVal.toFixed(2)}` : zVal.toFixed(2)
             distTextRef.current.text = `${distStr}\nx: ${xStr}  y: ${yStr}  z: ${zStr}`
           } else {
             distTextRef.current.text = distStr
@@ -332,6 +366,38 @@ export const MenuItemBadge: React.FC<MenuItemBadgeProps> = ({
         : 1
     const alpha = resolvedOpacity
 
+    // Distance Telemetry Probe Mode: updates sphere materials in-place and bypasses badge rendering
+    if (effectiveShowDistance) {
+      if (sphereMaterialRef.current) {
+        if (isGlitchedOrHovered && Math.random() > 0.45) {
+          sphereColor.current.set(Math.random() > 0.5 ? '#00f0ff' : '#ff0055')
+        } else if (isGlitchedOrHovered) {
+          sphereColor.current.set(highlightColorHex)
+        } else {
+          sphereColor.current.lerpColors(dimBadgeColor, baseBadgeColor, currentDepth)
+        }
+        sphereMaterialRef.current.color.copy(sphereColor.current)
+        sphereMaterialRef.current.opacity = alpha * (isHovered ? 0.65 : 0.35)
+        sphereMaterialRef.current.transparent = true
+        sphereMaterialRef.current.depthWrite = false
+        sphereMaterialRef.current.depthTest = true
+      }
+
+      if (sphereWireMaterialRef.current) {
+        if (isGlitchedOrHovered) {
+          sphereWireColor.current.set(highlightColorHex)
+        } else {
+          sphereWireColor.current.copy(baseBadgeColor)
+        }
+        sphereWireMaterialRef.current.color.copy(sphereWireColor.current)
+        sphereWireMaterialRef.current.opacity = alpha * (isHovered ? 0.50 : 0.25)
+        sphereWireMaterialRef.current.transparent = true
+        sphereWireMaterialRef.current.depthWrite = false
+        sphereWireMaterialRef.current.depthTest = true
+      }
+      return
+    }
+
     if (isImageBadge) {
       // 15-Frame Turntable Flipbook Animation: unified 45ms rate on hover and glitch
       if (isGlitchedOrHovered && imageTextures.length > 1) {
@@ -345,14 +411,17 @@ export const MenuItemBadge: React.FC<MenuItemBadgeProps> = ({
             imgMaterialRef.current.needsUpdate = true
           }
         }
-      } else if (!isGlitchedOrHovered && frameIndexRef.current !== 0) {
-        frameIndexRef.current = 0
+      } else if (!isGlitchedOrHovered && wasGlitchedOrHoveredRef.current && imageTextures.length > 1) {
+        // When glitch or hover effect completes, choose a random frame from the flipbook
+        const randomIndex = Math.floor(Math.random() * imageTextures.length)
+        frameIndexRef.current = randomIndex
         frameTimerRef.current = 0
-        if (imgMaterialRef.current && imageTextures[0]) {
-          imgMaterialRef.current.map = imageTextures[0]
+        if (imgMaterialRef.current && imageTextures[randomIndex]) {
+          imgMaterialRef.current.map = imageTextures[randomIndex]
           imgMaterialRef.current.needsUpdate = true
         }
       }
+      wasGlitchedOrHoveredRef.current = isGlitchedOrHovered
 
       // Character sprite material: identical chromatic flashing on hover and glitch
       if (imgMaterialRef.current) {
@@ -444,44 +513,129 @@ export const MenuItemBadge: React.FC<MenuItemBadgeProps> = ({
 
       if (textRef.current) {
         textRef.current.fillOpacity = alpha
-        textRef.current.color = '#1c1b22'
-        if (textRef.current.material) {
-          textRef.current.material.toneMapped = false
+        if (textRef.current.color !== '#1c1b22') {
+          textRef.current.color = '#1c1b22'
+        }
+        const mat = textRef.current._derivedMaterial || textRef.current.material
+        if (mat && mat.toneMapped !== false) {
+          mat.toneMapped = false
         }
       }
     }
   })
 
+  const handleBadgeClick = (e: { stopPropagation: () => void }) => {
+    if (!isExpanded) return
+    e.stopPropagation()
+    onSelect(path)
+  }
+
+  const handleBadgePointerOver = (e: { stopPropagation: () => void }) => {
+    if (!isExpanded) return
+    e.stopPropagation()
+    onHover(true)
+  }
+
+  const handleBadgePointerOut = (e: { stopPropagation: () => void }) => {
+    e.stopPropagation()
+    onHover(false)
+  }
+
+  // Telemetry Probe Mode: replaces all link badges with interactive translucent 3D spheres
+  if (effectiveShowDistance) {
+    return (
+      <group key="probe-sphere-mode" ref={itemGroupRef}>
+        <Billboard follow={true}>
+          <group
+            ref={textGroupRef}
+            onClick={handleBadgeClick}
+            onPointerDown={handleBadgePointerOver}
+            onPointerOver={handleBadgePointerOver}
+            onPointerOut={handleBadgePointerOut}
+          >
+            {/* 1. Translucent 3D Probe Sphere */}
+            <mesh
+              ref={sphereMeshRef}
+              data-testid="translucent-sphere"
+            >
+              <sphereGeometry args={[0.15, 24, 24]} />
+              <meshBasicMaterial
+                ref={sphereMaterialRef}
+                color={primaryColorHex}
+                transparent={true}
+                opacity={0.35}
+                depthWrite={false}
+                depthTest={true}
+              />
+            </mesh>
+
+            {/* 2. Geometric Wireframe Outer Lattice */}
+            <mesh data-testid="translucent-sphere-wire">
+              <sphereGeometry args={[0.152, 12, 12]} />
+              <meshBasicMaterial
+                ref={sphereWireMaterialRef}
+                color={highlightColorHex}
+                wireframe={true}
+                transparent={true}
+                opacity={0.25}
+                depthWrite={false}
+                depthTest={true}
+              />
+            </mesh>
+
+            {/* 3. Floating Distance & Coordinate Telemetry Label */}
+            <group
+              position={[0, effectiveShowCoords ? 0.30 : 0.26, 0]}
+              data-testid="distance-badge"
+            >
+              <mesh position={[0, 0, -0.002]}>
+                <planeGeometry
+                  args={[
+                    effectiveShowCoords ? (vertexTag ? 0.66 : 0.54) : vertexTag ? 0.44 : 0.30,
+                    effectiveShowCoords ? 0.13 : 0.08,
+                  ]}
+                />
+                <meshBasicMaterial
+                  color="#1c1b22"
+                  transparent={true}
+                  opacity={0.88}
+                  depthTest={true}
+                />
+              </mesh>
+              <Text
+                ref={distTextRef}
+                fontSize={effectiveShowCoords ? (vertexTag ? 0.043 : 0.048) : 0.065}
+                lineHeight={1.22}
+                textAlign="center"
+                color={highlightColorHex}
+                anchorX="center"
+                anchorY="middle"
+                font="/fonts/JetBrainsMono-Regular.ttf"
+              >
+                {effectiveShowCoords
+                  ? `${vertexTag ? `[${vertexTag}] ` : ''}${effectiveMetric === 'depth' ? 'depth:' : 'd:'} 5.00\nx: 0.00  y: 0.00  z: 0.00`
+                  : `${vertexTag ? `[${vertexTag}] ` : ''}${effectiveMetric === 'depth' ? 'depth:' : 'd:'} 5.00`}
+              </Text>
+            </group>
+          </group>
+        </Billboard>
+      </group>
+    )
+  }
+
   if (isImageBadge) {
     const spriteZ = effectiveContainer === 'diorama' ? 0.19 : 0.0
 
-    const handleContainerClick = (e: { stopPropagation: () => void }) => {
-      if (!isExpanded) return
-      e.stopPropagation()
-      onSelect(path)
-    }
-
-    const handleContainerPointerOver = (e: { stopPropagation: () => void }) => {
-      if (!isExpanded) return
-      e.stopPropagation()
-      onHover(true)
-    }
-
-    const handleContainerPointerOut = (e: { stopPropagation: () => void }) => {
-      e.stopPropagation()
-      onHover(false)
-    }
-
     return (
-      <group ref={itemGroupRef}>
+      <group key="image-badge-mode" ref={itemGroupRef}>
         <Billboard follow={true}>
           <group
             ref={textGroupRef}
             rotation={[0.22, 0, 0]}
-            onClick={handleContainerClick}
-            onPointerDown={handleContainerPointerOver}
-            onPointerOver={handleContainerPointerOver}
-            onPointerOut={handleContainerPointerOut}
+            onClick={handleBadgeClick}
+            onPointerDown={handleBadgePointerOver}
+            onPointerOver={handleBadgePointerOver}
+            onPointerOut={handleBadgePointerOut}
           >
             {/* 1. L-Shaped Diorama Container */}
             {effectiveContainer === 'diorama' && (
@@ -716,35 +870,6 @@ export const MenuItemBadge: React.FC<MenuItemBadgeProps> = ({
                 depthTest={true}
               />
             </mesh>
-
-            {/* Floating Distance Telemetry Label */}
-            {effectiveShowDistance && (
-              <group position={[0, effectiveShowCoords ? 0.52 : 0.48, spriteZ]} data-testid="distance-badge">
-                <mesh position={[0, 0, -0.002]}>
-                  <planeGeometry args={[effectiveShowCoords ? 0.54 : 0.30, effectiveShowCoords ? 0.13 : 0.08]} />
-                  <meshBasicMaterial
-                    color="#1c1b22"
-                    transparent={true}
-                    opacity={0.88}
-                    depthTest={true}
-                  />
-                </mesh>
-                <Text
-                  ref={distTextRef}
-                  fontSize={effectiveShowCoords ? 0.048 : 0.065}
-                  lineHeight={1.22}
-                  textAlign="center"
-                  color={highlightColorHex}
-                  anchorX="center"
-                  anchorY="middle"
-                  font="/fonts/JetBrainsMono-Regular.ttf"
-                >
-                  {effectiveShowCoords
-                    ? `${effectiveMetric === 'depth' ? 'z:' : 'd:'} 5.00\nx: 0.00  y: 0.00  z: 0.00`
-                    : `${effectiveMetric === 'depth' ? 'z:' : 'd:'} 5.00`}
-                </Text>
-              </group>
-            )}
           </group>
         </Billboard>
       </group>
@@ -752,32 +877,17 @@ export const MenuItemBadge: React.FC<MenuItemBadgeProps> = ({
   }
 
   return (
-    <group ref={itemGroupRef}>
+    <group key="text-badge-mode" ref={itemGroupRef}>
       <Billboard follow={true}>
         <group ref={textGroupRef} rotation={[0, 0, 0]}>
           {/* Rectangular Toxic Neon Background Badge */}
           <mesh
             ref={bgMeshRef}
             position={[0, 0, -0.005]}
-            onClick={(e) => {
-              if (!isExpanded) return
-              e.stopPropagation()
-              onSelect(path)
-            }}
-            onPointerDown={(e) => {
-              if (!isExpanded) return
-              e.stopPropagation()
-              onHover(true)
-            }}
-            onPointerOver={(e) => {
-              if (!isExpanded) return
-              e.stopPropagation()
-              onHover(true)
-            }}
-            onPointerOut={(e) => {
-              e.stopPropagation()
-              onHover(false)
-            }}
+            onClick={handleBadgeClick}
+            onPointerDown={handleBadgePointerOver}
+            onPointerOver={handleBadgePointerOver}
+            onPointerOut={handleBadgePointerOut}
           >
             <planeGeometry args={[boxWidth, 0.22]} />
             <meshBasicMaterial
@@ -807,35 +917,6 @@ export const MenuItemBadge: React.FC<MenuItemBadgeProps> = ({
           >
             {displayLabel}
           </Text>
-
-          {/* Floating Distance Telemetry Label */}
-          {effectiveShowDistance && (
-            <group position={[0, effectiveShowCoords ? 0.25 : 0.22, 0]} data-testid="distance-badge">
-              <mesh position={[0, 0, -0.002]}>
-                <planeGeometry args={[effectiveShowCoords ? 0.54 : 0.30, effectiveShowCoords ? 0.13 : 0.08]} />
-                <meshBasicMaterial
-                  color="#1c1b22"
-                  transparent={true}
-                  opacity={0.88}
-                  depthTest={true}
-                />
-              </mesh>
-              <Text
-                ref={distTextRef}
-                fontSize={effectiveShowCoords ? 0.048 : 0.065}
-                lineHeight={1.22}
-                textAlign="center"
-                color={highlightColorHex}
-                anchorX="center"
-                anchorY="middle"
-                font="/fonts/JetBrainsMono-Regular.ttf"
-              >
-                {effectiveShowCoords
-                  ? `${effectiveMetric === 'depth' ? 'z:' : 'd:'} 5.00\nx: 0.00  y: 0.00  z: 0.00`
-                  : `${effectiveMetric === 'depth' ? 'z:' : 'd:'} 5.00`}
-              </Text>
-            </group>
-          )}
         </group>
       </Billboard>
     </group>

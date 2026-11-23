@@ -15,7 +15,7 @@ const TestWrapper: React.FC = () => {
 }
 
 describe('Navbar Component', () => {
-  it('renders all 3 navigation targets', () => {
+  it('renders all navigation targets including videos', () => {
     render(
       <RouterProvider>
         <TestWrapper />
@@ -23,6 +23,7 @@ describe('Navbar Component', () => {
     )
 
     expect(screen.getByRole('button', { name: 'about' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'videos' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'more' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'dchc' })).toBeInTheDocument()
   })
@@ -50,6 +51,10 @@ describe('Navbar Component', () => {
     const aboutButton = screen.getByRole('button', { name: 'about' })
     fireEvent.click(aboutButton)
     expect(screen.getByTestId('current-path')).toHaveTextContent('/about')
+
+    const videosButton = screen.getByRole('button', { name: 'videos' })
+    fireEvent.click(videosButton)
+    expect(screen.getByTestId('current-path')).toHaveTextContent('/videos')
 
     const moreButton = screen.getByRole('button', { name: 'more' })
     fireEvent.click(moreButton)

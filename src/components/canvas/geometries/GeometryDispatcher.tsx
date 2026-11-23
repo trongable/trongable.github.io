@@ -16,6 +16,7 @@ export interface GeometryDispatcherProps {
   isExpanded: boolean
   onSelect: (path: string) => void
   isGlitching?: boolean
+  isPaused?: boolean
   theme?: ThemeColor
 }
 
@@ -25,6 +26,7 @@ export const GeometryDispatcher: React.FC<GeometryDispatcherProps> = ({
   isExpanded,
   onSelect,
   isGlitching = false,
+  isPaused = false,
   theme,
 }) => {
   switch (mode) {
@@ -34,6 +36,7 @@ export const GeometryDispatcher: React.FC<GeometryDispatcherProps> = ({
           isExpanded={isExpanded}
           onSelect={onSelect}
           isGlitching={isGlitching}
+          isPaused={isPaused}
           theme={theme}
           params={params.trefoil}
         />
@@ -45,6 +48,7 @@ export const GeometryDispatcher: React.FC<GeometryDispatcherProps> = ({
           isExpanded={isExpanded}
           onSelect={onSelect}
           isGlitching={isGlitching}
+          isPaused={isPaused}
           theme={theme}
           params={params.tesseract}
         />
@@ -56,6 +60,7 @@ export const GeometryDispatcher: React.FC<GeometryDispatcherProps> = ({
           isExpanded={isExpanded}
           onSelect={onSelect}
           isGlitching={isGlitching}
+          isPaused={isPaused}
           theme={theme}
           params={params.astrolabe}
         />
@@ -67,6 +72,7 @@ export const GeometryDispatcher: React.FC<GeometryDispatcherProps> = ({
           isExpanded={isExpanded}
           onSelect={onSelect}
           isGlitching={isGlitching}
+          isPaused={isPaused}
           theme={theme}
           params={params.lorenz}
         />
@@ -78,6 +84,7 @@ export const GeometryDispatcher: React.FC<GeometryDispatcherProps> = ({
           isExpanded={isExpanded}
           onSelect={onSelect}
           isGlitching={isGlitching}
+          isPaused={isPaused}
           theme={theme}
           params={params.origami}
         />
@@ -89,6 +96,7 @@ export const GeometryDispatcher: React.FC<GeometryDispatcherProps> = ({
           isExpanded={isExpanded}
           onSelect={onSelect}
           isGlitching={isGlitching}
+          isPaused={isPaused}
           theme={theme}
           params={params.slingshot}
         />
@@ -100,6 +108,7 @@ export const GeometryDispatcher: React.FC<GeometryDispatcherProps> = ({
           isExpanded={isExpanded}
           onSelect={onSelect}
           isGlitching={isGlitching}
+          isPaused={isPaused}
           theme={theme}
           params={params.helix}
         />
@@ -112,6 +121,7 @@ export const GeometryDispatcher: React.FC<GeometryDispatcherProps> = ({
           isExpanded={isExpanded}
           onSelect={onSelect}
           isGlitching={isGlitching}
+          isPaused={isPaused}
           theme={theme}
           speed={params.halo.speed}
           radiusScale={params.halo.radius}

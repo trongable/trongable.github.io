@@ -149,3 +149,9 @@
   pointer-events: none;
   animation: glitch-bar 0.22s linear forwards;
 }
+
+[data-effects-paused="true"] *,
+[data-effects-paused="true"] *::before,
+[data-effects-paused="true"] *::after {
+  animation-play-state: paused !important;
+}

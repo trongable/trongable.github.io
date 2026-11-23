@@ -146,22 +146,41 @@ When displaying character badge items (such as the `/sonny` route badge), `MenuI
 To assist in debugging depth coordinates and spatial positioning, the Tuner provides real-time telemetry overlays rendered as cyber monospace pills directly above all 3D menu badges:
 
 ### 6.1 Telemetry Controls in the Tuner
-- **`Distance Labels (HUD)` Toggle**: Globally enables or disables telemetry labels.
-- **`Metric Switcher` (`Euclid (d:)` vs `View Depth (z:)`)**:
+- **`Distance Labels (HUD)` Toggle**: Globally enables or disables telemetry labels. When enabled, **Telemetry Probe Mode** activates:
+  - All standard link badges (text cards and Sonny 3D containers/sprites) are hidden.
+  - Replaced with interactive translucent 3D spheres ($r = 0.15$) encased in glowing geometric wireframe cages ($r = 0.152$).
+  - Spheres retain full interactivity: clicking navigates to the target route (`onSelect`), and hovering triggers neon highlight glow and pointer cursor state.
+  - Floating distance telemetry pills float directly above each sphere.
+- **`Metric Switcher` (`Euclid (d:)` vs `View Depth (depth:)`)**:
   - **`Euclid (d:)`**: True 3D radial Euclidean distance from camera eye $\vec{C}$ to object center $\vec{P}$:
     $$d = \|\vec{P} - \vec{C}\| = \sqrt{(P_x - C_x)^2 + (P_y - C_y)^2 + (P_z - C_z)^2}$$
-  - **`View Depth (z:)`**: Perpendicular depth along the camera's forward optical axis vector $\hat{f}$:
-    $$z = -(\vec{P} - \vec{C}) \cdot \hat{f}$$
-- **`Coords (XYZ)` Toggle**: Toggles real-time 3D world coordinates $(x, y, z)$ on the second row of the telemetry pill.
+  - **`View Depth (depth:)`**: Perpendicular distance from camera focal plane along the optical axis vector $\hat{f}$:
+    $$d_{\text{depth}} = (\vec{P} - \vec{C}) \cdot \hat{f} = -0.4238 y - 0.9058 z + 6.017$$
+- **`Coords (XYZ)` Toggle**: Toggles real-time 3D coordinates $(x, y, z)$ on the second row of the telemetry pill.
+- **`Coord Frame Switcher` (`View (Screen)` vs `World (Global)`)**:
+  - **`View (Screen)`** (Default): Camera-relative screen space $(x_v, y_v, z_v)$ normalized to scene origin $(0, 0, 0)$:
+    - $x$: Screen horizontal position ($-$: left, $+$: right)
+    - $y$: Screen vertical position ($-$: down, $+$: up)
+    - $z$: Relative optical depth ($z_{\text{rel}} = \text{viewPos}.z - \text{originView}.z$). Objects in front are mathematically guaranteed to strictly have higher Z values than objects behind them ($Z_{\text{front}} > Z_{\text{back}}$). Positive values are explicitly prefixed with `+` (e.g. `z: +0.91` vs `z: -0.48`) to make depth unambiguous.
+  - **`World (Global)`**: Raw global manifold coordinates $(x_w, y_w, z_w)$ before camera perspective projection.
+- **`Camera Angle Switcher` (`Elevated (25°)` vs `Eye-Level (0°)`)**:
+  - **`Elevated (25°)`** (Default): Camera perched at $[0, 2.55, 5.45]$ looking downward at $25.07^\circ$. Gives depth perspective across the orbital plane, but introduces downward optical skew where lower vertices drop further from the eye.
+  - **`Eye-Level (0°)`**: Camera dropped to $[0, 0, 6.0]$ with horizontal $0^\circ$ pitch. Eliminates vertical elevation distortion, allowing direct verification of 4D symmetry and relative distances along the optical axis.
+- **`Tesseract 4D Vertex Tagging`**:
+  - In Tesseract mode, telemetry pills dynamically display vertex indices and cell status:
+    - `[V13 outer]`: Vertex 13 (`about`), binary `1101` ($w=+1$), outer cell.
+    - `[V7 inner]`: Vertex 7 (`more`), binary `0111` ($w=-1$), inner cell.
+    - `[V10 outer]`: Vertex 10 (`sonny`), binary `1010` ($w=+1$), outer cell.
+    - `[V0 inner]`: Vertex 0 (`dchc`), binary `0000` ($w=-1$), inner cell.
 
 ### 6.2 Visual Layout & Formatting
 ```
-┌─────────────────────────────────┐
-│            d: 5.45              │  ← Row 1: Camera Distance (Center-Aligned)
-│  x: 1.00   y: -0.50   z: 1.25   │  ← Row 2: World Coordinates (Center-Aligned)
-└─────────────────────────────────┘
+┌──────────────────────────────────────────────┐
+│             [V10 outer] depth: 7.50          │  ← Row 1: Vertex Tag & Camera Distance
+│       x: -0.39   y: -2.81   z: -0.48         │  ← Row 2: 3D Coordinates (View or World)
+└──────────────────────────────────────────────┘
 ```
-- **Pill Dimensions**: Width `0.54`, Height `0.13` (scaled perfectly to standard badge widths).
+- **Pill Dimensions**: Width dynamically adjusted (`0.30`–`0.66`) based on vertex tag presence and coordinates mode.
 - **Throttling**: Values update at ~16 Hz (60ms) and require a spatial delta $|\Delta| \ge 0.01$ to trigger re-triangulation, preserving zero-allocation performance.
 
 ---
@@ -199,6 +218,20 @@ The Tuner exposes a 3-way Power Governance manager (`usePowerManager.ts`) to sim
 
 > **0% GPU Idle Sleep**: Regardless of power mode, when the browser tab is hidden or minimized (`document.visibilityState === 'hidden'`), the R3F Canvas automatically switches to `frameloop="never"` and halts all periodic timers, reducing GPU and CPU consumption to **0.0%**.
 
+### 8.1 Animation Pause Button & Complete Effects Freeze
+Adjacent to the bottom-right Tuner launcher pill (`geo: [name] | ⚙ | ✕`), the Tuner provides a dedicated circular **Animation Pause Button** (`data-testid="animation-pause-button"`):
+- **Visibility**: Only rendered when the Tuner HUD is active (`isTunerVisible === true`). Automatically unpauses and dismisses when the Tuner is closed via `✕`.
+- **States**:
+  - Running: Displays `⏸` with aria-label `"Pause all animations and visual effects"`.
+  - Paused: Displays `▶` highlighted in neon magenta (`border-[#ff007f] bg-[#ff007f]/20 text-[#ff007f]`) with aria-label `"Resume animations and visual effects"`.
+- **Total Effects Freeze Scope**:
+  - R3F Canvas switches to `frameloop="never"`, bypassing all WebGL rendering cycles.
+  - `FrameGovernor` halts its RAF timer loop.
+  - Periodic GPU glitch timers and active glitch bursts are immediately cleared.
+  - Mobile touch glyph scrambling is suspended.
+  - Global CSS keyframes freeze via `[data-effects-paused="true"] *, *::before, *::after { animation-play-state: paused !important; }`.
+- **Drawer Control**: The `VFX & Glitch` drawer tab also features an "Animation Engine" toggle row displaying `RUNNING (LIVE)` vs `PAUSED (FROZEN)`.
+
 ---
 
 ## 9. Developer Console Commands Reference
@@ -209,6 +242,12 @@ All developer APIs are registered globally on the browser `window` object and ca
 // --- Tuner Visibility ---
 tuner()                          // Toggle Tuner HUD visibility on/off
 hideTuner()                      // Explicitly close and dismiss Tuner HUD
+
+// --- Animation Engine & Visual Effects Freeze ---
+pause(true)                      // Pause all 3D rendering and visual effects (0% GPU/CPU)
+pause(false)                     // Resume active animation loop and effects
+togglePause()                    // Toggle animation pause state
+isPaused()                       // Return true if animation engine is currently paused
 
 // --- Topologies & Manifolds ---
 setGeo('trefoil')                // Switch active topology ('halo', 'trefoil', 'tesseract', etc.)
@@ -226,6 +265,19 @@ toggleDistanceMetric()           // Toggle between 'euclid' and 'depth'
 distanceMetric()                 // Print active distance metric to console
 toggleCoords()                   // Toggle 3D (X, Y, Z) coordinates on telemetry labels
 showCoords(true)                 // Explicitly enable (true) or disable (false) coordinates
+setCoordFrame('view')            // Switch coordinate frame ('view' | 'world')
+toggleCoordFrame()               // Toggle between 'view' (screen-space) and 'world' (global)
+coordFrame()                     // Print active coordinate frame to console
+setCameraElevation('eye-level')  // Switch camera elevation ('elevated' | 'eye-level')
+toggleCameraElevation()          // Toggle between 'elevated' (25° pitch) and 'eye-level' (0° pitch)
+cameraElevation()                // Print active camera elevation to console
+
+// --- 360° Camera Orbit Inspection ---
+setInspectYaw(45)                // Set camera orbit yaw azimuth in degrees (-180° to +180°)
+setInspectPitch(0)               // Set camera orbit pitch elevation in degrees (-85° to +85°)
+setInspectDistance(8.5)          // Set camera orbit distance/zoom (2.5 to 12.0)
+resetCameraAngles()              // Reset camera angles back to default view
+cameraAngles()                   // Print active orbit angles: { yaw, pitch, distance }
 
 // --- Theming & Color Science ---
 setTheme('teal')                 // Switch preset theme ('yellow', 'purple', 'teal')
@@ -253,14 +305,23 @@ Any user or automated test harness can deep-link into specific geometries and tu
 | Parameter Key | Accepted Values | Example Usage | Description |
 | :--- | :--- | :--- | :--- |
 | `tuner` | `true`, `false` | `?tuner=true` | Unlocks and displays the Developer Tuner HUD on page load. |
+| `paused` | `true`, `false` | `?paused=true` | Pauses 3D canvas rendering and all visual effects immediately on mount. |
 | `geo` | `halo`, `trefoil`, `tesseract`, `astrolabe`, `lorenz`, `origami`, `slingshot`, `helix` | `?geo=lorenz` | Overrides the default topology and mounts the specified geometry immediately. |
 | `container` | `capsule`, `diorama`, `pedestal`, `wirebox`, `crystal`, `none` | `?container=wirebox` | Sets the active Sonny 3D character container style. |
 | `dist` | `true`, `false` | `?dist=true` | Enables real-time distance telemetry labels above all badges. |
 | `metric` | `euclid`, `depth` | `?metric=depth` | Sets active distance metric (`euclid` = radial distance, `depth` = view-plane depth). |
 | `coords` | `true`, `false` | `?coords=false` | Toggles visibility of the 3D $(X, Y, Z)$ coordinate readout row. |
+| `frame` | `view`, `world` | `?frame=view` | Sets coordinate frame (`view` = screen relative, `world` = global manifold). |
+| `elevation` | `elevated`, `eye-level` | `?elevation=eye-level` | Sets camera elevation angle (`elevated` = 25° downward pitch, `eye-level` = 0° flat view). |
+| `yaw` | `-180` to `180` | `?yaw=45` | Sets initial camera inspection orbit yaw angle in degrees. |
+| `pitch` | `-85` to `85` | `?pitch=0` | Sets initial camera inspection orbit pitch angle in degrees. |
+| `zoom` | `2.5` to `12.0` | `?zoom=8.5` | Sets initial camera inspection orbit distance / zoom radius. |
 | `halo` | `true`, `false` | `?halo=true` | Backwards-compatible flag forcing immediate expansion into the halo geometry. |
 
 **Chained Example**:
+```
+https://trongngyn.com/?tuner=true&paused=true&geo=tesseract&dist=true&metric=depth&elevation=eye-level&yaw=45&pitch=15
+```
 ```
 https://trongngyn.com/?geo=tesseract&tuner=true&dist=true&metric=depth&coords=true&container=crystal
 ```
@@ -279,4 +340,5 @@ The Tuner persists user preferences in the browser's `localStorage` across page 
 | `trongngyn_debug_distance` | `string` | `'true'` / `'false'` | Persists distance telemetry HUD visibility. |
 | `trongngyn_debug_distance_metric` | `string` | `'euclid'`, `'depth'` | Persists selected distance telemetry metric. |
 | `trongngyn_debug_distance_coords` | `string` | `'true'` / `'false'` | Persists 3D $(X, Y, Z)$ coordinate readout visibility. |
+| `trongngyn_debug_distance_coord_frame` | `string` | `'view'`, `'world'` | Persists selected coordinate frame mode (screen view vs global manifold). |
 | `antigravity_tuner_visible` | `string` | `'true'` / `'false'` | Legacy fallback key automatically migrated to `trongngyn_tuner_visible`. |

@@ -9,12 +9,14 @@ export interface LorenzMenuProps {
   isExpanded: boolean
   onSelect: (path: string) => void
   isGlitching?: boolean
+  isPaused?: boolean
   theme?: ThemeColor
   params: LorenzParams
 }
 
 const ITEMS = [
   { label: 'about', path: '/about', initial: [0.1, 0.0, 0.0] },
+  { label: 'videos', path: '/videos', initial: [0.05, 0.05, 0.0] },
   { label: 'more', path: '/more', initial: [-0.1, 0.0, 0.0] },
   { label: 'sonny', path: '/sonny', imageUrl: '/images/sonny.png', initial: [0.0, -0.1, 0.0] },
   { label: 'dchc', path: 'https://dc-hardcore.com', initial: [0.0, 0.1, 0.0] },
@@ -48,6 +50,7 @@ export const LorenzMenu: React.FC<LorenzMenuProps> = ({
   isExpanded,
   onSelect,
   isGlitching = false,
+  isPaused = false,
   theme,
   params,
 }) => {
@@ -133,28 +136,30 @@ export const LorenzMenu: React.FC<LorenzMenuProps> = ({
     const dt = (hoveredIdx !== null ? params.speed * 0.25 : params.speed)
     const glitchJitter = isGlitching ? THREE.MathUtils.randFloatSpread(0.01) : 0
 
-    ITEMS.forEach((_, idx) => {
-      // Step attractor differential equations forward in-place
-      const currentPos = stateVectors.current[idx]
-      stepLorenz(currentPos, dt + glitchJitter, params.rho, currentPos)
+    if (!isPaused) {
+      ITEMS.forEach((_, idx) => {
+        // Step attractor differential equations forward in-place
+        const currentPos = stateVectors.current[idx]
+        stepLorenz(currentPos, dt + glitchJitter, params.rho, currentPos)
 
-      const scaledX = currentPos.x * params.scale
-      const scaledY = currentPos.y * params.scale
-      const scaledZ = (currentPos.z - 25) * params.scale
+        const scaledX = currentPos.x * params.scale
+        const scaledY = currentPos.y * params.scale
+        const scaledZ = (currentPos.z - 25) * params.scale
 
-      // Update badge 3D position directly in real time
-      const itemGroup = itemGroupRefs.current[idx]
-      if (itemGroup) {
-        itemGroup.position.set(scaledX, scaledY, scaledZ)
-      }
+        // Update badge 3D position directly in real time
+        const itemGroup = itemGroupRefs.current[idx]
+        if (itemGroup) {
+          itemGroup.position.set(scaledX, scaledY, scaledZ)
+        }
 
-      // Shift trail points
-      const trail = trails.current[idx]
-      trail.copyWithin(3, 0, (TRAIL_LENGTH - 1) * 3)
-      trail[0] = scaledX
-      trail[1] = scaledY
-      trail[2] = scaledZ
-    })
+        // Shift trail points
+        const trail = trails.current[idx]
+        trail.copyWithin(3, 0, (TRAIL_LENGTH - 1) * 3)
+        trail[0] = scaledX
+        trail[1] = scaledY
+        trail[2] = scaledZ
+      })
+    }
 
     trailObjects.forEach((obj) => {
       obj.visible = isExpanded && params.showParticles

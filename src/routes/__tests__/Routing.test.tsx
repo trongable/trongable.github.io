@@ -45,6 +45,16 @@ describe('App Route Navigation', () => {
     expect(screen.getByRole('button', { name: 'Return home' })).toBeInTheDocument()
   })
 
+  it('renders videos page when navigating to /videos', () => {
+    render(<App />)
+    act(() => {
+      window.location.hash = '#/videos'
+      window.dispatchEvent(new HashChangeEvent('hashchange'))
+    })
+    expect(screen.getByTestId('videos-page')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Return home' })).toBeInTheDocument()
+  })
+
   it('navigates back to /?halo=true with expanded halo when clicking Return home', () => {
     render(<App />)
     act(() => {
@@ -53,6 +63,6 @@ describe('App Route Navigation', () => {
     })
     const returnButton = screen.getByRole('button', { name: 'Return home' })
     fireEvent.click(returnButton)
-    expect(window.location.hash).toBe('#/?halo=true')
+    expect(window.location.hash).toBe('#/?expanded=true')
   })
 })

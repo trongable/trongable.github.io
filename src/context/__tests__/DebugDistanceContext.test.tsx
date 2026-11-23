@@ -7,6 +7,8 @@ import {
   DEBUG_DISTANCE_STORAGE_KEY,
   DEBUG_DISTANCE_METRIC_KEY,
   DEBUG_DISTANCE_COORDS_KEY,
+  DEBUG_DISTANCE_FRAME_KEY,
+  DEBUG_DISTANCE_ELEVATION_KEY,
 } from '../DebugDistanceContext'
 
 const TestConsumer: React.FC = () => {
@@ -20,12 +22,20 @@ const TestConsumer: React.FC = () => {
     showCoordinates,
     setShowCoordinates,
     toggleCoordinates,
+    coordFrame,
+    setCoordFrame,
+    toggleCoordFrame,
+    cameraElevation,
+    setCameraElevation,
+    toggleCameraElevation,
   } = useDebugDistance()
   return (
     <div>
       <span data-testid="distance-status">{showDistance ? 'ENABLED' : 'DISABLED'}</span>
       <span data-testid="metric-status">{distanceMetric}</span>
       <span data-testid="coords-status">{showCoordinates ? 'ENABLED' : 'DISABLED'}</span>
+      <span data-testid="frame-status">{coordFrame}</span>
+      <span data-testid="elevation-status">{cameraElevation}</span>
       <button data-testid="toggle-btn" onClick={toggleDistance}>
         Toggle
       </button>
@@ -46,6 +56,18 @@ const TestConsumer: React.FC = () => {
       </button>
       <button data-testid="disable-coords-btn" onClick={() => setShowCoordinates(false)}>
         Disable Coords
+      </button>
+      <button data-testid="set-world-frame-btn" onClick={() => setCoordFrame('world')}>
+        Set World Frame
+      </button>
+      <button data-testid="toggle-frame-btn" onClick={toggleCoordFrame}>
+        Toggle Frame
+      </button>
+      <button data-testid="set-eye-level-btn" onClick={() => setCameraElevation('eye-level')}>
+        Set Eye Level
+      </button>
+      <button data-testid="toggle-elevation-btn" onClick={toggleCameraElevation}>
+        Toggle Elevation
       </button>
     </div>
   )
@@ -284,5 +306,142 @@ describe('DebugDistanceContext', () => {
     })
 
     expect(screen.getByTestId('coords-status')).toHaveTextContent('DISABLED')
+  })
+
+  it('provides "view" as default coordFrame state and toggles to "world"', () => {
+    render(
+      <DebugDistanceProvider>
+        <TestConsumer />
+      </DebugDistanceProvider>
+    )
+
+    expect(screen.getByTestId('frame-status')).toHaveTextContent('view')
+
+    act(() => {
+      screen.getByTestId('toggle-frame-btn').click()
+    })
+
+    expect(screen.getByTestId('frame-status')).toHaveTextContent('world')
+    expect(window.localStorage.getItem(DEBUG_DISTANCE_FRAME_KEY)).toBe('world')
+
+    act(() => {
+      screen.getByTestId('toggle-frame-btn').click()
+    })
+
+    expect(screen.getByTestId('frame-status')).toHaveTextContent('view')
+    expect(window.localStorage.getItem(DEBUG_DISTANCE_FRAME_KEY)).toBe('view')
+  })
+
+  it('initializes coordFrame from ?frame=world URL parameter and localStorage', () => {
+    window.history.replaceState({}, '', '/?frame=world')
+
+    render(
+      <DebugDistanceProvider>
+        <TestConsumer />
+      </DebugDistanceProvider>
+    )
+
+    expect(screen.getByTestId('frame-status')).toHaveTextContent('world')
+  })
+
+  it('synchronizes coordFrame on storage event', () => {
+    render(
+      <DebugDistanceProvider>
+        <TestConsumer />
+      </DebugDistanceProvider>
+    )
+
+    act(() => {
+      window.dispatchEvent(
+        new StorageEvent('storage', {
+          key: DEBUG_DISTANCE_FRAME_KEY,
+          newValue: 'world',
+        })
+      )
+    })
+
+    expect(screen.getByTestId('frame-status')).toHaveTextContent('world')
+  })
+
+  it('provides "elevated" as default cameraElevation state and toggles to "eye-level"', () => {
+    render(
+      <DebugDistanceProvider>
+        <TestConsumer />
+      </DebugDistanceProvider>
+    )
+
+    expect(screen.getByTestId('elevation-status')).toHaveTextContent('elevated')
+
+    act(() => {
+      screen.getByTestId('toggle-elevation-btn').click()
+    })
+
+    expect(screen.getByTestId('elevation-status')).toHaveTextContent('eye-level')
+    expect(window.localStorage.getItem(DEBUG_DISTANCE_ELEVATION_KEY)).toBe('eye-level')
+
+    act(() => {
+      screen.getByTestId('toggle-elevation-btn').click()
+    })
+
+    expect(screen.getByTestId('elevation-status')).toHaveTextContent('elevated')
+    expect(window.localStorage.getItem(DEBUG_DISTANCE_ELEVATION_KEY)).toBe('elevated')
+  })
+
+  it('allows explicit setting of cameraElevation', () => {
+    render(
+      <DebugDistanceProvider>
+        <TestConsumer />
+      </DebugDistanceProvider>
+    )
+
+    act(() => {
+      screen.getByTestId('set-eye-level-btn').click()
+    })
+
+    expect(screen.getByTestId('elevation-status')).toHaveTextContent('eye-level')
+    expect(window.localStorage.getItem(DEBUG_DISTANCE_ELEVATION_KEY)).toBe('eye-level')
+  })
+
+  it('initializes cameraElevation from ?elevation=eye-level URL parameter and localStorage', () => {
+    window.history.replaceState({}, '', '/?elevation=eye-level')
+
+    render(
+      <DebugDistanceProvider>
+        <TestConsumer />
+      </DebugDistanceProvider>
+    )
+
+    expect(screen.getByTestId('elevation-status')).toHaveTextContent('eye-level')
+  })
+
+  it('initializes cameraElevation from ?camera=eye-level URL alias', () => {
+    window.history.replaceState({}, '', '/?camera=eye-level')
+
+    render(
+      <DebugDistanceProvider>
+        <TestConsumer />
+      </DebugDistanceProvider>
+    )
+
+    expect(screen.getByTestId('elevation-status')).toHaveTextContent('eye-level')
+  })
+
+  it('synchronizes cameraElevation on storage event', () => {
+    render(
+      <DebugDistanceProvider>
+        <TestConsumer />
+      </DebugDistanceProvider>
+    )
+
+    act(() => {
+      window.dispatchEvent(
+        new StorageEvent('storage', {
+          key: DEBUG_DISTANCE_ELEVATION_KEY,
+          newValue: 'eye-level',
+        })
+      )
+    })
+
+    expect(screen.getByTestId('elevation-status')).toHaveTextContent('eye-level')
   })
 })

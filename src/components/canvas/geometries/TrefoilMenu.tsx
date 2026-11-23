@@ -10,12 +10,14 @@ export interface GeometryProps {
   isExpanded: boolean
   onSelect: (path: string) => void
   isGlitching?: boolean
+  isPaused?: boolean
   theme?: ThemeColor
   params: TrefoilParams
 }
 
 const ITEMS = [
   { label: 'about', path: '/about' },
+  { label: 'videos', path: '/videos' },
   { label: 'more', path: '/more' },
   { label: 'sonny', path: '/sonny', imageUrl: '/images/sonny.png' },
   { label: 'dchc', path: 'https://dc-hardcore.com' },
@@ -36,6 +38,7 @@ export const TrefoilMenu: React.FC<GeometryProps> = ({
   isExpanded,
   onSelect,
   isGlitching = false,
+  isPaused = false,
   theme,
   params,
 }) => {
@@ -85,9 +88,11 @@ export const TrefoilMenu: React.FC<GeometryProps> = ({
     }
 
     // Advance motion along the knot loop in real time
-    const speed = hoveredIdx !== null ? params.speed * 0.25 : params.speed
-    const glitchJitter = isGlitching ? THREE.MathUtils.randFloatSpread(0.02) : 0
-    currentT.current += (speed * delta + glitchJitter)
+    if (!isPaused) {
+      const speed = hoveredIdx !== null ? params.speed * 0.25 : params.speed
+      const glitchJitter = isGlitching ? THREE.MathUtils.randFloatSpread(0.02) : 0
+      currentT.current += (speed * delta + glitchJitter)
+    }
 
     // Update each item's 3D position directly in-place every frame
     ITEMS.forEach((_, index) => {

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { useRouter } from '../routes/Router'
 import { useTheme } from '../context/ThemeContext'
 import { usePowerManager, PowerMode } from '../hooks/usePowerManager'
-import { SceneContainer } from '../components/canvas/SceneContainer'
+import { SceneContainer, CameraAngles } from '../components/canvas/SceneContainer'
 import { GpuGlitchOverlay } from '../components/effects/GpuGlitchOverlay'
 import { GeometryDispatcher } from '../components/canvas/geometries/GeometryDispatcher'
 import { Tuner } from '../components/ui/Tuner'
@@ -20,6 +20,7 @@ import {
   SONNY_CONTAINER_STYLES,
 } from '../context/SonnyContainerContext'
 import { useDebugDistance } from '../context/DebugDistanceContext'
+import { useTuner } from '../context/TunerContext'
 import { scrambleGlyphs } from '../utils/glyphUtils'
 
 export const HomePage: React.FC = () => {
@@ -59,6 +60,12 @@ export const HomePage: React.FC = () => {
     showCoordinates,
     setShowCoordinates,
     toggleCoordinates,
+    coordFrame,
+    setCoordFrame,
+    toggleCoordFrame,
+    cameraElevation,
+    setCameraElevation,
+    toggleCameraElevation,
   } = useDebugDistance()
 
   // Active geometry mode (defaults to 'tesseract' if not specified or invalid)
@@ -66,25 +73,82 @@ export const HomePage: React.FC = () => {
     ? queryParams.geo
     : DEFAULT_GEOMETRY_MODE
 
-  const isTunerParam =
-    queryParams.tuner === 'true' ||
-    queryParams.tuner === '1' ||
-    queryParams.debug === 'true'
-
-  const [isTunerVisible, setIsTunerVisible] = useState<boolean>(() => {
-    if (isTunerParam) return true
-    if (typeof window !== 'undefined') {
-      try {
-        return (
-          window.localStorage.getItem('trongngyn_tuner_visible') === 'true' ||
-          window.localStorage.getItem('antigravity_tuner_visible') === 'true'
-        )
-      } catch {
-        return false
+  const tunerContext = useTuner()
+  const [localTunerVisible, setLocalTunerVisible] = useState<boolean>(() => {
+    try {
+      if (
+        queryParams.tuner === 'true' ||
+        queryParams.tuner === '1' ||
+        queryParams.debug === 'true'
+      ) {
+        return true
       }
+      return (
+        window.localStorage.getItem('trongngyn_tuner_visible') === 'true' ||
+        window.localStorage.getItem('antigravity_tuner_visible') === 'true'
+      )
+    } catch {
+      return false
     }
-    return false
   })
+
+  const isTunerVisible = tunerContext.isStandAlone ? localTunerVisible : tunerContext.isTunerVisible
+  const setIsTunerVisible = tunerContext.isStandAlone ? setLocalTunerVisible : tunerContext.setIsTunerVisible
+
+  // Detect pause query param: ?paused=true, ?paused=1, ?pause=true, ?pause=1
+  const isPauseParam =
+    queryParams.paused === 'true' ||
+    queryParams.paused === '1' ||
+    queryParams.pause === 'true' ||
+    queryParams.pause === '1'
+
+  const [isAnimationPaused, setIsAnimationPaused] = useState<boolean>(() => isPauseParam)
+  const isAnimationPausedRef = useRef(isAnimationPaused)
+  isAnimationPausedRef.current = isAnimationPaused
+
+  // Camera Orbit Inspection angles (Yaw, Pitch, Distance)
+  const defaultInspectPitch = cameraElevation === 'eye-level' ? 0 : 25.07
+  const defaultInspectDist = cameraElevation === 'eye-level' ? 6.0 : 6.017
+
+  const [cameraAngles, setCameraAngles] = useState<CameraAngles>(() => {
+    let initialYaw = 0
+    let initialPitch = defaultInspectPitch
+    let initialDist = defaultInspectDist
+    if (queryParams.yaw) {
+      const parsed = parseFloat(queryParams.yaw)
+      if (!Number.isNaN(parsed)) initialYaw = parsed
+    }
+    if (queryParams.pitch) {
+      const parsed = parseFloat(queryParams.pitch)
+      if (!Number.isNaN(parsed)) initialPitch = parsed
+    }
+    if (queryParams.zoom || queryParams.distance || queryParams.dist_zoom) {
+      const parsed = parseFloat(queryParams.zoom || queryParams.distance || queryParams.dist_zoom)
+      if (!Number.isNaN(parsed)) initialDist = parsed
+    }
+    return { yaw: initialYaw, pitch: initialPitch, distance: initialDist }
+  })
+  const cameraAnglesRef = useRef(cameraAngles)
+  useEffect(() => {
+    cameraAnglesRef.current = cameraAngles
+  }, [cameraAngles])
+
+  // Sync default pitch/distance when cameraElevation changes after mount
+  const prevCameraElevationRef = useRef(cameraElevation)
+  useEffect(() => {
+    if (prevCameraElevationRef.current !== cameraElevation) {
+      prevCameraElevationRef.current = cameraElevation
+      const targetPitch = cameraElevation === 'eye-level' ? 0 : 25.07
+      const targetDist = cameraElevation === 'eye-level' ? 6.0 : 6.017
+      setCameraAngles((prev) => ({ ...prev, pitch: targetPitch, distance: targetDist }))
+    }
+  }, [cameraElevation])
+
+  const handleResetCameraAngles = () => {
+    const targetPitch = cameraElevation === 'eye-level' ? 0 : 25.07
+    const targetDist = cameraElevation === 'eye-level' ? 6.0 : 6.017
+    setCameraAngles({ yaw: 0, pitch: targetPitch, distance: targetDist })
+  }
 
   const [geometryParams, setGeometryParams] = useState<AllGeometryParams>(DEFAULT_GEOMETRY_PARAMS)
 
@@ -151,7 +215,7 @@ export const HomePage: React.FC = () => {
 
   // Scramble glyphs while touch-hovered (press-and-hold tactile feedback on mobile)
   useEffect(() => {
-    if (!isTouchHovered) {
+    if (!isTouchHovered || isAnimationPaused) {
       setWelcomeDisplay('welcome')
       return
     }
@@ -161,7 +225,21 @@ export const HomePage: React.FC = () => {
     }, 85)
 
     return () => window.clearInterval(interval)
-  }, [isTouchHovered])
+  }, [isTouchHovered, isAnimationPaused])
+
+  // Synchronize pause query param
+  useEffect(() => {
+    if (isPauseParam) {
+      setIsAnimationPaused(true)
+    }
+  }, [isPauseParam])
+
+  // Cancel active glitch if paused
+  useEffect(() => {
+    if (isAnimationPaused) {
+      setIsGlitching(false)
+    }
+  }, [isAnimationPaused])
 
   // Synchronize if query params change
   useEffect(() => {
@@ -191,6 +269,14 @@ export const HomePage: React.FC = () => {
     }
   }, [queryParams.dist, queryParams.debugDistance, setShowDistance])
 
+  // Synchronize camera elevation query param: ?elevation=eye-level or ?camera=eye-level
+  useEffect(() => {
+    const elev = queryParams.elevation ?? queryParams.camera
+    if (elev === 'eye-level' || elev === 'elevated') {
+      setCameraElevation(elev)
+    }
+  }, [queryParams.elevation, queryParams.camera, setCameraElevation])
+
   // Periodic fullscreen GPU artifact glitch every `glitchInterval` seconds, lasting 400ms to 3,000ms
   useEffect(() => {
     const prefersReducedMotion =
@@ -198,7 +284,7 @@ export const HomePage: React.FC = () => {
       typeof window.matchMedia === 'function' &&
       window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
-    if (prefersReducedMotion || !isDocumentVisible) return
+    if (prefersReducedMotion || !isDocumentVisible || isAnimationPaused) return
 
     let timerId: number
     let resetId: number
@@ -229,7 +315,7 @@ export const HomePage: React.FC = () => {
       window.clearTimeout(timerId)
       window.clearTimeout(resetId)
     }
-  }, [glitchInterval, isDocumentVisible])
+  }, [glitchInterval, isDocumentVisible, isAnimationPaused])
 
   const handleSelect = (path: string) => {
     navigate(path)
@@ -270,7 +356,7 @@ export const HomePage: React.FC = () => {
             'color: #39ff14; font-weight: bold; background: #1c1b22; padding: 2px 6px; border-radius: 4px;'
           )
           console.log(
-            'Animation menu is now visible in the bottom-right HUD.\nCommands:\n  tuner()                  - Toggle visibility\n  setGeo(mode)             - Switch topology\n  geoList()                - List all topologies\n  setSonnyContainer(style) - Switch Sonny 3D container\n  sonnyContainers()        - List all Sonny containers\n  toggleDistance()         - Toggle distance debug labels\n  showDistance(boolean)    - Set distance debug labels\n  hideTuner()              - Hide HUD tuner'
+            'Animation menu is now visible in the bottom-right HUD.\nCommands:\n  tuner()                  - Toggle visibility\n  pause(boolean?)          - Pause or resume animation engine\n  togglePause()            - Toggle animation pause\n  isPaused()               - Check animation pause status\n  setGeo(mode)             - Switch topology\n  geoList()                - List all topologies\n  setSonnyContainer(style) - Switch Sonny 3D container\n  sonnyContainers()        - List all Sonny containers\n  toggleDistance()         - Toggle distance debug labels\n  showDistance(boolean)    - Set distance debug labels\n  setCameraElevation(elev) - Switch camera elevation (\'elevated\', \'eye-level\')\n  toggleCameraElevation()  - Toggle camera elevation\n  hideTuner()              - Hide HUD tuner'
           )
         } else {
           console.log(
@@ -281,6 +367,28 @@ export const HomePage: React.FC = () => {
         return next
       })
     }
+
+    const pauseCmd = (paused?: boolean) => {
+      const next = typeof paused === 'boolean' ? paused : true
+      setIsAnimationPaused(next)
+      console.log(
+        `%c[ANIMATION ENGINE] ${next ? 'PAUSED' : 'RESUMED'}`,
+        'color: #39ff14; font-weight: bold; background: #1c1b22; padding: 2px 6px; border-radius: 4px;'
+      )
+    }
+
+    const togglePauseCmd = () => {
+      setIsAnimationPaused((prev) => {
+        const next = !prev
+        console.log(
+          `%c[ANIMATION ENGINE] ${next ? 'PAUSED' : 'RESUMED'}`,
+          'color: #39ff14; font-weight: bold; background: #1c1b22; padding: 2px 6px; border-radius: 4px;'
+        )
+        return next
+      })
+    }
+
+    const isPausedCmd = () => isAnimationPausedRef.current
 
     const setGeo = (mode: string) => {
       if (isValidGeometryMode(mode)) {
@@ -322,6 +430,9 @@ export const HomePage: React.FC = () => {
     win.tuner = toggleTuner
     win.showTuner = () => toggleTuner(true)
     win.hideTuner = () => toggleTuner(false)
+    win.pause = pauseCmd
+    win.togglePause = togglePauseCmd
+    win.isPaused = isPausedCmd
     win.setGeo = setGeo
     win.geoList = geoList
     win.setSonnyContainer = setSonnyContainerCmd
@@ -344,6 +455,49 @@ export const HomePage: React.FC = () => {
     win.distanceMetric = () => distanceMetric
     win.toggleCoords = toggleCoordinates
     win.showCoords = (show?: boolean) => setShowCoordinates(typeof show === 'boolean' ? show : true)
+    win.setCoordFrame = (frame: string) => {
+      if (frame === 'view' || frame === 'world') {
+        setCoordFrame(frame)
+        console.log(`%c[COORD FRAME] Switched to '${frame}'`, 'color: #39ff14')
+      } else {
+        console.warn(`[COORD FRAME] Invalid frame '${frame}'. Available: 'view', 'world'`)
+      }
+    }
+    win.toggleCoordFrame = () => {
+      toggleCoordFrame()
+      console.log('%c[COORD FRAME] Toggled coordinate frame', 'color: #39ff14')
+    }
+    win.coordFrame = () => coordFrame
+    win.setCameraElevation = (elev: string) => {
+      if (elev === 'eye-level' || elev === 'elevated') {
+        setCameraElevation(elev)
+        console.log(`%c[CAMERA ELEVATION] Switched to '${elev}'`, 'color: #39ff14')
+      } else {
+        console.warn(`[CAMERA ELEVATION] Invalid elevation '${elev}'. Available: 'elevated', 'eye-level'`)
+      }
+    }
+    win.toggleCameraElevation = () => {
+      toggleCameraElevation()
+      console.log('%c[CAMERA ELEVATION] Toggled camera elevation', 'color: #39ff14')
+    }
+    win.cameraElevation = () => cameraElevation
+    win.setInspectYaw = (deg: number) => {
+      setCameraAngles((prev) => ({ ...prev, yaw: deg }))
+      console.log(`%c[CAMERA INSPECT] Yaw set to ${deg}°`, 'color: #39ff14')
+    }
+    win.setInspectPitch = (deg: number) => {
+      setCameraAngles((prev) => ({ ...prev, pitch: deg }))
+      console.log(`%c[CAMERA INSPECT] Pitch set to ${deg}°`, 'color: #39ff14')
+    }
+    win.setInspectDistance = (dist: number) => {
+      setCameraAngles((prev) => ({ ...prev, distance: dist }))
+      console.log(`%c[CAMERA INSPECT] Distance set to ${dist}`, 'color: #39ff14')
+    }
+    win.resetCameraAngles = () => {
+      handleResetCameraAngles()
+      console.log('%c[CAMERA INSPECT] Reset camera angles to default view', 'color: #39ff14')
+    }
+    win.cameraAngles = () => cameraAnglesRef.current
     win.glitch = handleTriggerGlitchBurst
     win.triggerGlitch = handleTriggerGlitchBurst
     win.setTheme = setTheme
@@ -366,6 +520,9 @@ export const HomePage: React.FC = () => {
       delete win.tuner
       delete win.showTuner
       delete win.hideTuner
+      delete win.pause
+      delete win.togglePause
+      delete win.isPaused
       delete win.setGeo
       delete win.geoList
       delete win.setSonnyContainer
@@ -378,6 +535,18 @@ export const HomePage: React.FC = () => {
       delete win.distanceMetric
       delete win.toggleCoords
       delete win.showCoords
+      delete win.setCoordFrame
+      delete win.toggleCoordFrame
+      delete win.coordFrame
+      delete win.setCameraElevation
+      delete win.toggleCameraElevation
+      delete win.cameraElevation
+      delete win.setInspectYaw
+      delete win.setInspectPitch
+      delete win.setInspectDistance
+      delete win.resetCameraAngles
+      delete win.cameraAngles
+      delete win.cameraElevation
       delete win.glitch
       delete win.triggerGlitch
       delete win.setTheme
@@ -394,6 +563,17 @@ export const HomePage: React.FC = () => {
     setSonnyContainer,
     toggleDistance,
     setShowDistance,
+    setDistanceMetric,
+    toggleDistanceMetric,
+    distanceMetric,
+    setShowCoordinates,
+    toggleCoordinates,
+    setCoordFrame,
+    toggleCoordFrame,
+    coordFrame,
+    setCameraElevation,
+    toggleCameraElevation,
+    cameraElevation,
     setTheme,
     setCustomColor,
     setIsThemeLocked,
@@ -406,7 +586,10 @@ export const HomePage: React.FC = () => {
   ])
 
   return (
-    <main className="relative w-full h-full min-h-dvh overflow-hidden bg-[#1c1b22] flex items-center justify-center select-none">
+    <main
+      data-effects-paused={isAnimationPaused ? 'true' : undefined}
+      className="relative w-full h-full min-h-dvh overflow-hidden bg-[#1c1b22] flex items-center justify-center select-none"
+    >
       {/* Fullscreen Random "Graphics Card Dying" Artifact Glitch Overlay */}
       <GpuGlitchOverlay
         isActive={isGlitching}
@@ -418,6 +601,9 @@ export const HomePage: React.FC = () => {
       {/* 3D Canvas Background & Geometry Animation */}
       <SceneContainer
         isGlitching={isGlitching}
+        isPaused={isAnimationPaused}
+        cameraElevation={cameraElevation}
+        cameraAngles={cameraAngles}
         theme={currentTheme}
         targetFps={targetFps}
         targetDpr={targetDpr}
@@ -436,6 +622,7 @@ export const HomePage: React.FC = () => {
           isExpanded={isExpanded}
           onSelect={handleSelect}
           isGlitching={isGlitching}
+          isPaused={isAnimationPaused}
           theme={currentTheme}
         />
       </SceneContainer>
@@ -443,6 +630,7 @@ export const HomePage: React.FC = () => {
       {/* Accessibility screen-reader navigation links */}
       <nav className="sr-only" aria-label="Direct Destinations">
         <button onClick={() => handleSelect('/about')}>about</button>
+        <button onClick={() => handleSelect('/videos')}>videos</button>
         <button onClick={() => handleSelect('/more')}>more</button>
         <button onClick={() => handleSelect('/sonny')}>sonny</button>
         <a href="https://dc-hardcore.com" target="_blank" rel="noopener noreferrer">dchc</a>
@@ -519,8 +707,20 @@ export const HomePage: React.FC = () => {
           onDistanceMetricChange={setDistanceMetric}
           showCoordinates={showCoordinates}
           onToggleShowCoordinates={setShowCoordinates}
+          coordFrame={coordFrame}
+          onCoordFrameChange={setCoordFrame}
+          cameraElevation={cameraElevation}
+          onCameraElevationChange={setCameraElevation}
+          cameraAngles={cameraAngles}
+          onCameraAnglesChange={setCameraAngles}
+          onResetCameraAngles={handleResetCameraAngles}
+          isPaused={isAnimationPaused}
+          onTogglePause={(paused) =>
+            setIsAnimationPaused(typeof paused === 'boolean' ? paused : !isAnimationPaused)
+          }
           onClose={() => {
             setIsTunerVisible(false)
+            setIsAnimationPaused(false)
             try {
               window.localStorage.removeItem('trongngyn_tuner_visible')
               window.localStorage.removeItem('antigravity_tuner_visible')

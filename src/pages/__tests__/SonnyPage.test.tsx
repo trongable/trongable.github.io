@@ -26,6 +26,6 @@ describe('SonnyPage Component', () => {
     fireEvent.click(backBtn)
 
     const watcher = screen.getByTestId('location-watcher')
-    expect(watcher.getAttribute('data-search')).toContain('halo=true')
+    expect(watcher.getAttribute('data-search')).toContain('expanded=true')
   })
 })

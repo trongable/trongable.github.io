@@ -13,6 +13,7 @@ This repository hosts a personal web platform and interactive 3D mathematical ge
   - `/about`: Clean minimalist page shell.
   - `/more`: Clean minimalist page shell.
   - `/sonny`: Clean minimalist page shell.
+  - `/videos`: Cerebro 3D spherical chamber video archive with 7 inward-curving YouTube video screens and smooth theater takeover.
   - `dchc`: External direct navigation link to `https://dc-hardcore.com`.
 
 ---
@@ -54,6 +55,9 @@ Themes mutate randomly following fullscreen glitch events or can be controlled p
 A secret diagnostic and tuning HUD positioned in the bottom-right corner, elevated at `z-[60]` to remain interactive during glitch bursts:
 - **Unlock via Browser Console**:
   - `tuner()`: Toggle HUD visibility (persisted in `localStorage` as `trongngyn_tuner_visible`).
+  - `pause(boolean?)`: Pause or resume all 3D canvas rendering, tick governors, glitch loops, and CSS animations.
+  - `togglePause()`: Toggle animation engine pause state.
+  - `isPaused()`: Print active animation engine pause state.
   - `glitch()` / `triggerGlitch()`: Immediately trigger a procedural glitch burst.
   - `setTheme(id)`: Force active preset theme (`yellow`, `purple`, `teal`).
   - `setColor(hex)` / `setCustomColor(hex)`: Set a custom primary hex color with auto-computed companion highlight.
@@ -66,18 +70,32 @@ A secret diagnostic and tuning HUD positioned in the bottom-right corner, elevat
   - `geoList()`: Output all 8 topologies to console.
   - `setSonnyContainer('capsule')`: Switch Sonny 3D container (`capsule`, `diorama`, `pedestal`, `wirebox`, `crystal`, `none`).
   - `sonnyContainers()`: Output all Sonny container styles to console.
-  - `toggleDistance()`: Toggle real-time distance telemetry labels (`d: X.XX` / `z: X.XX`) above all 3D objects.
-  - `showDistance(boolean)`: Explicitly set distance label visibility.
-  - `setDistanceMetric('euclid' | 'depth')`: Switch distance metric between radial Euclidean (`d: X.XX`) and camera view-plane depth (`z: X.XX`).
+  - `toggleDistance()`: Toggle real-time distance telemetry labels (`d: X.XX` / `depth: X.XX`) and Telemetry Probe Mode (replaces badges with translucent spheres).
+  - `showDistance(boolean)`: Explicitly set distance label visibility / probe mode.
+  - `setDistanceMetric('euclid' | 'depth')`: Switch distance metric between radial Euclidean (`d: X.XX`) and camera view-plane depth (`depth: X.XX`).
   - `toggleDistanceMetric()`: Toggle distance metric.
   - `distanceMetric()`: Print active distance metric.
   - `toggleCoords()`: Toggle real-time 3D $(x, y, z)$ coordinate readout in telemetry labels.
   - `showCoords(boolean)`: Explicitly set $(x, y, z)$ coordinate readout visibility.
+  - `setCoordFrame('view' | 'world')`: Switch coordinate frame between camera view space (`view`: screen-relative where $Z_{\text{front}} > Z_{\text{back}}$) and global manifold (`world`: raw world $(x, y, z)$).
+  - `toggleCoordFrame()`: Toggle coordinate frame.
+  - `coordFrame()`: Print active coordinate frame.
+  - `setCameraElevation('elevated' | 'eye-level')`: Switch camera elevation / pitch angle between standard elevated view ($25^\circ$ downward pitch at $[0, 2.55, 5.45]$) and eye level ($0^\circ$ pitch at $[0, 0, 6.0]$) to eliminate downward elevation skew when auditing 3D depth and 4D projections.
+  - `toggleCameraElevation()`: Toggle camera elevation.
+  - `cameraElevation()`: Print active camera elevation state.
+  - `setInspectYaw(deg)`: Set camera orbit yaw angle ($-180^\circ$ to $+180^\circ$).
+  - `setInspectPitch(deg)`: Set camera orbit pitch angle ($-85^\circ$ to $+85^\circ$).
+  - `setInspectDistance(dist)`: Set camera orbit distance / zoom ($2.5$ to $12.0$).
+  - `resetCameraAngles()`: Reset camera orbit angles to default view.
+  - `cameraAngles()`: Print active camera orbit angles (`{ yaw, pitch, distance }`).
   - `hideTuner()`: Dismiss HUD.
-- **Unlock via URL**: Append `?tuner=true`, `?geo=...`, `?container=...`, `?dist=true`, `?metric=depth`, or `?coords=false` to the URL.
+- **Unlock via URL**: Append `?tuner=true`, `?paused=true`, `?geo=...`, `?container=...`, `?dist=true`, `?metric=depth`, `?coords=false`, `?frame=view`, `?elevation=eye-level`, `?yaw=...`, `?pitch=...`, or `?zoom=...` to the URL.
 - **Tuning Drawer**:
-  - **`3D Topologies` Tab**: Real-time sliders for animation speeds, radii, scales, chaos parameters, wireframe toggles, dedicated `↺ Reset {name} to Defaults` buttons, **Sonny 3D Container** selector (6 styles), and **Distance Labels (HUD)** telemetry toggle with **Metric Switcher** (`Euclid (d:)` vs `View Depth (z:)`) and **Coords (XYZ)** toggle.
-  - **`VFX & Glitch` Tab**: Preset theme palettes, custom hex text entry + native color picker with real-time auto-computed highlight color preview, theme locking toggle, glitch frequency interval slider (2s–20s), memory picture appearance rate slider (0%–100%), manual `⚡ Trigger Glitch` button, and **Power & Performance Manager** with 3 modes (`Auto` [default: uncapped FPS, managed DPR], `Eco` [Tuner only: uncapped FPS, reduced DPR 1.0], and `Uncapped` [Tuner only: uncapped FPS, forced DPR 2.0 on battery]).
+  - **`3D Topologies` Tab**: Real-time sliders for animation speeds, radii, scales, chaos parameters, wireframe toggles, dedicated `↺ Reset {name} to Defaults` buttons, **Sonny 3D Container** selector (6 styles), **Distance Labels (HUD)** telemetry toggle with **Metric Switcher** (`Euclid (d:)` vs `View Depth (depth:)`), **Coords (XYZ)** toggle, **Coord Frame** switcher (`View (Screen)` vs `World (Global)`), **Camera Angle** switcher (`Elevated (25°)` vs `Eye-Level (0°)`), **360° Camera Orbit Inspection** with real-time Yaw/Pitch/Distance sliders and Quick Presets (`Front`, `Side`, `Top`), and automatic **Tesseract 4D Vertex Tagging** (`[V13 outer]`, `[V7 inner]`, `[V10 outer]`, `[V0 inner]`).
+  - **`VFX & Glitch` Tab**: Preset theme palettes, custom hex text entry + native color picker with real-time auto-computed highlight color preview, theme locking toggle, glitch frequency interval slider (2s–20s), memory picture appearance rate slider (0%–100%), manual `⚡ Trigger Glitch` button, **Animation Engine** live/freeze status toggle, and **Power & Performance Manager** with 3 modes (`Auto` [default: uncapped FPS, managed DPR], `Eco` [Tuner only: uncapped FPS, reduced DPR 1.0], and `Uncapped` [Tuner only: uncapped FPS, forced DPR 2.0 on battery]).
+- **Persistent Animation Pause & Orbit Dock**:
+  - Dedicated `⏸` / `▶` pause button adjacent to the launcher pill, visible whenever the Tuner HUD is enabled.
+  - Compact **Inspect Orbit Dock** floating above the launcher pill when paused, providing instant Yaw/Pitch sliders, presets, and reset without opening the full drawer.
 
 ---
 
@@ -267,7 +285,7 @@ npm run preview
 3. **Register Route in Router**:
    In `src/routes/Router.tsx`, add the path to `RoutePath`:
    ```ts
-   export type RoutePath = '/' | '/about' | '/more' | '/sonny'
+   export type RoutePath = '/' | '/about' | '/more' | '/sonny' | '/videos'
    ```
 4. **Create Page Component**:
    In `src/pages/<Name>Page.tsx`, follow the minimal shell pattern with `useRouter()` and `← home` back button.

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, act } from '@testing-library/react'
 import { HomePage } from '../HomePage'
 import { RouterProvider } from '../../routes/Router'
@@ -11,11 +11,25 @@ vi.mock('../../components/canvas/SceneContainer', () => ({
   SceneContainer: ({
     children,
     onBackgroundClick,
+    isPaused,
+    cameraElevation,
+    cameraAngles,
   }: {
     children: React.ReactNode
     onBackgroundClick?: () => void
+    isPaused?: boolean
+    cameraElevation?: string
+    cameraAngles?: { yaw: number; pitch: number; distance: number }
   }) => (
-    <div data-testid="mock-scene-container" onClick={onBackgroundClick}>
+    <div
+      data-testid="mock-scene-container"
+      data-paused={isPaused ? 'true' : 'false'}
+      data-camera-elevation={cameraElevation || 'elevated'}
+      data-camera-yaw={cameraAngles?.yaw}
+      data-camera-pitch={cameraAngles?.pitch}
+      data-camera-dist={cameraAngles?.distance}
+      onClick={onBackgroundClick}
+    >
       {children}
     </div>
   ),
@@ -30,14 +44,31 @@ vi.mock('../../components/canvas/HaloMenuRing', () => ({
 
 // Mock GeometryDispatcher in jsdom test environment
 vi.mock('../../components/canvas/geometries/GeometryDispatcher', () => ({
-  GeometryDispatcher: ({ mode, isExpanded }: { mode: string; isExpanded: boolean }) => (
-    <div data-testid="mock-geometry-dispatcher" data-mode={mode} data-expanded={isExpanded}>
+  GeometryDispatcher: ({
+    mode,
+    isExpanded,
+    isPaused,
+  }: {
+    mode: string
+    isExpanded: boolean
+    isPaused?: boolean
+  }) => (
+    <div
+      data-testid="mock-geometry-dispatcher"
+      data-mode={mode}
+      data-expanded={isExpanded}
+      data-paused={isPaused ? 'true' : 'false'}
+    >
       <div data-testid="mock-halo-ring" data-expanded={isExpanded} />
     </div>
   ),
 }))
 
 describe('HomePage Component', () => {
+  beforeEach(() => {
+    window.localStorage.clear()
+  })
+
   it('renders the unpretentious "welcome" prompt initially', () => {
     render(
       <RouterProvider>
@@ -494,6 +525,22 @@ describe('HomePage Component', () => {
       win.showCoords(true)
     })
     expect(window.localStorage.getItem('trongngyn_debug_distance_coords')).toBe('true')
+
+    expect(typeof win.setCoordFrame).toBe('function')
+    expect(typeof win.toggleCoordFrame).toBe('function')
+    expect(typeof win.coordFrame).toBe('function')
+
+    act(() => {
+      win.setCoordFrame('world')
+    })
+    expect(window.localStorage.getItem('trongngyn_debug_distance_coord_frame')).toBe('world')
+    expect(win.coordFrame()).toBe('world')
+
+    act(() => {
+      win.toggleCoordFrame()
+    })
+    expect(window.localStorage.getItem('trongngyn_debug_distance_coord_frame')).toBe('view')
+    expect(win.coordFrame()).toBe('view')
   })
 
   it('initializes debug distance from ?dist=true query parameter', () => {
@@ -511,5 +558,312 @@ describe('HomePage Component', () => {
     )
 
     expect(window.localStorage.getItem('trongngyn_debug_distance')).toBe('true')
+  })
+
+  it('toggles expansion state when clicking the welcome trigger button directly', () => {
+    // Given: rendered home page
+    window.location.hash = '#/'
+    render(
+      <RouterProvider>
+        <HomePage />
+      </RouterProvider>
+    )
+
+    const welcomeButton = screen.getByTestId('welcome-trigger')
+    const haloRing = screen.getByTestId('mock-halo-ring')
+    expect(haloRing).toHaveAttribute('data-expanded', 'false')
+
+    // When: clicking welcome button
+    fireEvent.click(welcomeButton)
+
+    // Then: expands geometry
+    expect(haloRing).toHaveAttribute('data-expanded', 'true')
+  })
+
+  it('navigates to destination paths when clicking screen-reader accessibility buttons', () => {
+    // Given: rendered home page
+    window.location.hash = '#/'
+    render(
+      <RouterProvider>
+        <HomePage />
+      </RouterProvider>
+    )
+
+    // When: clicking screen-reader buttons
+    const srNav = screen.getByRole('navigation', { name: 'Direct Destinations' })
+    const aboutBtn = screen.getByRole('button', { name: 'about' })
+    const moreBtn = screen.getByRole('button', { name: 'more' })
+    const sonnyBtn = screen.getByRole('button', { name: 'sonny' })
+
+    expect(srNav).toBeInTheDocument()
+
+    fireEvent.click(aboutBtn)
+    expect(window.location.hash).toBe('#/about')
+
+    fireEvent.click(moreBtn)
+    expect(window.location.hash).toBe('#/more')
+
+    fireEvent.click(sonnyBtn)
+    expect(window.location.hash).toBe('#/sonny')
+  })
+
+  it('hides Tuner HUD and removes localStorage persistence when closing via onClose', () => {
+    // Given: tuner open via query param
+    window.location.hash = '#/?tuner=true'
+    window.localStorage.setItem('trongngyn_tuner_visible', 'true')
+
+    render(
+      <RouterProvider>
+        <ThemeProvider>
+          <HomePage />
+        </ThemeProvider>
+      </RouterProvider>
+    )
+
+    expect(screen.getByTestId('geometry-tuner')).toBeInTheDocument()
+
+    // When: clicking close button on Tuner
+    const closeBtn = screen.getByLabelText('Hide tuner menu')
+    fireEvent.click(closeBtn)
+
+    // Then: tuner is dismissed and key removed
+    expect(screen.queryByTestId('geometry-tuner')).not.toBeInTheDocument()
+    expect(window.localStorage.getItem('trongngyn_tuner_visible')).toBeNull()
+  })
+
+  it('renders animation pause button strictly when tuner is visible, and controls pause state', () => {
+    // Given: home page without tuner visible
+    window.location.hash = '#/'
+    const { unmount } = render(
+      <RouterProvider>
+        <ThemeProvider>
+          <HomePage />
+        </ThemeProvider>
+      </RouterProvider>
+    )
+
+    // Then: pause button is not rendered
+    expect(screen.queryByTestId('animation-pause-button')).not.toBeInTheDocument()
+    unmount()
+
+    // When: opening page with tuner visible
+    window.location.hash = '#/?tuner=true'
+    render(
+      <RouterProvider>
+        <ThemeProvider>
+          <HomePage />
+        </ThemeProvider>
+      </RouterProvider>
+    )
+
+    // Then: pause button is visible next to tuner launcher
+    const pauseBtn = screen.getByTestId('animation-pause-button')
+    const sceneContainer = screen.getByTestId('mock-scene-container')
+    const mainEl = document.querySelector('main')
+
+    expect(pauseBtn).toBeInTheDocument()
+    expect(pauseBtn).toHaveTextContent('⏸')
+    expect(sceneContainer).toHaveAttribute('data-paused', 'false')
+    expect(mainEl).not.toHaveAttribute('data-effects-paused')
+
+    // When: clicking pause button
+    fireEvent.click(pauseBtn)
+
+    // Then: effects are paused
+    expect(pauseBtn).toHaveTextContent('▶')
+    expect(sceneContainer).toHaveAttribute('data-paused', 'true')
+    expect(mainEl).toHaveAttribute('data-effects-paused', 'true')
+
+    // When: closing tuner, auto-unpauses
+    const closeBtn = screen.getByLabelText('Hide tuner menu')
+    fireEvent.click(closeBtn)
+
+    expect(sceneContainer).toHaveAttribute('data-paused', 'false')
+    expect(mainEl).not.toHaveAttribute('data-effects-paused')
+  })
+
+  it('controls animation pause via secret console commands pause, togglePause, and isPaused', () => {
+    window.location.hash = '#/?tuner=true'
+    render(
+      <RouterProvider>
+        <ThemeProvider>
+          <HomePage />
+        </ThemeProvider>
+      </RouterProvider>
+    )
+
+    const win = window as any
+    expect(typeof win.pause).toBe('function')
+    expect(typeof win.togglePause).toBe('function')
+    expect(typeof win.isPaused).toBe('function')
+
+    const sceneContainer = screen.getByTestId('mock-scene-container')
+    const mainEl = document.querySelector('main')
+
+    expect(win.isPaused()).toBe(false)
+    expect(sceneContainer).toHaveAttribute('data-paused', 'false')
+
+    // When: calling win.pause(true)
+    act(() => {
+      win.pause(true)
+    })
+    expect(win.isPaused()).toBe(true)
+    expect(sceneContainer).toHaveAttribute('data-paused', 'true')
+    expect(mainEl).toHaveAttribute('data-effects-paused', 'true')
+
+    // When: calling win.togglePause()
+    act(() => {
+      win.togglePause()
+    })
+    expect(win.isPaused()).toBe(false)
+    expect(sceneContainer).toHaveAttribute('data-paused', 'false')
+    expect(mainEl).not.toHaveAttribute('data-effects-paused')
+  })
+
+  it('initializes animation paused state from ?paused=true query parameter', () => {
+    window.location.hash = '#/?tuner=true&paused=true'
+    render(
+      <RouterProvider>
+        <ThemeProvider>
+          <HomePage />
+        </ThemeProvider>
+      </RouterProvider>
+    )
+
+    const sceneContainer = screen.getByTestId('mock-scene-container')
+    const mainEl = document.querySelector('main')
+    const pauseBtn = screen.getByTestId('animation-pause-button')
+
+    expect(sceneContainer).toHaveAttribute('data-paused', 'true')
+    expect(mainEl).toHaveAttribute('data-effects-paused', 'true')
+    expect(pauseBtn).toHaveTextContent('▶')
+  })
+
+  it('controls camera elevation via secret console commands setCameraElevation, toggleCameraElevation, and cameraElevation', () => {
+    window.location.hash = '#/?tuner=true'
+    render(
+      <RouterProvider>
+        <ThemeProvider>
+          <DebugDistanceProvider>
+            <HomePage />
+          </DebugDistanceProvider>
+        </ThemeProvider>
+      </RouterProvider>
+    )
+
+    const win = window as any
+    expect(typeof win.setCameraElevation).toBe('function')
+    expect(typeof win.toggleCameraElevation).toBe('function')
+    expect(typeof win.cameraElevation).toBe('function')
+
+    const sceneContainer = screen.getByTestId('mock-scene-container')
+    expect(win.cameraElevation()).toBe('elevated')
+    expect(sceneContainer).toHaveAttribute('data-camera-elevation', 'elevated')
+
+    // When: setting to eye-level
+    act(() => {
+      win.setCameraElevation('eye-level')
+    })
+    expect(win.cameraElevation()).toBe('eye-level')
+    expect(sceneContainer).toHaveAttribute('data-camera-elevation', 'eye-level')
+
+    // When: toggling elevation
+    act(() => {
+      win.toggleCameraElevation()
+    })
+    expect(win.cameraElevation()).toBe('elevated')
+    expect(sceneContainer).toHaveAttribute('data-camera-elevation', 'elevated')
+  })
+
+  it('initializes camera elevation from ?elevation=eye-level URL parameter', () => {
+    window.location.hash = '#/?tuner=true&elevation=eye-level'
+    render(
+      <RouterProvider>
+        <ThemeProvider>
+          <DebugDistanceProvider>
+            <HomePage />
+          </DebugDistanceProvider>
+        </ThemeProvider>
+      </RouterProvider>
+    )
+
+    const sceneContainer = screen.getByTestId('mock-scene-container')
+    expect(sceneContainer).toHaveAttribute('data-camera-elevation', 'eye-level')
+  })
+
+  it('controls camera orbit inspection via console commands setInspectYaw, setInspectPitch, setInspectDistance, resetCameraAngles, and cameraAngles', () => {
+    window.location.hash = '#/?tuner=true'
+    render(
+      <RouterProvider>
+        <ThemeProvider>
+          <DebugDistanceProvider>
+            <HomePage />
+          </DebugDistanceProvider>
+        </ThemeProvider>
+      </RouterProvider>
+    )
+
+    const win = window as any
+    expect(typeof win.setInspectYaw).toBe('function')
+    expect(typeof win.setInspectPitch).toBe('function')
+    expect(typeof win.setInspectDistance).toBe('function')
+    expect(typeof win.resetCameraAngles).toBe('function')
+    expect(typeof win.cameraAngles).toBe('function')
+
+    const initialAngles = win.cameraAngles()
+    expect(initialAngles.yaw).toBe(0)
+    expect(initialAngles.pitch).toBeCloseTo(25.07, 1)
+
+    // Adjust yaw
+    act(() => {
+      win.setInspectYaw(45)
+    })
+    expect(win.cameraAngles().yaw).toBe(45)
+    expect(screen.getByTestId('mock-scene-container')).toHaveAttribute('data-camera-yaw', '45')
+
+    // Adjust pitch
+    act(() => {
+      win.setInspectPitch(-30)
+    })
+    expect(win.cameraAngles().pitch).toBe(-30)
+    expect(screen.getByTestId('mock-scene-container')).toHaveAttribute('data-camera-pitch', '-30')
+
+    // Adjust distance
+    act(() => {
+      win.setInspectDistance(8.5)
+    })
+    expect(win.cameraAngles().distance).toBe(8.5)
+    expect(screen.getByTestId('mock-scene-container')).toHaveAttribute('data-camera-dist', '8.5')
+
+    // Reset camera angles
+    act(() => {
+      win.resetCameraAngles()
+    })
+    expect(win.cameraAngles().yaw).toBe(0)
+    expect(win.cameraAngles().pitch).toBeCloseTo(25.07, 1)
+    expect(win.cameraAngles().distance).toBeCloseTo(6.017, 2)
+  })
+
+  it('initializes camera inspection angles from query parameters ?yaw=45&pitch=30&zoom=8.5', () => {
+    window.location.hash = '#/?tuner=true&yaw=45&pitch=30&zoom=8.5'
+    render(
+      <RouterProvider>
+        <ThemeProvider>
+          <DebugDistanceProvider>
+            <HomePage />
+          </DebugDistanceProvider>
+        </ThemeProvider>
+      </RouterProvider>
+    )
+
+    const sceneContainer = screen.getByTestId('mock-scene-container')
+    expect(sceneContainer).toHaveAttribute('data-camera-yaw', '45')
+    expect(sceneContainer).toHaveAttribute('data-camera-pitch', '30')
+    expect(sceneContainer).toHaveAttribute('data-camera-dist', '8.5')
+
+    const win = window as any
+    expect(win.cameraAngles().yaw).toBe(45)
+    expect(win.cameraAngles().pitch).toBe(30)
+    expect(win.cameraAngles().distance).toBe(8.5)
   })
 })

@@ -4,6 +4,7 @@ import { useThree } from '@react-three/fiber'
 export interface FrameGovernorProps {
   targetFps?: number | null // null = uncapped native refresh rate
   isSleeping?: boolean
+  isPaused?: boolean
 }
 
 /**
@@ -14,11 +15,12 @@ export interface FrameGovernorProps {
 export const FrameGovernor: React.FC<FrameGovernorProps> = ({
   targetFps = 60,
   isSleeping = false,
+  isPaused = false,
 }) => {
   const { invalidate } = useThree()
 
   useEffect(() => {
-    if (isSleeping || targetFps === null || targetFps <= 0) return
+    if (isSleeping || isPaused || targetFps === null || targetFps <= 0) return
 
     let handle: number
     let lastRenderTime = performance.now()
@@ -35,7 +37,7 @@ export const FrameGovernor: React.FC<FrameGovernorProps> = ({
 
     handle = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(handle)
-  }, [targetFps, isSleeping, invalidate])
+  }, [targetFps, isSleeping, isPaused, invalidate])
 
   return null
 }
