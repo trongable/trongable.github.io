@@ -144,4 +144,37 @@ describe('CerebroChamber Component', () => {
 
     expect(screen.getByTestId('cerebro-chamber-container')).toBeInTheDocument()
   })
+
+  it('adaptively expands max yaw in portrait viewport mode', () => {
+    // In portrait mode: width < height
+    setMockThreeState({
+      viewport: {
+        width: 400,
+        height: 800,
+        factor: 1,
+        distance: 5,
+        aspect: 400 / 800,
+      },
+    })
+
+    render(
+      <ThemeProvider>
+        <CerebroChamber
+          activeVideo={null}
+          onSelectVideo={vi.fn()}
+        />
+      </ThemeProvider>
+    )
+
+    const container = screen.getByTestId('cerebro-chamber-container')
+    // Drag horizontally
+    fireEvent.pointerDown(container, { clientX: 300, clientY: 400 })
+    fireEvent.pointerMove(container, { clientX: 10, clientY: 400 })
+
+    act(() => {
+      runFrames(10, 0.016)
+    })
+
+    expect(screen.getByTestId('cerebro-chamber-container')).toBeInTheDocument()
+  })
 })

@@ -40,7 +40,20 @@ We have implemented and verified all requested enhancements covering the 3D vide
   - **Lower Tier** (3 panels, index $j \in [0..2]$):
     $$\text{azimuth} = -\frac{\text{arcDegrees}}{3} + j \cdot \frac{\text{arcDegrees}}{3}$$
     $$\text{elevation} = \arcsin\left(\frac{-\text{rowSeparation}/2}{\text{sphereRadius}}\right) \times \frac{180}{\pi}$$
-- **Dynamic Parabolic Curvature**: Procedural cylindrical mesh coordinates and corner brackets recalculate curvature $z_{\text{curv}} = -\frac{x^2}{2 \cdot \text{sphereRadius}}$ and $z_{\text{corner}} = -\frac{(w/2)^2}{2 \cdot \text{sphereRadius}}$ with explicit WebGL resource disposal on change.
+- **Unified Sphere Horizontal Curvature ($R_h = R \cos\phi_{\text{elev}}$)**:
+  Rather than bending to an arbitrary local radius, the horizontal curvature of every video panel, its outer wireframe border, and its 3D title text aligns along the sphere's horizontal latitude circle radius:
+  $$R_h = \text{sphereRadius} \cdot \cos(\phi_{\text{elev}})$$
+  - **Curved Thumbnail Mesh**: Generated with 32 horizontal subdivisions along angular span $\alpha \in [-\arcsin(hw/R_h), +\arcsin(hw/R_h)]$, mapping points to $x = R_h \sin\alpha$ and $z = R_h(1 - \cos\alpha)$.
+  - **Curved Wireframe Border**: 32-segment top and bottom arcs that follow the exact cylindrical sagitta of the screen mesh without clipping.
+  - **Curved 3D Title Typography**: 3D Troika text passed native `curveRadius={Rh}` to curve concavely inward along the exact same latitude arc as the thumbnail mesh.
+- **Enforced Lowercase Typography**:
+  - The videos page container (`VideosPage.tsx`) and theater overlay (`VideoTheaterOverlay.tsx`) enforce CSS `lowercase` across all text elements.
+  - Runtime strings (video titles, glyph scramblers, navigation labels) explicitly execute `.toLowerCase()`, ensuring uniform cyber typography.
+- **Adaptive Mobile Portrait Max Yaw Expansion**:
+  - On mobile devices in portrait orientation (narrow horizontal FOV $\approx 22.3^\circ$), camera yaw bounds automatically adapt:
+    $$\text{effectiveMaxYawDeg} = \max(\text{params.maxYawDeg}, (\text{arcDegrees} / 2) + 12)$$
+  - Allows full swipe and pan range across the entire $100^\circ$ video chamber arc so users can effortlessly inspect all peripheral video panels on portrait viewports.
+- **Editorial Italic Serif Typography**: Applied the platform's signature italic serif typeface (`Newsreader-Italic.ttf`, `fontStyle="italic"`) to the 3D video panel titles in [CurvedVideoPanel.tsx](file:///c:/developer/trongable.github.io/src/components/videos/CurvedVideoPanel.tsx) and the 2D theater player title in [VideoTheaterOverlay.tsx](file:///c:/developer/trongable.github.io/src/components/videos/VideoTheaterOverlay.tsx) (`font-serif italic`), matching the home screen badges.
 
 ### 1.5 Default Flight Transit Speed
 - Updated default `transitSpeed` to `16` (previously `8`) across `videoTunerConfig.ts`, `CurvedVideoPanel.tsx`, and `VideosPage.tsx`.
@@ -85,11 +98,11 @@ We have implemented and verified all requested enhancements covering the 3D vide
 - `npm run typecheck` (`tsc --noEmit`): **0 type errors**.
 
 ### 2.2 Unit & Component Tests (`npm test`)
-- **40 test files passed** (339 tests passed).
+- **40 test files passed** (341 tests passed).
 - Includes comprehensive tests for `CerebroChamber`, `CurvedVideoPanel`, `Tuner`, `CyberTerminalLine`, `MenuItemBadge`, `VideosPage`, and all procedural mathematical topologies.
 
 ### 2.3 Playwright End-to-End Test Suite (`npx playwright test`)
-- **24 tests passed (44.5s)** across **Desktop Chromium** and **Mobile Chrome**:
+- **24 tests passed (50.6s)** across **Desktop Chromium** and **Mobile Chrome**:
   - `TC-01`: Page initial load, header, return button, and WebGL canvas mounting
   - `TC-02`: Accessible video navigation items exist for all 7 videos
   - `TC-03 & TC-04`: Video selection, 3D transit, and theater player overlay mounting

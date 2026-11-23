@@ -25,7 +25,7 @@ const ChamberCameraController: React.FC<ChamberCameraControllerProps> = ({
   wheelDeltaRef,
   params,
 }) => {
-  const { camera } = useThree()
+  const { camera, viewport } = useThree()
 
   const currentYaw = useRef<number>(0)
   const currentPitch = useRef<number>(0)
@@ -33,9 +33,6 @@ const ChamberCameraController: React.FC<ChamberCameraControllerProps> = ({
   const targetPitch = useRef<number>(0)
   const velocityYaw = useRef<number>(0)
   const velocityPitch = useRef<number>(0)
-
-  const maxYaw = THREE.MathUtils.degToRad(params.maxYawDeg)
-  const maxPitch = THREE.MathUtils.degToRad(params.maxPitchDeg)
 
   useFrame((_, delta) => {
     // 1. Process mouse drag or touch screen delta
@@ -73,6 +70,15 @@ const ChamberCameraController: React.FC<ChamberCameraControllerProps> = ({
       wheelDeltaRef.current.x = 0
       wheelDeltaRef.current.y = 0
     }
+
+    // In portrait orientation (narrow horizontal FOV), adaptively expand maxYaw
+    // so users can comfortably sweep the camera past the outermost video panels
+    const isPortrait = viewport.width < viewport.height
+    const effectiveMaxYawDeg = isPortrait
+      ? Math.max(params.maxYawDeg, (params.arcDegrees / 2) + 12)
+      : params.maxYawDeg
+    const maxYaw = THREE.MathUtils.degToRad(effectiveMaxYawDeg)
+    const maxPitch = THREE.MathUtils.degToRad(params.maxPitchDeg)
 
     // Clamp yaw and pitch within calibrated bounds
     targetYaw.current = THREE.MathUtils.clamp(targetYaw.current, -maxYaw, maxYaw)

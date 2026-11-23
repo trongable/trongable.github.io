@@ -97,8 +97,8 @@ test.describe('Videos Page End-to-End Suite', () => {
     const overlay = page.locator('[data-testid="video-theater-overlay"]')
     await expect(overlay).toBeVisible({ timeout: 4000 })
 
-    // Verify title in theater overlay
-    await expect(overlay.getByText(firstVideo.title)).toBeVisible()
+    // Verify title in theater overlay (forced lowercase)
+    await expect(overlay.getByText(firstVideo.title.toLowerCase())).toBeVisible()
 
     // Verify absence of channel names and counters
     await expect(overlay.locator('text=/cerebro/i')).not.toBeVisible()
@@ -121,29 +121,29 @@ test.describe('Videos Page End-to-End Suite', () => {
 
     const overlay = page.locator('[data-testid="video-theater-overlay"]')
     await expect(overlay).toBeVisible({ timeout: 4000 })
-    await expect(overlay.getByText(secondVideo.title)).toBeVisible()
+    await expect(overlay.getByText(secondVideo.title.toLowerCase())).toBeVisible()
 
     // Click Next -> advances to video-3
     const nextBtn = overlay.getByRole('button', { name: 'Next video' })
     await nextBtn.click()
     const thirdVideo = VIDEOS[2]
-    await expect(overlay.getByText(thirdVideo.title)).toBeVisible()
+    await expect(overlay.getByText(thirdVideo.title.toLowerCase())).toBeVisible()
     const nextIframe = overlay.locator('iframe')
     expect(await nextIframe.getAttribute('src')).toContain(thirdVideo.youtubeId)
 
     // Click Prev -> returns to video-2
     const prevBtn = overlay.getByRole('button', { name: 'Previous video' })
     await prevBtn.click()
-    await expect(overlay.getByText(secondVideo.title)).toBeVisible()
+    await expect(overlay.getByText(secondVideo.title.toLowerCase())).toBeVisible()
 
     // Click Prev again -> returns to video-1
     await prevBtn.click()
-    await expect(overlay.getByText(VIDEOS[0].title)).toBeVisible()
+    await expect(overlay.getByText(VIDEOS[0].title.toLowerCase())).toBeVisible()
 
     // Click Prev on video-1 -> wraps around to video-7
     await prevBtn.click()
     const lastVideo = VIDEOS[6]
-    await expect(overlay.getByText(lastVideo.title)).toBeVisible()
+    await expect(overlay.getByText(lastVideo.title.toLowerCase())).toBeVisible()
     const wrapIframe = overlay.locator('iframe')
     expect(await wrapIframe.getAttribute('src')).toContain(lastVideo.youtubeId)
   })
@@ -157,16 +157,16 @@ test.describe('Videos Page End-to-End Suite', () => {
 
     const overlay = page.locator('[data-testid="video-theater-overlay"]')
     await expect(overlay).toBeVisible({ timeout: 4000 })
-    await expect(overlay.getByText(middleVideo.title)).toBeVisible()
+    await expect(overlay.getByText(middleVideo.title.toLowerCase())).toBeVisible()
 
     // Press ArrowRight -> advances to video 5
     await page.keyboard.press('ArrowRight')
     const nextVideo = VIDEOS[4]
-    await expect(overlay.getByText(nextVideo.title)).toBeVisible()
+    await expect(overlay.getByText(nextVideo.title.toLowerCase())).toBeVisible()
 
     // Press ArrowLeft -> returns to video 4
     await page.keyboard.press('ArrowLeft')
-    await expect(overlay.getByText(middleVideo.title)).toBeVisible()
+    await expect(overlay.getByText(middleVideo.title.toLowerCase())).toBeVisible()
 
     // Press Escape -> triggers smooth exit
     await page.keyboard.press('Escape')

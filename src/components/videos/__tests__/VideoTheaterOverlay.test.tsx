@@ -28,7 +28,7 @@ describe('VideoTheaterOverlay Component', () => {
     )
 
     expect(screen.getByTestId('video-theater-overlay')).toBeInTheDocument()
-    expect(screen.getByText(mockVideo.title)).toBeInTheDocument()
+    expect(screen.getByText(mockVideo.title.toLowerCase())).toBeInTheDocument()
 
     // Verifies author name and cerebro references are not present in theater player
     expect(screen.queryByText(/cerebro/i)).not.toBeInTheDocument()

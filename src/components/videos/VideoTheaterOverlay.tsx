@@ -121,9 +121,9 @@ export const VideoTheaterOverlay: React.FC<VideoTheaterOverlayProps> = ({
         className="w-full max-w-[95vw] md:max-w-[92vw] xl:max-w-[88vw] mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-mono tracking-wider text-[var(--theme-primary)] z-10"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex flex-col text-center sm:text-left">
-          <span className="font-semibold text-[var(--theme-highlight)] text-sm md:text-base line-clamp-1">
-            {activeVideo.title}
+        <div className="flex flex-col text-center sm:text-left lowercase">
+          <span className="font-serif italic font-normal text-[var(--theme-highlight)] text-base md:text-lg line-clamp-1 lowercase">
+            {activeVideo.title.toLowerCase()}
           </span>
         </div>
 

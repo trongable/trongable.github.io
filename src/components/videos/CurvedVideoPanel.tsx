@@ -46,7 +46,7 @@ export const CurvedVideoPanel: React.FC<CurvedVideoPanelProps> = ({
   const textRef = useRef<any>(null)
 
   const [isHovered, setIsHovered] = useState(false)
-  const [displayTitle, setDisplayTitle] = useState(video.title)
+  const [displayTitle, setDisplayTitle] = useState(video.title.toLowerCase())
   const scrambleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const flightProgress = useRef(0)
 
@@ -56,8 +56,8 @@ export const CurvedVideoPanel: React.FC<CurvedVideoPanelProps> = ({
   const scratchBaseColor = useRef(new THREE.Color()).current
   const scratchThemeColor = useRef(new THREE.Color()).current
 
-  // Compute 3D position on sphere wall and rotation facing origin
-  const { initialPosition, initialQuaternion } = useMemo(() => {
+  // Compute 3D position on sphere wall and rotation facing origin, plus horizontal latitude radius Rh
+  const { initialPosition, initialQuaternion, Rh } = useMemo(() => {
     let azimuth = video.azimuthDeg
     let elevation = video.elevationDeg
 
@@ -73,6 +73,9 @@ export const CurvedVideoPanel: React.FC<CurvedVideoPanelProps> = ({
       elevation = THREE.MathUtils.radToDeg(Math.asin(clampedRatio))
     }
 
+    const phiRad = THREE.MathUtils.degToRad(elevation)
+    const horizRadius = sphereRadius * Math.cos(phiRad)
+
     const pos = computeSphericalPosition(sphereRadius, azimuth, elevation)
     const dummy = new THREE.Object3D()
     dummy.position.copy(pos)
@@ -80,36 +83,57 @@ export const CurvedVideoPanel: React.FC<CurvedVideoPanelProps> = ({
     return {
       initialPosition: pos,
       initialQuaternion: dummy.quaternion.clone(),
+      Rh: horizRadius,
     }
   }, [video.azimuthDeg, video.elevationDeg, video.tier, video.index, sphereRadius, arcDegrees, rowSeparation])
 
-  // 1. Procedural Curved Screen Geometry (Bent along sphere radius)
+  // 1. Procedural Curved Screen Geometry (Unified horizontal curve aligned with sphere latitude radius Rh)
   const { screenGeo, borderGeo, playRingGeo, playTriangleGeo } = useMemo(() => {
-    const segments = 24
+    const segments = 32
     const sGeo = new THREE.PlaneGeometry(PANEL_WIDTH, PANEL_HEIGHT, segments, 1)
     const posAttr = sGeo.attributes.position
 
+    const hw = PANEL_WIDTH / 2
+    const hh = PANEL_HEIGHT / 2
+    const clampedHw = Math.min(hw, Rh * 0.99)
+    const alphaMax = Math.asin(clampedHw / Rh)
+
     for (let i = 0; i < posAttr.count; i++) {
-      const x = posAttr.getX(i)
-      // Parabolic cylindrical curvature matching sphere wall
-      const zCurv = -(x * x) / (2 * sphereRadius)
+      const u = posAttr.getX(i) // in [-hw, +hw]
+      const alpha = (u / hw) * alphaMax
+      const xCurv = Rh * Math.sin(alpha)
+      const zCurv = Rh * (1 - Math.cos(alpha))
+      posAttr.setX(i, xCurv)
       posAttr.setZ(i, zCurv)
     }
     posAttr.needsUpdate = true
     sGeo.computeVertexNormals()
 
-    // Cyber border wireframe with corner brackets
-    const hw = PANEL_WIDTH / 2
-    const hh = PANEL_HEIGHT / 2
-    const zCorner = -(hw * hw) / (2 * sphereRadius)
+    // Multi-segment curved border wireframe hugging the exact curved perimeter on Rh
+    const borderPoints: THREE.Vector3[] = []
 
-    const borderPoints: THREE.Vector3[] = [
-      new THREE.Vector3(-hw, -hh, zCorner),
-      new THREE.Vector3(hw, -hh, zCorner),
-      new THREE.Vector3(hw, hh, zCorner),
-      new THREE.Vector3(-hw, hh, zCorner),
-      new THREE.Vector3(-hw, -hh, zCorner),
-    ]
+    // Bottom edge: left to right (-hw to +hw at y = -hh)
+    for (let i = 0; i <= segments; i++) {
+      const t = i / segments
+      const alpha = -alphaMax + t * (2 * alphaMax)
+      const x = Rh * Math.sin(alpha)
+      const z = Rh * (1 - Math.cos(alpha))
+      borderPoints.push(new THREE.Vector3(x, -hh, z))
+    }
+
+    // Top edge: right to left (+hw to -hw at y = +hh)
+    for (let i = segments; i >= 0; i--) {
+      const t = i / segments
+      const alpha = -alphaMax + t * (2 * alphaMax)
+      const x = Rh * Math.sin(alpha)
+      const z = Rh * (1 - Math.cos(alpha))
+      borderPoints.push(new THREE.Vector3(x, hh, z))
+    }
+
+    // Close loop back to bottom-left
+    const zCorner = Rh * (1 - Math.cos(-alphaMax))
+    borderPoints.push(new THREE.Vector3(-clampedHw, -hh, zCorner))
+
     const bGeo = new THREE.BufferGeometry().setFromPoints(borderPoints)
 
     // Play icon ring (radius 0.20)
@@ -130,7 +154,7 @@ export const CurvedVideoPanel: React.FC<CurvedVideoPanelProps> = ({
     const ptGeo = new THREE.BufferGeometry().setFromPoints(triPts)
 
     return { screenGeo: sGeo, borderGeo: bGeo, playRingGeo: prGeo, playTriangleGeo: ptGeo }
-  }, [sphereRadius])
+  }, [Rh])
 
   // Explicit WebGL disposal for procedural geometries on parameter change or unmount
   useEffect(() => {
@@ -237,10 +261,10 @@ export const CurvedVideoPanel: React.FC<CurvedVideoPanelProps> = ({
     scrambleTimerRef.current = setInterval(() => {
       iter++
       const progress = iter / 8
-      setDisplayTitle(scrambleGlyphs(video.title, progress))
+      setDisplayTitle(scrambleGlyphs(video.title.toLowerCase(), progress).toLowerCase())
       if (iter >= 8) {
         clearInterval(scrambleTimerRef.current!)
-        setDisplayTitle(video.title)
+        setDisplayTitle(video.title.toLowerCase())
       }
     }, 40)
   }
@@ -252,7 +276,7 @@ export const CurvedVideoPanel: React.FC<CurvedVideoPanelProps> = ({
       document.body.style.cursor = 'default'
     }
     if (scrambleTimerRef.current) clearInterval(scrambleTimerRef.current)
-    setDisplayTitle(video.title)
+    setDisplayTitle(video.title.toLowerCase())
   }
 
   // Smooth hover scale & Fly-to-Center animation in useFrame (Zero-allocation)
@@ -389,23 +413,25 @@ export const CurvedVideoPanel: React.FC<CurvedVideoPanelProps> = ({
         </lineLoop>
       </group>
 
-      {/* Title Label: wraps across up to 2 lines, raycasting disabled to preserve tight hit target */}
+      {/* Title Label: wraps across up to 2 lines, styled with editorial Newsreader italic serif typography curved along Rh */}
       <group position={[0, -PANEL_HEIGHT / 2 - 0.10, 0]} visible={!isDimmed || isSelected} raycast={() => null}>
         <Text
           ref={textRef}
-          font="/fonts/JetBrainsMono-Regular.ttf"
-          fontSize={0.068}
+          font="/fonts/Newsreader-Italic.ttf"
+          fontStyle="italic"
+          fontSize={0.082}
+          {...({ curveRadius: Rh } as any)}
           maxWidth={PANEL_WIDTH * 0.95}
-          lineHeight={1.25}
+          lineHeight={1.2}
           textAlign="center"
           color={isHovered ? highlightColorHex : themeColorHex}
           anchorX="center"
           anchorY="top"
-          letterSpacing={0.04}
+          letterSpacing={0.02}
           fillOpacity={isHovered ? 1.0 : 0.75}
           raycast={() => null}
         >
-          {displayTitle}
+          {displayTitle.toLowerCase()}
         </Text>
       </group>
     </group>

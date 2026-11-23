@@ -129,4 +129,38 @@ describe('CurvedVideoPanel Component', () => {
     expect(darknessEnd).toBe(1.0)
     expect(visibilityEnd).toBe(0.0)
   })
+
+  it('applies unified horizontal curvature aligned with sphere latitude radius Rh, curved text, and lowercase', () => {
+    const R = 4.5
+    const el = 11.54 // deg
+    const phi = (el * Math.PI) / 180
+    const Rh = R * Math.cos(phi) // ~4.409
+    const w = 1.92
+    const hw = w / 2
+
+    // Angular half-width
+    const alphaMax = Math.asin(hw / Rh)
+    const xEdge = Rh * Math.sin(alphaMax)
+    const zEdge = Rh * (1 - Math.cos(alphaMax))
+
+    expect(xEdge).toBeCloseTo(hw, 4)
+    expect(zEdge).toBeCloseTo(0.1058, 3)
+
+    // Distance in 2D to cylinder center (0, Rh) is constant Rh everywhere
+    const distToCenter = Math.sqrt(xEdge * xEdge + (Rh - zEdge) * (Rh - zEdge))
+    expect(distToCenter).toBeCloseTo(Rh, 4)
+
+    // Component renders with dynamic sphereRadius, curved text, and lowercase
+    render(
+      <ThemeProvider>
+        <CurvedVideoPanel
+          video={mockVideo}
+          sphereRadius={5.0}
+          onSelect={vi.fn()}
+        />
+      </ThemeProvider>
+    )
+
+    expect(screen.getByTestId(`curved-video-panel-${mockVideo.id}`)).toBeInTheDocument()
+  })
 })

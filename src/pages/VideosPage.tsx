@@ -72,7 +72,7 @@ export const VideosPage: React.FC = () => {
   return (
     <main
       data-testid="videos-page"
-      className="relative w-full h-full min-h-dvh bg-[#0c0b10] text-[var(--theme-primary)] flex flex-col overflow-hidden select-none"
+      className="relative w-full h-full min-h-dvh bg-[#0c0b10] text-[var(--theme-primary)] flex flex-col overflow-hidden select-none lowercase"
     >
       {/* Minimalist Return Home Link matching other shell pages */}
       <button
