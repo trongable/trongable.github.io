@@ -12,6 +12,13 @@ export default defineConfig({
   },
   test: {
     environment: 'jsdom',
+    environmentMatchGlobs: [
+      ['src/utils/**', 'node'],
+      ['src/components/canvas/geometries/__tests__/geometryMath.test.ts', 'node'],
+      ['src/components/canvas/geometries/__tests__/geometryConfig.test.ts', 'node'],
+      ['src/components/videos/__tests__/videoData.test.ts', 'node'],
+    ],
+    pool: 'vmThreads',
     globals: true,
     setupFiles: ['./vitest.setup.ts'],
     include: ['src/**/*.{test,spec}.{ts,tsx}'],

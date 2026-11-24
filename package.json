@@ -8,11 +8,17 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "test": "vitest run",
+    "test:agent": "vitest run --silent --reporter=dot",
+    "test:fast": "vitest run --silent --bail=1",
+    "test:related": "vitest related --run --silent --reporter=dot",
     "test:coverage": "vitest run --coverage",
+    "test:verbose": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
+    "e2e:agent": "playwright test --project=chromium --reporter=line",
     "typecheck": "tsc --noEmit",
-    "lint": "oxlint src"
+    "lint": "oxlint src",
+    "verify:agent": "oxlint src && tsc --noEmit && vitest run --silent --reporter=dot"
   },
   "repository": {
     "type": "git",
