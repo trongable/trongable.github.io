@@ -81,9 +81,9 @@ export const CerebroSphereWall: React.FC<CerebroSphereWallProps> = ({
       const v = Math.random()
       const theta = u * 2.0 * Math.PI
       const phi = Math.acos(2.0 * v - 1.0)
-      const r = Math.cbrt(Math.random()) * (radius * 0.85)
-
       const sinPhi = Math.sin(phi)
+      // Position particles on outer celestial sphere wall layer (behind the gallery media panels)
+      const r = radius * (0.98 + 0.05 * Math.random())
       positions[i * 3] = r * sinPhi * Math.sin(theta)
       positions[i * 3 + 1] = r * Math.cos(phi)
       positions[i * 3 + 2] = -r * sinPhi * Math.cos(theta)

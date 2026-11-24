@@ -85,7 +85,8 @@ export interface TunerProps {
   // Animation / Effect Pause
   isPaused?: boolean
   onTogglePause?: (paused?: boolean) => void
-  // Video Chamber Specific Controls
+  // Video / Gallery Chamber Specific Controls
+  isGalleryPage?: boolean
   isVideosPage?: boolean
   videoParams?: VideoChamberParams
   onVideoParamChange?: <K extends keyof VideoChamberParams>(key: K, val: VideoChamberParams[K]) => void
@@ -133,11 +134,13 @@ export const Tuner: React.FC<TunerProps> = ({
   onResetCameraAngles,
   isPaused = false,
   onTogglePause,
+  isGalleryPage = false,
   isVideosPage = false,
   videoParams = DEFAULT_VIDEO_CHAMBER_PARAMS,
   onVideoParamChange = () => {},
   onResetVideoParams = () => {},
 }) => {
+  const isEffectiveGallery = Boolean(isGalleryPage || isVideosPage)
   const { containerStyle: ctxContainerStyle, setContainerStyle: ctxSetContainerStyle } = useSonnyContainer()
   const activeSonnyContainer = sonnyContainer ?? ctxContainerStyle
   const handleContainerChange = (style: SonnyContainerStyle) => {
@@ -261,10 +264,10 @@ export const Tuner: React.FC<TunerProps> = ({
               <span className="font-bold tracking-wider uppercase text-[11px]">System Tuner</span>
               <p className="text-[10px] opacity-70 mt-0.5">
                 {activeTab === 'geo'
-                  ? isVideosPage
-                    ? 'Video Chamber 3D Laboratory'
+                  ? isEffectiveGallery
+                    ? 'Gallery Chamber 3D Laboratory'
                     : currentMeta.name
-                  : isVideosPage
+                  : isEffectiveGallery
                   ? 'VFX & Theme Controls'
                   : 'VFX & Glitch Controls'}
               </p>
@@ -274,7 +277,7 @@ export const Tuner: React.FC<TunerProps> = ({
                 <button
                   type="button"
                   onClick={() => {
-                    if (isVideosPage) {
+                    if (isEffectiveGallery) {
                       onResetVideoParams?.()
                     } else if (onResetParams && activeMode) {
                       onResetParams(activeMode)
@@ -308,7 +311,7 @@ export const Tuner: React.FC<TunerProps> = ({
                   : 'border-transparent opacity-60 hover:opacity-100'
               }`}
             >
-              {isVideosPage ? 'Video Chamber' : '3D Topologies'}
+              {isEffectiveGallery ? 'Gallery Chamber' : '3D Topologies'}
             </button>
             <button
               type="button"
@@ -319,13 +322,13 @@ export const Tuner: React.FC<TunerProps> = ({
                   : 'border-transparent opacity-60 hover:opacity-100'
               }`}
             >
-              {isVideosPage ? 'VFX & Theme' : 'VFX & Glitch'}
+              {isEffectiveGallery ? 'VFX & Theme' : 'VFX & Glitch'}
             </button>
           </div>
 
-          {/* Tab 1: Video Chamber Controls (for Videos Page) */}
-          {activeTab === 'geo' && isVideosPage && videoParams && onVideoParamChange && (
-            <div data-testid="video-chamber-tuner-tab" className="space-y-2.5">
+          {/* Tab 1: Gallery Chamber Controls (for Gallery Page) */}
+          {activeTab === 'geo' && isEffectiveGallery && videoParams && onVideoParamChange && (
+            <div data-testid="gallery-chamber-tuner-tab" className="space-y-2.5">
               <div>
                 <div className="flex justify-between text-[11px] mb-1">
                   <span className="opacity-80">Sphere Radius</span>
@@ -503,13 +506,13 @@ export const Tuner: React.FC<TunerProps> = ({
                 onClick={onResetVideoParams}
                 className="w-full mt-3 py-1.5 px-3 rounded border border-[var(--theme-primary)]/40 hover:bg-[var(--theme-primary)] hover:text-[#1c1b22] text-xs font-semibold cursor-pointer transition-all active:scale-[0.98] text-center"
               >
-                ↺ Reset Video Chamber
+                ↺ Reset Gallery Chamber
               </button>
             </div>
           )}
 
           {/* Tab 1: 3D Topologies (for Home Page) */}
-          {activeTab === 'geo' && !isVideosPage && (
+          {activeTab === 'geo' && !isEffectiveGallery && (
             <div>
               {/* Direct Mode Selector Grid */}
               <div className="grid grid-cols-4 gap-1.5 mb-3">
@@ -1943,13 +1946,13 @@ export const Tuner: React.FC<TunerProps> = ({
         </button>
 
         <div className="flex items-center rounded-full border border-[var(--theme-primary)]/40 bg-[#1c1b22]/90 p-1 shadow-lg backdrop-blur-md">
-          {isVideosPage ? (
+          {isEffectiveGallery ? (
             <div
-              data-testid="video-chamber-hud-pill"
+              data-testid="gallery-chamber-hud-pill"
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-[var(--theme-primary)]"
             >
               <span className="opacity-60">chamber:</span>
-              <span className="font-semibold">video</span>
+              <span className="font-semibold">gallery</span>
             </div>
           ) : (
             <button

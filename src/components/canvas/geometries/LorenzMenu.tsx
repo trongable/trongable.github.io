@@ -16,7 +16,7 @@ export interface LorenzMenuProps {
 
 const ITEMS = [
   { label: 'about', path: '/about', initial: [0.1, 0.0, 0.0] },
-  { label: 'videos', path: '/videos', initial: [0.05, 0.05, 0.0] },
+  { label: 'gallery', path: '/gallery', initial: [0.05, 0.05, 0.0] },
   { label: 'more', path: '/more', initial: [-0.1, 0.0, 0.0] },
   { label: 'sonny', path: '/sonny', imageUrl: '/images/sonny.png', initial: [0.0, -0.1, 0.0] },
   { label: 'dchc', path: 'https://dc-hardcore.com', initial: [0.0, 0.1, 0.0] },

@@ -2,9 +2,9 @@ import React, { useRef, useState, useEffect } from 'react'
 import { Canvas, useThree, useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { CerebroSphereWall } from './CerebroSphereWall'
-import { CurvedVideoPanel } from './CurvedVideoPanel'
-import { VideoItem, VIDEOS_DATA } from './videoData'
-import { VideoChamberParams, DEFAULT_VIDEO_CHAMBER_PARAMS } from './videoTunerConfig'
+import { CurvedMediaPanel } from './CurvedVideoPanel'
+import { GalleryItem, GALLERY_DATA } from '../gallery/galleryData'
+import { GalleryChamberParams, DEFAULT_GALLERY_CHAMBER_PARAMS } from '../gallery/galleryTunerConfig'
 import { useTheme } from '@/context/ThemeContext'
 
 interface ChamberCameraControllerProps {
@@ -12,7 +12,7 @@ interface ChamberCameraControllerProps {
   isDraggingRef: React.MutableRefObject<boolean>
   dragDeltaRef: React.MutableRefObject<{ x: number; y: number }>
   wheelDeltaRef: React.MutableRefObject<{ x: number; y: number }>
-  params: VideoChamberParams
+  params: GalleryChamberParams
 }
 
 const EPSILON = 0.0001
@@ -46,7 +46,7 @@ const ChamberCameraController: React.FC<ChamberCameraControllerProps> = ({
       dragDeltaRef.current.x = 0
       dragDeltaRef.current.y = 0
     } else {
-      // Quench inertial velocity immediately when theater is active / dimmed
+      // Quench inertial velocity immediately when overlay is active / dimmed
       if (isDimmed) {
         velocityYaw.current = 0
         velocityPitch.current = 0
@@ -72,10 +72,10 @@ const ChamberCameraController: React.FC<ChamberCameraControllerProps> = ({
     }
 
     // In portrait orientation (narrow horizontal FOV), adaptively expand maxYaw
-    // so users can comfortably sweep the camera past the outermost video panels
+    // so users can comfortably sweep the camera past the outermost media panels
     const isPortrait = viewport.width < viewport.height
     const effectiveMaxYawDeg = isPortrait
-      ? Math.max(params.maxYawDeg, (params.arcDegrees / 2) + 12)
+      ? Math.max(params.maxYawDeg, (params.arcDegrees / 2) + 18)
       : params.maxYawDeg
     const maxYaw = THREE.MathUtils.degToRad(effectiveMaxYawDeg)
     const maxPitch = THREE.MathUtils.degToRad(params.maxPitchDeg)
@@ -88,7 +88,7 @@ const ChamberCameraController: React.FC<ChamberCameraControllerProps> = ({
     currentYaw.current = THREE.MathUtils.lerp(currentYaw.current, targetYaw.current, 0.18)
     currentPitch.current = THREE.MathUtils.lerp(currentPitch.current, targetPitch.current, 0.18)
 
-    // Camera observer position on catwalk
+    // Camera observer position in chamber center
     camera.position.set(0, 0, 0.35)
 
     // Direction calculation
@@ -112,21 +112,33 @@ const ChamberCameraController: React.FC<ChamberCameraControllerProps> = ({
 }
 
 export interface CerebroChamberProps {
-  activeVideo: VideoItem | null
-  selectedVideo?: VideoItem | null
-  params?: VideoChamberParams
-  onSelectVideo: (video: VideoItem) => void
+  activeVideo?: GalleryItem | null
+  selectedVideo?: GalleryItem | null
+  activeItem?: GalleryItem | null
+  selectedItem?: GalleryItem | null
+  items?: GalleryItem[]
+  params?: GalleryChamberParams
+  onSelectVideo?: (item: GalleryItem) => void
+  onSelectItem?: (item: GalleryItem) => void
 }
 
 export const CerebroChamber: React.FC<CerebroChamberProps> = ({
   activeVideo,
   selectedVideo,
-  params = DEFAULT_VIDEO_CHAMBER_PARAMS,
+  activeItem,
+  selectedItem,
+  items = GALLERY_DATA,
+  params = DEFAULT_GALLERY_CHAMBER_PARAMS,
   onSelectVideo,
+  onSelectItem,
 }) => {
   const { currentTheme } = useTheme()
-  const currentSelected = selectedVideo ?? activeVideo
+  const effectiveActive = activeItem ?? activeVideo ?? null
+  const effectiveSelected = selectedItem ?? selectedVideo ?? null
+  const currentSelected = effectiveSelected ?? effectiveActive
   const isDimmed = Boolean(currentSelected)
+
+  const handleSelect = onSelectItem ?? onSelectVideo ?? (() => { })
 
   const isDraggingRef = useRef(false)
   const isPointerDownRef = useRef(false)
@@ -177,13 +189,11 @@ export const CerebroChamber: React.FC<CerebroChamberProps> = ({
     const aspect = w / h
 
     // Exact 1:1 camera FOV angular derivation
-    // vertical fov = 46 deg -> half fov = 23 deg
     const tanHalfFovY = Math.tan(THREE.MathUtils.degToRad(23))
     const fovY = THREE.MathUtils.degToRad(46)
     const fovX = 2 * Math.atan(tanHalfFovY * aspect)
 
     // Moving finger/mouse right pans camera left (sweeps world right)
-    // Scaled by 2.2x so single-point touchscreen and mouse drag move as fast as 2-finger wheel gestures
     const sensitivity = 2.2 * params.panSensitivity
     const deltaYaw = -(dx / w) * fovX * sensitivity
     const deltaPitch = (dy / h) * fovY * sensitivity
@@ -199,7 +209,7 @@ export const CerebroChamber: React.FC<CerebroChamberProps> = ({
     isDraggingRef.current = false
   }
 
-  // Two-Finger Scrolling & Wheel Gestures (vertical movement inverted for natural tilt)
+  // Two-Finger Scrolling & Wheel Gestures
   const handleWheel = (e: React.WheelEvent) => {
     if (isDimmed) return
     wheelDeltaRef.current.x += e.deltaX * 0.0016 * params.panSensitivity
@@ -249,19 +259,19 @@ export const CerebroChamber: React.FC<CerebroChamberProps> = ({
           particleCount={params.particleCount}
         />
 
-        {/* 7 Curved Video Panels along the Spherical Wall */}
-        {VIDEOS_DATA.map((video) => (
-          <CurvedVideoPanel
-            key={video.id}
-            video={video}
+        {/* All Curved Media Panels along the Spherical Wall */}
+        {items.map((item) => (
+          <CurvedMediaPanel
+            key={item.id}
+            video={item}
             isDimmed={isDimmed}
-            isSelected={currentSelected?.id === video.id}
+            isSelected={currentSelected?.id === item.id}
             thumbnailScale={params.thumbnailScale}
             transitSpeed={params.transitSpeed}
             sphereRadius={params.sphereRadius}
             arcDegrees={params.arcDegrees}
             rowSeparation={params.rowSeparation}
-            onSelect={onSelectVideo}
+            onSelect={handleSelect}
           />
         ))}
       </Canvas>

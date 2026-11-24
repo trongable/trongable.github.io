@@ -23,7 +23,7 @@ describe('Navbar Component', () => {
     )
 
     expect(screen.getByRole('button', { name: 'about' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'videos' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'gallery' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'more' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'dchc' })).toBeInTheDocument()
   })
@@ -52,9 +52,9 @@ describe('Navbar Component', () => {
     fireEvent.click(aboutButton)
     expect(screen.getByTestId('current-path')).toHaveTextContent('/about')
 
-    const videosButton = screen.getByRole('button', { name: 'videos' })
-    fireEvent.click(videosButton)
-    expect(screen.getByTestId('current-path')).toHaveTextContent('/videos')
+    const galleryButton = screen.getByRole('button', { name: 'gallery' })
+    fireEvent.click(galleryButton)
+    expect(screen.getByTestId('current-path')).toHaveTextContent('/gallery')
 
     const moreButton = screen.getByRole('button', { name: 'more' })
     fireEvent.click(moreButton)

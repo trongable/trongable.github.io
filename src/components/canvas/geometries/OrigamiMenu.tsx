@@ -24,7 +24,7 @@ export interface OrigamiItem {
 // 4 primary facet centers on the hemisphere of an icosahedron
 export const ORIGAMI_ITEMS: OrigamiItem[] = [
   { label: 'about', path: '/about', normal: new THREE.Vector3(-0.85, 0.45, 0.40).normalize() },
-  { label: 'videos', path: '/videos', normal: new THREE.Vector3(0.0, 0.85, 0.50).normalize() },
+  { label: 'gallery', path: '/gallery', normal: new THREE.Vector3(0.0, 0.85, 0.50).normalize() },
   { label: 'more', path: '/more', normal: new THREE.Vector3(0.85, 0.45, 0.40).normalize() },
   { label: 'sonny', path: '/sonny', imageUrl: '/images/sonny.png', normal: new THREE.Vector3(-0.45, -0.65, 0.60).normalize() },
   { label: 'dchc', path: 'https://dc-hardcore.com', normal: new THREE.Vector3(0.0, -0.75, 0.65).normalize() },

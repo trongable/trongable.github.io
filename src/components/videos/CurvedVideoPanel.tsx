@@ -3,11 +3,11 @@ import * as THREE from 'three'
 import { useFrame } from '@react-three/fiber'
 import { Text } from '@react-three/drei'
 import { useTheme } from '@/context/ThemeContext'
-import { VideoItem, computeSphericalPosition } from './videoData'
+import { GalleryItem, computeSphericalPosition } from '../gallery/galleryData'
 import { scrambleGlyphs } from '@/utils/glyphUtils'
 
-export interface CurvedVideoPanelProps {
-  video: VideoItem
+export interface CurvedMediaPanelProps {
+  video: GalleryItem
   isDimmed?: boolean
   isSelected?: boolean
   thumbnailScale?: number
@@ -15,21 +15,19 @@ export interface CurvedVideoPanelProps {
   sphereRadius?: number
   arcDegrees?: number
   rowSeparation?: number
-  onSelect: (video: VideoItem) => void
+  onSelect: (item: GalleryItem) => void
 }
 
-// Enlarged 16:9 thumbnail dimensions (~33% larger for bold cinema presence)
-const PANEL_WIDTH = 1.92
-const PANEL_HEIGHT = 1.08
+export type CurvedVideoPanelProps = CurvedMediaPanelProps
 
-export const CurvedVideoPanel: React.FC<CurvedVideoPanelProps> = ({
+export const CurvedMediaPanel: React.FC<CurvedMediaPanelProps> = ({
   video,
   isDimmed = false,
   isSelected = false,
   thumbnailScale = 1.0,
   transitSpeed = 16,
   sphereRadius = 4.5,
-  arcDegrees = 100,
+  arcDegrees = 200,
   rowSeparation = 1.8,
   onSelect,
 }) => {
@@ -56,22 +54,46 @@ export const CurvedVideoPanel: React.FC<CurvedVideoPanelProps> = ({
   const scratchBaseColor = useRef(new THREE.Color()).current
   const scratchThemeColor = useRef(new THREE.Color()).current
 
+  // Derive panel dimensions from aspect ratio:
+  // Video: standard 1.92 x 1.08 (16:9)
+  // Portrait Photo: ~0.90 x 1.20 (3:4)
+  // Landscape Photo: ~1.44 x 1.08 (4:3)
+  const { panelWidth, panelHeight } = useMemo(() => {
+    if (video.type === 'video') {
+      return { panelWidth: 1.92, panelHeight: 1.08 }
+    }
+    if (video.aspectRatio >= 1) {
+      const h = 1.08
+      const w = Math.round(h * video.aspectRatio * 100) / 100
+      return { panelWidth: w, panelHeight: h }
+    } else {
+      const h = 1.20
+      const w = Math.round(h * video.aspectRatio * 100) / 100
+      return { panelWidth: w, panelHeight: h }
+    }
+  }, [video.type, video.aspectRatio])
+
   // Compute 3D position on sphere wall and rotation facing origin, plus horizontal latitude radius Rh
   const { initialPosition, initialQuaternion, Rh } = useMemo(() => {
     let azimuth = video.azimuthDeg
     let elevation = video.elevationDeg
 
-    if (video.tier === 'upper' && typeof video.index === 'number') {
-      const i = Math.max(0, Math.min(3, video.index - 1))
-      azimuth = -arcDegrees / 2 + i * (arcDegrees / 3)
-      const clampedRatio = Math.max(-0.95, Math.min(0.95, (rowSeparation / 2) / sphereRadius))
-      elevation = THREE.MathUtils.radToDeg(Math.asin(clampedRatio))
-    } else if (video.tier === 'lower' && typeof video.index === 'number') {
-      const j = Math.max(0, Math.min(2, video.index - 5))
-      azimuth = -arcDegrees / 3 + j * (arcDegrees / 3)
-      const clampedRatio = Math.max(-0.95, Math.min(0.95, (-rowSeparation / 2) / sphereRadius))
-      elevation = THREE.MathUtils.radToDeg(Math.asin(clampedRatio))
-    }
+    const totalInTier = video.totalInTier ?? 9
+    const indexInTier =
+      typeof video.indexInTier === 'number'
+        ? video.indexInTier
+        : (video.index - 1) % totalInTier
+
+    const stepRatio = totalInTier > 1 ? Math.max(0, Math.min(1, indexInTier / (totalInTier - 1))) : 0.5
+    azimuth = -arcDegrees / 2 + stepRatio * arcDegrees
+
+    let tierFactor = 0
+    if (video.tier === 'upper') tierFactor = 1
+    else if (video.tier === 'lower') tierFactor = -1
+    else tierFactor = 0 // 'middle'
+
+    const clampedRatio = Math.max(-0.95, Math.min(0.95, (tierFactor * rowSeparation) / sphereRadius))
+    elevation = THREE.MathUtils.radToDeg(Math.asin(clampedRatio))
 
     const phiRad = THREE.MathUtils.degToRad(elevation)
     const horizRadius = sphereRadius * Math.cos(phiRad)
@@ -85,16 +107,26 @@ export const CurvedVideoPanel: React.FC<CurvedVideoPanelProps> = ({
       initialQuaternion: dummy.quaternion.clone(),
       Rh: horizRadius,
     }
-  }, [video.azimuthDeg, video.elevationDeg, video.tier, video.index, sphereRadius, arcDegrees, rowSeparation])
+  }, [
+    video.azimuthDeg,
+    video.elevationDeg,
+    video.tier,
+    video.index,
+    video.indexInTier,
+    video.totalInTier,
+    sphereRadius,
+    arcDegrees,
+    rowSeparation,
+  ])
 
-  // 1. Procedural Curved Screen Geometry (Unified horizontal curve aligned with sphere latitude radius Rh)
+  // 1. Procedural Curved Screen Geometry aligned with sphere latitude radius Rh
   const { screenGeo, borderGeo, playRingGeo, playTriangleGeo } = useMemo(() => {
     const segments = 32
-    const sGeo = new THREE.PlaneGeometry(PANEL_WIDTH, PANEL_HEIGHT, segments, 1)
+    const sGeo = new THREE.PlaneGeometry(panelWidth, panelHeight, segments, 1)
     const posAttr = sGeo.attributes.position
 
-    const hw = PANEL_WIDTH / 2
-    const hh = PANEL_HEIGHT / 2
+    const hw = panelWidth / 2
+    const hh = panelHeight / 2
     const clampedHw = Math.min(hw, Rh * 0.99)
     const alphaMax = Math.asin(clampedHw / Rh)
 
@@ -109,7 +141,7 @@ export const CurvedVideoPanel: React.FC<CurvedVideoPanelProps> = ({
     posAttr.needsUpdate = true
     sGeo.computeVertexNormals()
 
-    // Multi-segment curved border wireframe hugging the exact curved perimeter on Rh
+    // Curved border wireframe hugging the exact perimeter on Rh
     const borderPoints: THREE.Vector3[] = []
 
     // Bottom edge: left to right (-hw to +hw at y = -hh)
@@ -136,37 +168,41 @@ export const CurvedVideoPanel: React.FC<CurvedVideoPanelProps> = ({
 
     const bGeo = new THREE.BufferGeometry().setFromPoints(borderPoints)
 
-    // Play icon ring (radius 0.20)
-    const ringPts: THREE.Vector3[] = []
-    const rSegs = 32
-    for (let i = 0; i <= rSegs; i++) {
-      const a = (i / rSegs) * Math.PI * 2
-      ringPts.push(new THREE.Vector3(0.20 * Math.cos(a), 0.20 * Math.sin(a), 0.02))
-    }
-    const prGeo = new THREE.BufferGeometry().setFromPoints(ringPts)
+    // Play icon geometry (only for video modality)
+    let prGeo: THREE.BufferGeometry | null = null
+    let ptGeo: THREE.BufferGeometry | null = null
 
-    // Play icon triangle
-    const triPts: THREE.Vector3[] = [
-      new THREE.Vector3(-0.06, 0.085, 0.02),
-      new THREE.Vector3(0.095, 0, 0.02),
-      new THREE.Vector3(-0.06, -0.085, 0.02),
-    ]
-    const ptGeo = new THREE.BufferGeometry().setFromPoints(triPts)
+    if (video.type === 'video') {
+      const ringPts: THREE.Vector3[] = []
+      const rSegs = 32
+      for (let i = 0; i <= rSegs; i++) {
+        const a = (i / rSegs) * Math.PI * 2
+        ringPts.push(new THREE.Vector3(0.20 * Math.cos(a), 0.20 * Math.sin(a), 0.02))
+      }
+      prGeo = new THREE.BufferGeometry().setFromPoints(ringPts)
+
+      const triPts: THREE.Vector3[] = [
+        new THREE.Vector3(-0.06, 0.085, 0.02),
+        new THREE.Vector3(0.095, 0, 0.02),
+        new THREE.Vector3(-0.06, -0.085, 0.02),
+      ]
+      ptGeo = new THREE.BufferGeometry().setFromPoints(triPts)
+    }
 
     return { screenGeo: sGeo, borderGeo: bGeo, playRingGeo: prGeo, playTriangleGeo: ptGeo }
-  }, [Rh])
+  }, [panelWidth, panelHeight, Rh, video.type])
 
   // Explicit WebGL disposal for procedural geometries on parameter change or unmount
   useEffect(() => {
     return () => {
       screenGeo.dispose()
       borderGeo.dispose()
-      playRingGeo.dispose()
-      playTriangleGeo.dispose()
+      playRingGeo?.dispose()
+      playTriangleGeo?.dispose()
     }
   }, [screenGeo, borderGeo, playRingGeo, playTriangleGeo])
 
-  // 2. Thumbnail Texture Loader with Offline Procedural Canvas Fallback
+  // 2. Texture Loader with Offline Procedural Canvas Fallback
   const [texture, setTexture] = useState<THREE.Texture | null>(null)
 
   useEffect(() => {
@@ -197,6 +233,7 @@ export const CurvedVideoPanel: React.FC<CurvedVideoPanelProps> = ({
           }
         }
         const fallbackTex = new THREE.CanvasTexture(canvas)
+        fallbackTex.colorSpace = THREE.SRGBColorSpace
         fallbackTex.needsUpdate = true
         if (active) setTexture(fallbackTex)
       } catch {
@@ -208,12 +245,13 @@ export const CurvedVideoPanel: React.FC<CurvedVideoPanelProps> = ({
       const loader = new THREE.TextureLoader()
       loader.setCrossOrigin('anonymous')
       loader.load(
-        video.thumbnailUrl,
+        video.imageUrl,
         (loadedTex) => {
           if (!active) {
             loadedTex.dispose()
             return
           }
+          loadedTex.colorSpace = THREE.SRGBColorSpace
           loadedTex.generateMipmaps = true
           loadedTex.minFilter = THREE.LinearMipmapLinearFilter
           setTexture(loadedTex)
@@ -226,15 +264,15 @@ export const CurvedVideoPanel: React.FC<CurvedVideoPanelProps> = ({
     return () => {
       active = false
     }
-  }, [video.thumbnailUrl])
+  }, [video.imageUrl])
 
   // Explicit WebGL resource disposal & cursor reset on unmount
   useEffect(() => {
     return () => {
       screenGeo.dispose()
       borderGeo.dispose()
-      playRingGeo.dispose()
-      playTriangleGeo.dispose()
+      playRingGeo?.dispose()
+      playTriangleGeo?.dispose()
       texture?.dispose()
       screenMatRef.current?.dispose()
       borderMatRef.current?.dispose()
@@ -247,7 +285,7 @@ export const CurvedVideoPanel: React.FC<CurvedVideoPanelProps> = ({
     }
   }, [screenGeo, borderGeo, playRingGeo, playTriangleGeo, texture])
 
-  // Hover scramble effect on video title and native cursor pointer switch
+  // Hover scramble effect on item title and native cursor pointer switch
   const handlePointerEnter = (e: any) => {
     e.stopPropagation()
     setIsHovered(true)
@@ -310,9 +348,10 @@ export const CurvedVideoPanel: React.FC<CurvedVideoPanelProps> = ({
       groupRef.current.scale.z = THREE.MathUtils.damp(groupRef.current.scale.z, targetScale, 10, delta)
     }
 
-    // Darkness progression: 0.0 at wall slot, 1.0 at full center flight
-    const darknessFactor = THREE.MathUtils.clamp(fp, 0, 1)
-    const visibilityFactor = Math.max(0, 1.0 - darknessFactor)
+    // Darkness factor: videos fade to black right before 2D iframe expands; photos stay visible and bright!
+    const isVideo = video.type === 'video'
+    const darknessFactor = isVideo ? THREE.MathUtils.clamp(fp, 0, 1) : 0
+    const visibilityFactor = isVideo ? Math.max(0, 1.0 - fp) : 1.0
 
     // Border highlight and darkness fade
     if (borderMatRef.current) {
@@ -322,32 +361,37 @@ export const CurvedVideoPanel: React.FC<CurvedVideoPanelProps> = ({
       borderMatRef.current.opacity = isDimmed && !isSelected ? 0.0 : baseBorderOpacity * visibilityFactor
     }
 
-    // Holographic play icon: fade into darkness
-    const playAndTextFactor = Math.max(0, 1.0 - darknessFactor * 1.5)
-    scratchThemeColor.set(isHovered ? highlightColorHex : themeColorHex)
-    if (playRingMatRef.current) {
-      playRingMatRef.current.color.lerpColors(scratchThemeColor, scratchBlack, darknessFactor)
-      playRingMatRef.current.opacity = isDimmed && !isSelected ? 0.0 : (isHovered ? 1.0 : 0.65) * playAndTextFactor
-    }
-    if (playTriMatRef.current) {
-      playTriMatRef.current.color.lerpColors(scratchThemeColor, scratchBlack, darknessFactor)
-      playTriMatRef.current.opacity = isDimmed && !isSelected ? 0.0 : (isHovered ? 1.0 : 0.65) * playAndTextFactor
+    // Play icon: fade into darkness on fly-in (only videos have play icons)
+    if (isVideo) {
+      const playAndTextFactor = Math.max(0, 1.0 - fp * 1.5)
+      scratchThemeColor.set(isHovered ? highlightColorHex : themeColorHex)
+      if (playRingMatRef.current) {
+        playRingMatRef.current.color.lerpColors(scratchThemeColor, scratchBlack, fp)
+        playRingMatRef.current.opacity = isDimmed && !isSelected ? 0.0 : (isHovered ? 1.0 : 0.65) * playAndTextFactor
+      }
+      if (playTriMatRef.current) {
+        playTriMatRef.current.color.lerpColors(scratchThemeColor, scratchBlack, fp)
+        playTriMatRef.current.opacity = isDimmed && !isSelected ? 0.0 : (isHovered ? 1.0 : 0.65) * playAndTextFactor
+      }
     }
 
-    // Title label: fade into darkness
+    // Title label
     if (textRef.current && typeof textRef.current.fillOpacity === 'number') {
       const textBaseOpacity = isHovered ? 1.0 : 0.75
-      textRef.current.fillOpacity = isDimmed && !isSelected ? 0.0 : textBaseOpacity * playAndTextFactor
+      const textDimFactor = isSelected ? Math.max(0, 1.0 - fp * 2) : (isDimmed ? 0.0 : 1.0)
+      textRef.current.fillOpacity = textBaseOpacity * textDimFactor
     }
 
-    // Curved thumbnail screen mesh: fade into darkness on fly-in, fade back in on fly-out
+    // Screen mesh material
     if (screenMatRef.current) {
-      scratchBaseColor.set(isHovered ? '#ffffff' : '#dddddd')
-      // Color lerps into total darkness (pitch black #000000)
-      screenMatRef.current.color.lerpColors(scratchBaseColor, scratchBlack, darknessFactor)
-      // Opacity smoothly drops to 0 as it reaches center, and restores back to normal on fly-out
-      const baseScreenOpacity = isHovered ? 1.0 : 0.85
-      screenMatRef.current.opacity = isDimmed && !isSelected ? 0.0 : baseScreenOpacity * visibilityFactor
+      if (isVideo) {
+        // Videos lerp into black before theater overlay takes over
+        scratchBaseColor.set(isHovered ? '#ffffff' : '#dddddd')
+        screenMatRef.current.color.lerpColors(scratchBaseColor, scratchBlack, fp)
+      } else {
+        // Photos maintain full vibrant image visibility and 100% white base color (no black bleed-through)
+        screenMatRef.current.color.set('#ffffff')
+      }
     }
   })
 
@@ -356,9 +400,23 @@ export const CurvedVideoPanel: React.FC<CurvedVideoPanelProps> = ({
       ref={groupRef}
       position={initialPosition}
       quaternion={initialQuaternion}
+      visible={!isDimmed || isSelected}
       data-testid={`curved-video-panel-${video.id}`}
     >
-      {/* Curved Screen Mesh: click and hover events isolated here for perfect hit detection */}
+      {/* 100% Solid Opaque Backing Mesh to fully occlude background stars/geometry in depth buffer */}
+      <mesh
+        geometry={screenGeo}
+        position={[0, 0, -0.003]}
+        raycast={() => null}
+      >
+        <meshBasicMaterial
+          color="#0c0b10"
+          depthWrite={true}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+
+      {/* Curved Screen Mesh */}
       <mesh
         ref={meshRef}
         geometry={screenGeo}
@@ -376,9 +434,8 @@ export const CurvedVideoPanel: React.FC<CurvedVideoPanelProps> = ({
         <meshBasicMaterial
           ref={screenMatRef}
           map={texture}
-          color={isHovered ? '#ffffff' : '#dddddd'}
-          transparent
-          opacity={isDimmed && !isSelected ? 0.08 : 0.85}
+          color="#ffffff"
+          depthWrite={true}
           side={THREE.DoubleSide}
         />
       </mesh>
@@ -393,35 +450,37 @@ export const CurvedVideoPanel: React.FC<CurvedVideoPanelProps> = ({
         />
       </lineLoop>
 
-      {/* Central Holographic Play Icon */}
-      <group position={[0, 0, 0.02]} visible={!isDimmed || isSelected} raycast={() => null}>
-        <lineLoop geometry={playRingGeo}>
-          <lineBasicMaterial
-            ref={playRingMatRef}
-            color={isHovered ? highlightColorHex : themeColorHex}
-            transparent
-            opacity={isHovered ? 1.0 : 0.65}
-          />
-        </lineLoop>
-        <lineLoop geometry={playTriangleGeo}>
-          <lineBasicMaterial
-            ref={playTriMatRef}
-            color={isHovered ? highlightColorHex : themeColorHex}
-            transparent
-            opacity={isHovered ? 1.0 : 0.65}
-          />
-        </lineLoop>
-      </group>
+      {/* Central Holographic Play Icon (only for videos) */}
+      {video.type === 'video' && playRingGeo && playTriangleGeo && (
+        <group position={[0, 0, 0.02]} visible={!isDimmed || isSelected} raycast={() => null}>
+          <lineLoop geometry={playRingGeo}>
+            <lineBasicMaterial
+              ref={playRingMatRef}
+              color={isHovered ? highlightColorHex : themeColorHex}
+              transparent
+              opacity={isHovered ? 1.0 : 0.65}
+            />
+          </lineLoop>
+          <lineLoop geometry={playTriangleGeo}>
+            <lineBasicMaterial
+              ref={playTriMatRef}
+              color={isHovered ? highlightColorHex : themeColorHex}
+              transparent
+              opacity={isHovered ? 1.0 : 0.65}
+            />
+          </lineLoop>
+        </group>
+      )}
 
-      {/* Title Label: wraps across up to 2 lines, styled with editorial Newsreader italic serif typography curved along Rh */}
-      <group position={[0, -PANEL_HEIGHT / 2 - 0.10, 0]} visible={!isDimmed || isSelected} raycast={() => null}>
+      {/* Title Label in Newsreader italic serif */}
+      <group position={[0, -panelHeight / 2 - 0.10, 0]} visible={!isDimmed || isSelected} raycast={() => null}>
         <Text
           ref={textRef}
           font="/fonts/Newsreader-Italic.ttf"
           fontStyle="italic"
           fontSize={0.082}
           {...({ curveRadius: Rh } as any)}
-          maxWidth={PANEL_WIDTH * 0.95}
+          maxWidth={panelWidth * 0.95}
           lineHeight={1.2}
           textAlign="center"
           color={isHovered ? highlightColorHex : themeColorHex}
@@ -437,3 +496,6 @@ export const CurvedVideoPanel: React.FC<CurvedVideoPanelProps> = ({
     </group>
   )
 }
+
+// Retain CurvedVideoPanel export alias for full backward compatibility
+export const CurvedVideoPanel = CurvedMediaPanel

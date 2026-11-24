@@ -45,13 +45,13 @@ describe('App Route Navigation', () => {
     expect(screen.getByRole('button', { name: 'Return home' })).toBeInTheDocument()
   })
 
-  it('renders videos page when navigating to /videos', () => {
+  it('renders gallery page when navigating to /gallery', () => {
     render(<App />)
     act(() => {
-      window.location.hash = '#/videos'
+      window.location.hash = '#/gallery'
       window.dispatchEvent(new HashChangeEvent('hashchange'))
     })
-    expect(screen.getByTestId('videos-page')).toBeInTheDocument()
+    expect(screen.getByTestId('gallery-page')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Return home' })).toBeInTheDocument()
   })
 

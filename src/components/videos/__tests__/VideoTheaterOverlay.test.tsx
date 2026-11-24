@@ -1,10 +1,10 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { VideoTheaterOverlay } from '../VideoTheaterOverlay'
-import { VIDEOS_DATA } from '../videoData'
+import { GALLERY_DATA, VIDEOS_DATA } from '../videoData'
 
 describe('VideoTheaterOverlay Component', () => {
-  const mockVideo = VIDEOS_DATA[0]
+  const mockVideo = VIDEOS_DATA[0] // qopBymi9FYY
 
   it('renders null when activeVideo is null', () => {
     const { container } = render(
@@ -40,6 +40,25 @@ describe('VideoTheaterOverlay Component', () => {
       'src',
       `https://www.youtube-nocookie.com/embed/${mockVideo.youtubeId}?autoplay=1&rel=0&modestbranding=1`
     )
+  })
+
+  it('renders photo image and title when activeItem is a photo', () => {
+    const photoItem = GALLERY_DATA.find((i) => i.type === 'photo')!
+
+    render(
+      <VideoTheaterOverlay
+        activeItem={photoItem}
+        onClose={vi.fn()}
+        onSelectItem={vi.fn()}
+      />
+    )
+
+    expect(screen.getByTestId('video-theater-overlay')).toBeInTheDocument()
+    expect(screen.getByText(photoItem.title.toLowerCase())).toBeInTheDocument()
+
+    const img = screen.getByAltText(photoItem.title)
+    expect(img).toBeInTheDocument()
+    expect(img).toHaveAttribute('src', photoItem.imageUrl)
   })
 
   it('calls onClose when clicking return button', () => {
@@ -85,13 +104,16 @@ describe('VideoTheaterOverlay Component', () => {
     vi.useRealTimers()
   })
 
-  it('cycles to previous and next videos when clicking prev / next controls', () => {
+  it('cycles to previous and next items when clicking prev / next controls', () => {
     const handleSelectVideo = vi.fn()
-    const middleVideo = VIDEOS_DATA[2] // index 2
+    const activeItem = mockVideo // qopBymi9FYY at index 2
+    const activeIdx = GALLERY_DATA.findIndex((i) => i.id === activeItem.id)
+    const prevItem = GALLERY_DATA[activeIdx - 1]
+    const nextItem = GALLERY_DATA[activeIdx + 1]
 
     render(
       <VideoTheaterOverlay
-        activeVideo={middleVideo}
+        activeVideo={activeItem}
         onClose={vi.fn()}
         onSelectVideo={handleSelectVideo}
       />
@@ -99,29 +121,32 @@ describe('VideoTheaterOverlay Component', () => {
 
     const prevBtn = screen.getByRole('button', { name: 'Previous video' })
     fireEvent.click(prevBtn)
-    expect(handleSelectVideo).toHaveBeenCalledWith(VIDEOS_DATA[1])
+    expect(handleSelectVideo).toHaveBeenCalledWith(prevItem)
 
     const nextBtn = screen.getByRole('button', { name: 'Next video' })
     fireEvent.click(nextBtn)
-    expect(handleSelectVideo).toHaveBeenCalledWith(VIDEOS_DATA[3])
+    expect(handleSelectVideo).toHaveBeenCalledWith(nextItem)
   })
 
-  it('cycles to previous and next videos using arrow keys', () => {
+  it('cycles to previous and next items using arrow keys', () => {
     const handleSelectVideo = vi.fn()
-    const middleVideo = VIDEOS_DATA[2] // index 2
+    const activeItem = mockVideo
+    const activeIdx = GALLERY_DATA.findIndex((i) => i.id === activeItem.id)
+    const prevItem = GALLERY_DATA[activeIdx - 1]
+    const nextItem = GALLERY_DATA[activeIdx + 1]
 
     render(
       <VideoTheaterOverlay
-        activeVideo={middleVideo}
+        activeVideo={activeItem}
         onClose={vi.fn()}
         onSelectVideo={handleSelectVideo}
       />
     )
 
     fireEvent.keyDown(window, { key: 'ArrowLeft' })
-    expect(handleSelectVideo).toHaveBeenCalledWith(VIDEOS_DATA[1])
+    expect(handleSelectVideo).toHaveBeenCalledWith(prevItem)
 
     fireEvent.keyDown(window, { key: 'ArrowRight' })
-    expect(handleSelectVideo).toHaveBeenCalledWith(VIDEOS_DATA[3])
+    expect(handleSelectVideo).toHaveBeenCalledWith(nextItem)
   })
 })

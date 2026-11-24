@@ -781,25 +781,25 @@ describe('Tuner Component', () => {
     expect(screen.queryByTestId('compact-inspection-dock')).not.toBeInTheDocument()
   })
 
-  it('renders Video Chamber tab and controls when isVideosPage is true', () => {
+  it('renders Gallery Chamber tab and controls when isVideosPage is true', () => {
     const onVideoParamChange = vi.fn()
     const onResetVideoParams = vi.fn()
 
     const { rerender } = render(
       <Tuner
-        isVideosPage={true}
+        isGalleryPage={true}
         onVideoParamChange={onVideoParamChange}
         onResetVideoParams={onResetVideoParams}
       />
     )
 
-    // Bottom pill displays chamber: video
+    // Bottom pill displays chamber: gallery
     expect(screen.getByText('chamber:')).toBeInTheDocument()
-    expect(screen.getByText('video')).toBeInTheDocument()
+    expect(screen.getByText('gallery')).toBeInTheDocument()
 
     // Open drawer
     fireEvent.click(screen.getByLabelText('Toggle parameter drawer'))
-    expect(screen.getByRole('button', { name: 'Video Chamber' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Gallery Chamber' })).toBeInTheDocument()
     expect(screen.getByText('Sphere Radius')).toBeInTheDocument()
     expect(screen.getByText('Thumbnail Scale')).toBeInTheDocument()
 
@@ -808,8 +808,8 @@ describe('Tuner Component', () => {
     fireEvent.change(radiusSlider, { target: { value: '4.8' } })
     expect(onVideoParamChange).toHaveBeenCalledWith('sphereRadius', 4.8)
 
-    // Reset video parameters
-    const resetBtn = screen.getByRole('button', { name: /Reset Video Chamber/i })
+    // Reset gallery parameters
+    const resetBtn = screen.getByRole('button', { name: /Reset Gallery Chamber/i })
     fireEvent.click(resetBtn)
     expect(onResetVideoParams).toHaveBeenCalled()
 

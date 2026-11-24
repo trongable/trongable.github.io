@@ -18,7 +18,7 @@ export interface HaloItem {
 
 export const HALO_ITEMS: HaloItem[] = [
   { label: 'about', path: '/about' },
-  { label: 'videos', path: '/videos' },
+  { label: 'gallery', path: '/gallery' },
   { label: 'more', path: '/more' },
   { label: 'sonny', path: '/sonny', imageUrl: '/images/sonny.png' },
   { label: 'dchc', path: 'https://dc-hardcore.com', isExternal: true },

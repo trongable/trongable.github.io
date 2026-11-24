@@ -1,10 +1,43 @@
 import { describe, it, expect } from 'vitest'
 import * as THREE from 'three'
-import { VIDEOS_DATA, computeSphericalPosition, CEREBRO_RADIUS } from '../videoData'
+import { VIDEOS_DATA, GALLERY_DATA, randomizeGallery, computeSphericalPosition, CEREBRO_RADIUS } from '../videoData'
 
 describe('videoData module', () => {
   it('contains exactly 7 videos matching user requirements', () => {
     expect(VIDEOS_DATA).toHaveLength(7)
+  })
+
+  it('contains all 27 gallery items (7 videos + 20 photos)', () => {
+    expect(GALLERY_DATA).toHaveLength(27)
+    const videos = GALLERY_DATA.filter((i) => i.type === 'video')
+    const photos = GALLERY_DATA.filter((i) => i.type === 'photo')
+    expect(videos).toHaveLength(7)
+    expect(photos).toHaveLength(20)
+  })
+
+  it('randomizeGallery produces a valid 27-item permutation across 3 rows of 9', () => {
+    const shuffled = randomizeGallery(GALLERY_DATA)
+    expect(shuffled).toHaveLength(27)
+
+    // All original items preserved
+    const originalIds = new Set(GALLERY_DATA.map((i) => i.id))
+    const shuffledIds = new Set(shuffled.map((i) => i.id))
+    expect(shuffledIds).toEqual(originalIds)
+
+    // Exactly 9 in upper, 9 in middle, 9 in lower
+    const upper = shuffled.filter((i) => i.tier === 'upper')
+    const middle = shuffled.filter((i) => i.tier === 'middle')
+    const lower = shuffled.filter((i) => i.tier === 'lower')
+    expect(upper).toHaveLength(9)
+    expect(middle).toHaveLength(9)
+    expect(lower).toHaveLength(9)
+
+    // Indices and slots properly configured
+    shuffled.forEach((item, idx) => {
+      expect(item.index).toBe(idx + 1)
+      expect(item.totalInTier).toBe(9)
+      expect(item.indexInTier).toBe(idx % 9)
+    })
   })
 
   it('contains all specified YouTube video IDs', () => {
@@ -28,15 +61,28 @@ describe('videoData module', () => {
     })
   })
 
-  it('correctly partitions videos into 4 upper tier and 3 lower tier', () => {
-    const upper = VIDEOS_DATA.filter((v) => v.tier === 'upper')
-    const lower = VIDEOS_DATA.filter((v) => v.tier === 'lower')
+  it('correctly partitions total gallery items into 3 rows of 9 (upper, middle, lower)', () => {
+    const upper = GALLERY_DATA.filter((v) => v.tier === 'upper')
+    const middle = GALLERY_DATA.filter((v) => v.tier === 'middle')
+    const lower = GALLERY_DATA.filter((v) => v.tier === 'lower')
 
-    expect(upper).toHaveLength(4)
-    expect(lower).toHaveLength(3)
+    expect(upper).toHaveLength(9)
+    expect(middle).toHaveLength(9)
+    expect(lower).toHaveLength(9)
 
     upper.forEach((v) => expect(v.elevationDeg).toBeGreaterThan(0))
+    middle.forEach((v) => expect(v.elevationDeg).toBe(0))
     lower.forEach((v) => expect(v.elevationDeg).toBeLessThan(0))
+  })
+
+  it('correctly partitions videos across 3 tiers (2 upper, 3 middle, 2 lower)', () => {
+    const upperVideos = VIDEOS_DATA.filter((v) => v.tier === 'upper')
+    const middleVideos = VIDEOS_DATA.filter((v) => v.tier === 'middle')
+    const lowerVideos = VIDEOS_DATA.filter((v) => v.tier === 'lower')
+
+    expect(upperVideos).toHaveLength(2)
+    expect(middleVideos).toHaveLength(3)
+    expect(lowerVideos).toHaveLength(2)
   })
 
   it('computes distinct non-overlapping spherical positions on radius R', () => {

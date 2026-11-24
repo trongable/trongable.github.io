@@ -17,7 +17,7 @@ describe('HaloMenuRing Component', () => {
     it('should define 5 orbital navigation items including sonny and videos', () => {
       // Given & Then: items schema holds 5 destinations
       expect(HALO_ITEMS).toHaveLength(5)
-      expect(HALO_ITEMS.map((i) => i.label)).toEqual(['about', 'videos', 'more', 'sonny', 'dchc'])
+      expect(HALO_ITEMS.map((i) => i.label)).toEqual(['about', 'gallery', 'more', 'sonny', 'dchc'])
       expect(HALO_ITEMS.find((i) => i.label === 'sonny')?.imageUrl).toBe('/images/sonny.png')
     })
 
@@ -41,7 +41,7 @@ describe('HaloMenuRing Component', () => {
 
       // Then: navigation labels are present
       expect(screen.getByText('about')).toBeInTheDocument()
-      expect(screen.getByText('videos')).toBeInTheDocument()
+      expect(screen.getByText('gallery')).toBeInTheDocument()
       expect(screen.getByText('more')).toBeInTheDocument()
       expect(screen.getByText('dchc')).toBeInTheDocument()
     })

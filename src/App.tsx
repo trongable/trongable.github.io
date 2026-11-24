@@ -9,7 +9,7 @@ import { HomePage } from './pages/HomePage'
 import { AboutPage } from './pages/AboutPage'
 import { MorePage } from './pages/MorePage'
 import { SonnyPage } from './pages/SonnyPage'
-import { VideosPage } from './pages/VideosPage'
+import { GalleryPage } from './pages/GalleryPage'
 
 interface ErrorBoundaryState {
   hasError: boolean
@@ -73,8 +73,8 @@ const AppContent: React.FC = () => {
         return <MorePage />
       case '/sonny':
         return <SonnyPage />
-      case '/videos':
-        return <VideosPage />
+      case '/gallery':
+        return <GalleryPage />
       case '/':
       default:
         return <HomePage />

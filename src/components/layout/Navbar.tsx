@@ -9,7 +9,7 @@ export interface NavItem {
 
 export const NAV_ITEMS: NavItem[] = [
   { label: 'about', path: '/about' },
-  { label: 'videos', path: '/videos' },
+  { label: 'gallery', path: '/gallery' },
   { label: 'more', path: '/more' },
   { label: 'dchc', path: 'https://dc-hardcore.com', isExternal: true },
 ]
@@ -49,11 +49,10 @@ export const Navbar: React.FC = () => {
             <button
               key={item.label}
               onClick={() => navigate(item.path)}
-              className={`transition-colors duration-200 cursor-pointer ${
-                isActive
+              className={`transition-colors duration-200 cursor-pointer ${isActive
                   ? 'text-[var(--theme-highlight)] font-medium underline underline-offset-4 decoration-[var(--theme-primary)]'
                   : 'text-[var(--theme-primary)] hover:text-[var(--theme-highlight)]'
-              }`}
+                }`}
             >
               {item.label}
             </button>

@@ -16,7 +16,7 @@ export interface TesseractMenuProps {
 
 export const TESSERACT_ITEMS = [
   { label: 'about', path: '/about', vertexIdx: 13 },
-  { label: 'videos', path: '/videos', vertexIdx: 15 },
+  { label: 'gallery', path: '/gallery', vertexIdx: 15 },
   { label: 'more', path: '/more', vertexIdx: 7 },
   { label: 'sonny', path: '/sonny', imageUrl: '/images/sonny.png', vertexIdx: 10 },
   { label: 'dchc', path: 'https://dc-hardcore.com', vertexIdx: 0 },

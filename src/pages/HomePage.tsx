@@ -630,7 +630,7 @@ export const HomePage: React.FC = () => {
       {/* Accessibility screen-reader navigation links */}
       <nav className="sr-only" aria-label="Direct Destinations">
         <button onClick={() => handleSelect('/about')}>about</button>
-        <button onClick={() => handleSelect('/videos')}>videos</button>
+        <button onClick={() => handleSelect('/gallery')}>gallery</button>
         <button onClick={() => handleSelect('/more')}>more</button>
         <button onClick={() => handleSelect('/sonny')}>sonny</button>
         <a href="https://dc-hardcore.com" target="_blank" rel="noopener noreferrer">dchc</a>
