@@ -44,8 +44,11 @@ npm run preview        # Preview production build
    - `GpuGlitchOverlay.tsx` geometry must remain strictly orthogonal (100% $90^\circ$ right angles; zero diagonals/trapezoids).
    - Glitch effects must remain disabled when `prefers-reduced-motion: reduce` is active.
    - Keep `Tuner.tsx` at `z-[60]` so it stays interactive during glitch bursts.
-5. **Mobile & Touch**: Keep `min-h-dvh`, `overscroll-behavior: none`, and `touch-action: none` on `SceneContainer` so touch drag raycasting works without scroll hijacking.
-6. **Code Conventions**:
+5. **Gallery Color & Rendering**:
+   - `CerebroChamber.tsx` must keep `toneMapping: THREE.NoToneMapping`, and `CurvedMediaPanel.tsx` must keep its raw sRGB `ShaderMaterial` passthrough (`NoColorSpace` textures with `anisotropy` and `-0.75` LOD bias, `toneMapped={false}`) to prevent `GL_SRGB8_ALPHA8` linear-light mipmap contrast washout and match the 2D viewer 1:1.
+   - Gallery WebP thumbnails must be sRGB-converted via `npm run gallery:thumbnails` (`scripts/generate-gallery-thumbnails.py`) so Display P3 photos do not wash out in WebGL.
+6. **Mobile & Touch**: Keep `min-h-dvh`, `overscroll-behavior: none`, and `touch-action: none` on `SceneContainer` so touch drag raycasting works without scroll hijacking.
+7. **Code Conventions**:
    - Use `@/` path aliases for all imports into `src/` (e.g., `import { useTheme } from '@/context/ThemeContext'`).
    - Preserve the minimalist cyber aesthetic; avoid superfluous marketing copy.
    - Keep `vite.config.ts` vendor chunks (`vendor-three`, `vendor-react`) and `index.html` font preloads intact.
@@ -62,7 +65,7 @@ npm run preview        # Preview production build
 
 ## Architecture & Subsystem Pointers (Read Before Editing)
 
-- **Core Layout**: `src/routes/Router.tsx` (pushState + hash fallback + URL query sync), `src/context/ThemeContext.tsx` (Volt Yellow `#e2f872` default, Purple `#d4adf0`, Teal `#83d4d4` via `--theme-primary` / `--theme-highlight`), `src/components/canvas/geometries/` (8 topologies dispatched by `GeometryDispatcher.tsx` via `geometryConfig.ts`), `src/pages/` (`/`, `/about`, `/more`, `/sonny`, `/videos`, plus external `dchc` at `https://dc-hardcore.com`).
+- **Core Layout**: `src/routes/Router.tsx` (pushState + hash fallback + URL query sync), `src/context/ThemeContext.tsx` (Volt Yellow `#e2f872` default, Purple `#d4adf0`, Teal `#83d4d4` via `--theme-primary` / `--theme-highlight`), `src/components/canvas/geometries/` (8 topologies dispatched by `GeometryDispatcher.tsx` via `geometryConfig.ts`), `src/components/gallery/` (`CerebroChamber.tsx`, `CurvedMediaPanel.tsx`, `GalleryTheaterOverlay.tsx`, `galleryData.ts`, `galleryTunerConfig.ts`), `src/pages/` (`/`, `/about`, `/more`, `/sonny`, `/gallery`, plus external `dchc` at `https://dc-hardcore.com`).
 
 | If you are modifying… | Read first |
 | :--- | :--- |
@@ -93,3 +96,9 @@ npm run preview        # Preview production build
 1. Add the JPG/PNG to `public/images/glitch/` or `public/images/`.
 2. Append its public path to `GLITCH_MEMORY_IMAGES` in `src/components/effects/GpuGlitchOverlay.tsx`.
 3. Verify the test in `src/components/effects/__tests__/GpuGlitchOverlay.test.tsx` covers `GLITCH_MEMORY_IMAGES`.
+
+### Adding a Gallery Photo
+1. Drop the full-resolution `.jpg` into `public/images/gallery/<slug>.jpg`.
+2. Run `npm run gallery:thumbnails` (`python scripts/generate-gallery-thumbnails.py`) to generate the sRGB 640px WebP thumbnail in `public/images/gallery/thumbnails/<slug>.webp` and print the `aspectRatio` snippet.
+3. Append the item (`id`, `type: 'photo'`, lowercase `title`, `author`, `imageUrl`, `hqImageUrl`, `aspectRatio`) to `RAW_GALLERY_DATA` in `src/components/gallery/galleryData.ts` (`layoutGalleryTiers` distributes items across the 3 spherical tiers automatically).
+4. Update the total item count assertions in `src/components/gallery/__tests__/galleryData.test.ts` and `e2e/gallery.spec.ts`.

@@ -1,10 +1,28 @@
 import React, { useRef, useState, useEffect, useMemo } from 'react'
 import * as THREE from 'three'
-import { useFrame } from '@react-three/fiber'
+import { useFrame, useThree } from '@react-three/fiber'
 import { Text } from '@react-three/drei'
 import { useTheme } from '@/context/ThemeContext'
-import { GalleryItem, computeSphericalPosition } from '../gallery/galleryData'
+import { GalleryItem, computeSphericalPosition } from './galleryData'
 import { scrambleGlyphs } from '@/utils/glyphUtils'
+import { preloadAndDecodeImage } from '@/utils/imagePreload'
+
+const SCREEN_VERTEX_SHADER = `
+varying vec2 vUv;
+void main() {
+  vUv = uv;
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+}
+`
+
+const SCREEN_FRAGMENT_SHADER = `
+uniform sampler2D uMap;
+uniform bool uHasMap;
+varying vec2 vUv;
+void main() {
+  gl_FragColor = uHasMap ? texture2D(uMap, vUv, -0.75) : vec4(0.09, 0.086, 0.114, 1.0);
+}
+`
 
 export interface CurvedMediaPanelProps {
   video: GalleryItem
@@ -32,13 +50,15 @@ export const CurvedMediaPanel: React.FC<CurvedMediaPanelProps> = ({
   onSelect,
 }) => {
   const { currentTheme } = useTheme()
+  const { gl } = useThree()
+  const maxAnisotropy = Math.min(16, gl?.capabilities?.getMaxAnisotropy?.() ?? 4)
   const themeColorHex = currentTheme.primary
   const highlightColorHex = currentTheme.highlight
 
   const groupRef = useRef<THREE.Group>(null)
   const meshRef = useRef<THREE.Mesh>(null)
   const borderMatRef = useRef<THREE.LineBasicMaterial>(null)
-  const screenMatRef = useRef<THREE.MeshBasicMaterial>(null)
+  const screenMatRef = useRef<THREE.ShaderMaterial>(null)
   const playRingMatRef = useRef<THREE.LineBasicMaterial>(null)
   const playTriMatRef = useRef<THREE.LineBasicMaterial>(null)
   const textRef = useRef<any>(null)
@@ -50,17 +70,22 @@ export const CurvedMediaPanel: React.FC<CurvedMediaPanelProps> = ({
 
   // Scratch vectors and colors (Zero-allocation in useFrame)
   const scratchCenterPos = useRef(new THREE.Vector3()).current
-  const scratchBlack = useRef(new THREE.Color(0x000000)).current
-  const scratchBaseColor = useRef(new THREE.Color()).current
   const scratchThemeColor = useRef(new THREE.Color()).current
+  const screenUniforms = useMemo(
+    () => ({
+      uMap: { value: null as THREE.Texture | null },
+      uHasMap: { value: false },
+    }),
+    []
+  )
 
   // Derive panel dimensions from aspect ratio:
-  // Video: standard 1.92 x 1.08 (16:9)
+  // Video: calibrated 1.60 x 0.90 (16:9 widescreen) with guaranteed tier clearance
   // Portrait Photo: ~0.90 x 1.20 (3:4)
   // Landscape Photo: ~1.44 x 1.08 (4:3)
   const { panelWidth, panelHeight } = useMemo(() => {
     if (video.type === 'video') {
-      return { panelWidth: 1.92, panelHeight: 1.08 }
+      return { panelWidth: 1.60, panelHeight: 0.90 }
     }
     if (video.aspectRatio >= 1) {
       const h = 1.08
@@ -233,7 +258,7 @@ export const CurvedMediaPanel: React.FC<CurvedMediaPanelProps> = ({
           }
         }
         const fallbackTex = new THREE.CanvasTexture(canvas)
-        fallbackTex.colorSpace = THREE.SRGBColorSpace
+        fallbackTex.colorSpace = THREE.NoColorSpace
         fallbackTex.needsUpdate = true
         if (active) setTexture(fallbackTex)
       } catch {
@@ -244,16 +269,20 @@ export const CurvedMediaPanel: React.FC<CurvedMediaPanelProps> = ({
     if (typeof Image !== 'undefined') {
       const loader = new THREE.TextureLoader()
       loader.setCrossOrigin('anonymous')
+      const targetUrl = video.thumbnailUrl || video.imageUrl
       loader.load(
-        video.imageUrl,
+        targetUrl,
         (loadedTex) => {
           if (!active) {
             loadedTex.dispose()
             return
           }
-          loadedTex.colorSpace = THREE.SRGBColorSpace
+          // Keep NoColorSpace (GL_RGBA8) so GPU mipmaps average in sRGB space without linear-light shadow lifting
+          loadedTex.colorSpace = THREE.NoColorSpace
           loadedTex.generateMipmaps = true
           loadedTex.minFilter = THREE.LinearMipmapLinearFilter
+          loadedTex.magFilter = THREE.LinearFilter
+          loadedTex.anisotropy = maxAnisotropy
           setTexture(loadedTex)
         },
         undefined,
@@ -264,7 +293,16 @@ export const CurvedMediaPanel: React.FC<CurvedMediaPanelProps> = ({
     return () => {
       active = false
     }
-  }, [video.imageUrl])
+  }, [video.thumbnailUrl, video.imageUrl, maxAnisotropy])
+
+  useEffect(() => {
+    screenUniforms.uMap.value = texture
+    screenUniforms.uHasMap.value = Boolean(texture)
+    if (screenMatRef.current?.uniforms) {
+      screenMatRef.current.uniforms.uMap.value = texture
+      screenMatRef.current.uniforms.uHasMap.value = Boolean(texture)
+    }
+  }, [texture, screenUniforms])
 
   // Explicit WebGL resource disposal & cursor reset on unmount
   useEffect(() => {
@@ -285,12 +323,17 @@ export const CurvedMediaPanel: React.FC<CurvedMediaPanelProps> = ({
     }
   }, [screenGeo, borderGeo, playRingGeo, playTriangleGeo, texture])
 
-  // Hover scramble effect on item title and native cursor pointer switch
+  // Hover scramble effect on item title, native cursor pointer switch, and background pre-decode
   const handlePointerEnter = (e: any) => {
     e.stopPropagation()
     setIsHovered(true)
     if (typeof document !== 'undefined') {
       document.body.style.cursor = 'pointer'
+    }
+
+    // Speculatively pre-decode full-size photo while user hovers
+    if (video.type === 'photo') {
+      preloadAndDecodeImage(video.hqImageUrl || video.imageUrl)
     }
 
     let iter = 0
@@ -318,7 +361,7 @@ export const CurvedMediaPanel: React.FC<CurvedMediaPanelProps> = ({
   }
 
   // Smooth hover scale & Fly-to-Center animation in useFrame (Zero-allocation)
-  useFrame(({ camera }, delta) => {
+  useFrame(({ camera, viewport }, delta) => {
     if (!groupRef.current) return
 
     // 1. Fly-to-center interpolation when selected: projects dynamically in front of active camera
@@ -339,59 +382,66 @@ export const CurvedMediaPanel: React.FC<CurvedMediaPanelProps> = ({
         groupRef.current.quaternion.copy(initialQuaternion)
       }
 
-      // 2. Scale: 1.05x on hover, expanding to 1.6x when flying to center, modulated by thumbnailScale
+      // 2. Fullscreen scale calibration: matches the 2D theater overlay bounds (max-w-[90vw], max-h-[80vh])
+      // At distance d = 2.15 with vertical FOV (46 deg):
+      const persCam = camera as THREE.PerspectiveCamera
+      const fovYRad = THREE.MathUtils.degToRad(persCam.fov || 46)
+      const frustumHeight = 2 * 2.15 * Math.tan(fovYRad / 2) // ~1.82524
+      const aspect = persCam.aspect || (viewport ? viewport.aspect : 16 / 9)
+      const frustumWidth = frustumHeight * aspect
+
+      const maxW = 0.90 * frustumWidth
+      const maxH = 0.80 * frustumHeight
+
+      const itemAspect = panelWidth / panelHeight
+      let targetW = maxW
+      let targetH = targetW / itemAspect
+      if (targetH > maxH) {
+        targetH = maxH
+        targetW = targetH * itemAspect
+      }
+
+      const fullScreenScale = targetH / panelHeight
+
+      // Resting scale on sphere wall (hoverScale * thumbnailScale) lerps to fullScreenScale when flying to center
       const hoverScale = isHovered && !isDimmed ? 1.05 : 1.0
-      const targetScale = THREE.MathUtils.lerp(hoverScale, 1.6, fp) * thumbnailScale
+      const restingScale = hoverScale * thumbnailScale
+      const targetScale = THREE.MathUtils.lerp(restingScale, fullScreenScale, fp)
 
       groupRef.current.scale.x = THREE.MathUtils.damp(groupRef.current.scale.x, targetScale, 10, delta)
       groupRef.current.scale.y = THREE.MathUtils.damp(groupRef.current.scale.y, targetScale, 10, delta)
       groupRef.current.scale.z = THREE.MathUtils.damp(groupRef.current.scale.z, targetScale, 10, delta)
     }
 
-    // Darkness factor: videos fade to black right before 2D iframe expands; photos stay visible and bright!
     const isVideo = video.type === 'video'
-    const darknessFactor = isVideo ? THREE.MathUtils.clamp(fp, 0, 1) : 0
-    const visibilityFactor = isVideo ? Math.max(0, 1.0 - fp) : 1.0
 
-    // Border highlight and darkness fade
+    // Border highlight: stays crisp and visible during flight, matching the 2D overlay border
     if (borderMatRef.current) {
       scratchThemeColor.set(isHovered ? highlightColorHex : themeColorHex)
-      borderMatRef.current.color.lerpColors(scratchThemeColor, scratchBlack, darknessFactor)
+      borderMatRef.current.color.copy(scratchThemeColor)
       const baseBorderOpacity = isHovered ? 0.95 : 0.40
-      borderMatRef.current.opacity = isDimmed && !isSelected ? 0.0 : baseBorderOpacity * visibilityFactor
+      borderMatRef.current.opacity = isDimmed && !isSelected ? 0.0 : (isSelected ? 0.50 : baseBorderOpacity)
     }
 
-    // Play icon: fade into darkness on fly-in (only videos have play icons)
+    // Play icon: dissolves out cleanly during flight (only videos have play icons)
     if (isVideo) {
-      const playAndTextFactor = Math.max(0, 1.0 - fp * 1.5)
+      const playIconFactor = Math.max(0, 1.0 - fp * 2)
       scratchThemeColor.set(isHovered ? highlightColorHex : themeColorHex)
       if (playRingMatRef.current) {
-        playRingMatRef.current.color.lerpColors(scratchThemeColor, scratchBlack, fp)
-        playRingMatRef.current.opacity = isDimmed && !isSelected ? 0.0 : (isHovered ? 1.0 : 0.65) * playAndTextFactor
+        playRingMatRef.current.color.copy(scratchThemeColor)
+        playRingMatRef.current.opacity = isDimmed && !isSelected ? 0.0 : (isHovered ? 1.0 : 0.65) * playIconFactor
       }
       if (playTriMatRef.current) {
-        playTriMatRef.current.color.lerpColors(scratchThemeColor, scratchBlack, fp)
-        playTriMatRef.current.opacity = isDimmed && !isSelected ? 0.0 : (isHovered ? 1.0 : 0.65) * playAndTextFactor
+        playTriMatRef.current.color.copy(scratchThemeColor)
+        playTriMatRef.current.opacity = isDimmed && !isSelected ? 0.0 : (isHovered ? 1.0 : 0.65) * playIconFactor
       }
     }
 
-    // Title label
+    // Title label: dissolves out during flight
     if (textRef.current && typeof textRef.current.fillOpacity === 'number') {
       const textBaseOpacity = isHovered ? 1.0 : 0.75
       const textDimFactor = isSelected ? Math.max(0, 1.0 - fp * 2) : (isDimmed ? 0.0 : 1.0)
       textRef.current.fillOpacity = textBaseOpacity * textDimFactor
-    }
-
-    // Screen mesh material
-    if (screenMatRef.current) {
-      if (isVideo) {
-        // Videos lerp into black before theater overlay takes over
-        scratchBaseColor.set(isHovered ? '#ffffff' : '#dddddd')
-        screenMatRef.current.color.lerpColors(scratchBaseColor, scratchBlack, fp)
-      } else {
-        // Photos maintain full vibrant image visibility and 100% white base color (no black bleed-through)
-        screenMatRef.current.color.set('#ffffff')
-      }
     }
   })
 
@@ -431,12 +481,14 @@ export const CurvedMediaPanel: React.FC<CurvedMediaPanelProps> = ({
         onPointerOver={handlePointerEnter}
         onPointerOut={handlePointerLeave}
       >
-        <meshBasicMaterial
+        <shaderMaterial
           ref={screenMatRef}
-          map={texture}
-          color="#ffffff"
+          uniforms={screenUniforms}
+          vertexShader={SCREEN_VERTEX_SHADER}
+          fragmentShader={SCREEN_FRAGMENT_SHADER}
           depthWrite={true}
           side={THREE.DoubleSide}
+          toneMapped={false}
         />
       </mesh>
 

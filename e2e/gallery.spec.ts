@@ -59,6 +59,10 @@ const PHOTOS = [
   { id: 'photo-bison', title: 'custer state park' },
   { id: 'photo-vintage-toys', title: 'falls church va' },
   { id: 'photo-hogan', title: 'page az' },
+  { id: 'photo-monotype-monarch-pink', title: 'monarch print i' },
+  { id: 'photo-monotype-monarch-cyan', title: 'monarch print ii' },
+  { id: 'photo-monotype-monarch-coral', title: 'monarch print iii' },
+  { id: 'photo-monotype-monarch-wings', title: 'monarch print iv' },
 ]
 
 test.describe('Gallery Page End-to-End Suite', () => {
@@ -96,7 +100,7 @@ test.describe('Gallery Page End-to-End Suite', () => {
     expect(box!.height).toBeGreaterThan(150)
   })
 
-  test('TC-02: Accessible navigation items exist for all 27 gallery items (7 videos + 20 photos in 3 rows of 9)', async ({ page }) => {
+  test('TC-02: Accessible navigation items exist for all 31 gallery items (7 videos + 24 photos)', async ({ page }) => {
     await page.goto('/#/gallery')
 
     const nav = page.getByRole('navigation', { name: 'Available Gallery Items' })
@@ -148,7 +152,7 @@ test.describe('Gallery Page End-to-End Suite', () => {
     await expect(overlay.getByText(photo.title.toLowerCase())).toBeVisible()
 
     // Verify high-resolution image is rendered
-    const img = overlay.locator('img')
+    const img = overlay.locator('[data-testid="theater-main-image"]')
     await expect(img).toBeVisible()
     const imgSrc = await img.getAttribute('src')
     expect(imgSrc).toContain('anemone-white.jpg')
@@ -252,6 +256,8 @@ test.describe('Gallery Page End-to-End Suite', () => {
     await expect(drawer.locator('text=Sphere Radius')).toBeVisible()
     await expect(drawer.locator('text=Horizontal Wrap Arc')).toBeVisible()
     await expect(drawer.locator('text=Pan Sensitivity')).toBeVisible()
+    await expect(drawer.locator('text=Drag Multiplier')).toBeVisible()
+    await expect(drawer.locator('text=Fling Inertia')).toBeVisible()
   })
 
   test('TC-10: Gallery order is randomized on page load and stable per visit', async ({ page }) => {
@@ -261,10 +267,10 @@ test.describe('Gallery Page End-to-End Suite', () => {
     const firstButtonCanonical = await navDeterministic.locator('button').first().textContent()
     expect(firstButtonCanonical).toBe('View zion national park')
 
-    // 2. Normal visit without random=false is randomized and contains all 27 items
+    // 2. Normal visit without random=false is randomized and contains all 31 items
     await page.goto('/#/gallery')
     const navRandom = page.getByRole('navigation', { name: 'Available Gallery Items' })
     const buttons = await navRandom.locator('button').all()
-    expect(buttons).toHaveLength(27)
+    expect(buttons).toHaveLength(31)
   })
 })

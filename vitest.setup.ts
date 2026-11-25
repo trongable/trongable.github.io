@@ -30,6 +30,13 @@ if (typeof window !== 'undefined') {
     }
 }
 
+// HTMLImageElement decode stub for jsdom
+if (typeof HTMLImageElement !== 'undefined' && !('decode' in HTMLImageElement.prototype)) {
+  ;(HTMLImageElement.prototype as any).decode = function () {
+    return Promise.resolve()
+  }
+}
+
 // Canvas 2D Context stub for ParticleField and CurvedVideoPanel in jsdom
 if (typeof HTMLCanvasElement !== 'undefined') {
   HTMLCanvasElement.prototype.getContext = function (contextType: string) {
@@ -77,12 +84,13 @@ vi.mock('@react-three/fiber', () => ({
     registerFrameCallback(cb)
   },
   useThree: () => currentThreeState,
-  Canvas: ({ children, onPointerMissed, onClick, frameloop }: any) =>
+  Canvas: ({ children, onPointerMissed, onClick, frameloop, gl }: any) =>
     React.createElement(
       'div',
       {
         'data-testid': 'r3f-canvas',
         'data-frameloop': frameloop,
+        'data-tone-mapping': gl?.toneMapping,
         onClick: (e: any) => {
           onClick?.(e)
           onPointerMissed?.(e)
@@ -107,6 +115,7 @@ const r3fTags = [
   'pointLight',
   'planeGeometry',
   'meshBasicMaterial',
+  'shaderMaterial',
   'bufferGeometry',
   'bufferAttribute',
   'lineLoop',
@@ -129,6 +138,10 @@ const r3fPropWarningKeywords = [
   'React does not recognize the `anchorY` prop',
   'Received `true` for a non-boolean attribute `transparent`',
   'Received `true` for a non-boolean attribute `visible`',
+  'React does not recognize the `vertexShader` prop',
+  'React does not recognize the `fragmentShader` prop',
+  'React does not recognize the `depthWrite` prop',
+  'React does not recognize the `toneMapped` prop',
 ]
 
 console.error = (...args: unknown[]) => {

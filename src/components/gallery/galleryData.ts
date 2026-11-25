@@ -167,7 +167,22 @@ const RAW_GALLERY_DATA: Array<Omit<GalleryItem, 'thumbnailUrl' | 'hqThumbnailUrl
     tier: 'upper',
     index: 9,
     indexInTier: 8,
-    totalInTier: 9,
+    totalInTier: 10,
+  },
+  {
+    id: 'photo-monotype-monarch-pink',
+    type: 'photo',
+    title: 'monarch print i',
+    author: 'Trong Nguyen',
+    imageUrl: '/images/gallery/monotype-monarch-pink.jpg',
+    hqImageUrl: '/images/gallery/monotype-monarch-pink.jpg',
+    aspectRatio: 795 / 1024,
+    azimuthDeg: 110,
+    elevationDeg: 23.6,
+    tier: 'upper',
+    index: 10,
+    indexInTier: 9,
+    totalInTier: 10,
   },
 
   // ==========================================
@@ -310,7 +325,37 @@ const RAW_GALLERY_DATA: Array<Omit<GalleryItem, 'thumbnailUrl' | 'hqThumbnailUrl
     tier: 'middle',
     index: 18,
     indexInTier: 8,
-    totalInTier: 9,
+    totalInTier: 11,
+  },
+  {
+    id: 'photo-monotype-monarch-cyan',
+    type: 'photo',
+    title: 'monarch print ii',
+    author: 'Trong Nguyen',
+    imageUrl: '/images/gallery/monotype-monarch-cyan.jpg',
+    hqImageUrl: '/images/gallery/monotype-monarch-cyan.jpg',
+    aspectRatio: 768 / 1024,
+    azimuthDeg: 88,
+    elevationDeg: 0,
+    tier: 'middle',
+    index: 19,
+    indexInTier: 9,
+    totalInTier: 11,
+  },
+  {
+    id: 'photo-monotype-monarch-coral',
+    type: 'photo',
+    title: 'monarch print iii',
+    author: 'Trong Nguyen',
+    imageUrl: '/images/gallery/monotype-monarch-coral.jpg',
+    hqImageUrl: '/images/gallery/monotype-monarch-coral.jpg',
+    aspectRatio: 778 / 1024,
+    azimuthDeg: 110,
+    elevationDeg: 0,
+    tier: 'middle',
+    index: 20,
+    indexInTier: 10,
+    totalInTier: 11,
   },
 
   // ==========================================
@@ -452,21 +497,97 @@ const RAW_GALLERY_DATA: Array<Omit<GalleryItem, 'thumbnailUrl' | 'hqThumbnailUrl
     tier: 'lower',
     index: 27,
     indexInTier: 8,
-    totalInTier: 9,
+    totalInTier: 10,
+  },
+  {
+    id: 'photo-monotype-monarch-wings',
+    type: 'photo',
+    title: 'monarch print iv',
+    author: 'Trong Nguyen',
+    imageUrl: '/images/gallery/monotype-monarch-wings.jpg',
+    hqImageUrl: '/images/gallery/monotype-monarch-wings.jpg',
+    aspectRatio: 798 / 1024,
+    azimuthDeg: 110,
+    elevationDeg: -23.6,
+    tier: 'lower',
+    index: 28,
+    indexInTier: 9,
+    totalInTier: 10,
   },
 ]
 
-export const GALLERY_DATA: GalleryItem[] = RAW_GALLERY_DATA.map((item) => ({
-  ...item,
-  thumbnailUrl: item.imageUrl,
-  hqThumbnailUrl: item.hqImageUrl || item.imageUrl,
-}))
+/**
+ * Distributes any number of gallery items evenly across the 3 spherical tiers
+ * (upper, middle, lower), assigning extra items to the middle equator first
+ * where circumference is largest.
+ */
+export function layoutGalleryTiers(items: GalleryItem[]): GalleryItem[] {
+  const n = items.length
+  const base = Math.floor(n / 3)
+  const rem = n % 3
+  const upperCount = base + (rem === 2 ? 1 : 0)
+  const middleCount = base + (rem >= 1 ? 1 : 0)
+  const lowerCount = n - upperCount - middleCount
+
+  return items.map((item, idx) => {
+    let tier: TierKind = 'middle'
+    let elevationDeg = 0
+    let indexInTier = 0
+    let totalInTier = middleCount
+
+    if (idx < upperCount) {
+      tier = 'upper'
+      elevationDeg = 23.6
+      indexInTier = idx
+      totalInTier = upperCount
+    } else if (idx < upperCount + middleCount) {
+      tier = 'middle'
+      elevationDeg = 0
+      indexInTier = idx - upperCount
+      totalInTier = middleCount
+    } else {
+      tier = 'lower'
+      elevationDeg = -23.6
+      indexInTier = idx - upperCount - middleCount
+      totalInTier = lowerCount
+    }
+
+    const stepRatio = totalInTier > 1 ? indexInTier / (totalInTier - 1) : 0.5
+    const azimuthDeg = -110 + stepRatio * 220
+
+    return {
+      ...item,
+      index: idx + 1,
+      tier,
+      indexInTier,
+      totalInTier,
+      azimuthDeg,
+      elevationDeg,
+    }
+  })
+}
+
+export const GALLERY_DATA: GalleryItem[] = layoutGalleryTiers(
+  RAW_GALLERY_DATA.map((item) => {
+    const isVideo = item.type === 'video'
+    // Photos use optimized 640px WebP thumbnails for 3D sphere texture; videos use YouTube thumbnail
+    const thumb = isVideo
+      ? item.imageUrl
+      : item.imageUrl.replace('/images/gallery/', '/images/gallery/thumbnails/').replace('.jpg', '.webp')
+
+    return {
+      ...item,
+      thumbnailUrl: thumb,
+      hqThumbnailUrl: item.hqImageUrl || item.imageUrl,
+    }
+  })
+)
 
 // Backward-compatible alias filtering strictly the 7 videos
 export const VIDEOS_DATA: GalleryItem[] = GALLERY_DATA.filter((item) => item.type === 'video')
 
 /**
- * Randomizes gallery items across the 3 rows of 9 (27 items total) on page load.
+ * Randomizes gallery items across the 3 spherical tiers on page load.
  * Uses Fisher-Yates shuffle and reassigns spatial coordinates (tier, azimuthDeg, elevationDeg).
  */
 export function randomizeGallery(items: GalleryItem[]): GalleryItem[] {
@@ -478,35 +599,7 @@ export function randomizeGallery(items: GalleryItem[]): GalleryItem[] {
     shuffled[j] = temp
   }
 
-  return shuffled.map((item, idx) => {
-    let tier: TierKind = 'middle'
-    let elevationDeg = 0
-
-    if (idx < 9) {
-      tier = 'upper'
-      elevationDeg = 23.6
-    } else if (idx < 18) {
-      tier = 'middle'
-      elevationDeg = 0
-    } else {
-      tier = 'lower'
-      elevationDeg = -23.6
-    }
-
-    const indexInTier = idx % 9
-    // Default arc 220 -> -110 to +110 in steps of 27.5
-    const azimuthDeg = -110 + indexInTier * 27.5
-
-    return {
-      ...item,
-      index: idx + 1,
-      tier,
-      indexInTier,
-      totalInTier: 9,
-      azimuthDeg,
-      elevationDeg,
-    }
-  })
+  return layoutGalleryTiers(shuffled)
 }
 
 /**

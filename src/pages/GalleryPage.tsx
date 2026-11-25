@@ -3,14 +3,15 @@ import { useRouter } from '../routes/Router'
 import { useTuner } from '../context/TunerContext'
 import { useTheme } from '../context/ThemeContext'
 import { usePowerManager } from '../hooks/usePowerManager'
-import { CerebroChamber } from '../components/videos/CerebroChamber'
-import { GalleryTheaterOverlay } from '../components/videos/VideoTheaterOverlay'
+import { CerebroChamber } from '@/components/gallery/CerebroChamber'
+import { GalleryTheaterOverlay } from '@/components/gallery/GalleryTheaterOverlay'
 import { GalleryItem, GALLERY_DATA, randomizeGallery } from '../components/gallery/galleryData'
 import {
   GalleryChamberParams,
   DEFAULT_GALLERY_CHAMBER_PARAMS,
 } from '../components/gallery/galleryTunerConfig'
 import { Tuner } from '../components/ui/Tuner'
+import { preloadAndDecodeImage } from '@/utils/imagePreload'
 
 export const GalleryPage: React.FC = () => {
   const { navigate, queryParams } = useRouter()
@@ -54,6 +55,10 @@ export const GalleryPage: React.FC = () => {
   // Two-stage fly-in: card visibly glides to center (340ms) while background fades, then focused theater expands
   const handleSelectItem = (item: GalleryItem) => {
     setSelectedItem(item)
+    // Pre-decode high-res image off-thread immediately so it is in memory before the 340ms flight concludes
+    if (item.type === 'photo') {
+      preloadAndDecodeImage(item.hqImageUrl || item.imageUrl)
+    }
     if (transitTimerRef.current) clearTimeout(transitTimerRef.current)
     transitTimerRef.current = setTimeout(() => {
       setActiveItem(item)
@@ -83,7 +88,6 @@ export const GalleryPage: React.FC = () => {
       data-testid="gallery-page"
       className="relative w-full h-full min-h-dvh bg-[#0c0b10] text-[var(--theme-primary)] flex flex-col overflow-hidden select-none lowercase"
     >
-      <span data-testid="videos-page" className="hidden" aria-hidden="true" />
       {/* Minimalist Return Home Link matching other shell pages */}
       <button
         onClick={() => navigate('/?expanded=true')}
@@ -132,7 +136,6 @@ export const GalleryPage: React.FC = () => {
       {isTunerVisible && (
         <Tuner
           isGalleryPage={true}
-          isVideosPage={true}
           videoParams={galleryParams}
           onVideoParamChange={handleGalleryParamChange}
           onResetVideoParams={handleResetGalleryParams}
@@ -158,6 +161,3 @@ export const GalleryPage: React.FC = () => {
     </main>
   )
 }
-
-// Retain VideosPage export alias for backward compatibility
-export const VideosPage = GalleryPage

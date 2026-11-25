@@ -2,7 +2,7 @@ import React, { useMemo, useEffect, useRef } from 'react'
 import * as THREE from 'three'
 import { useFrame } from '@react-three/fiber'
 import { useTheme } from '@/context/ThemeContext'
-import { CEREBRO_RADIUS } from './videoData'
+import { CEREBRO_RADIUS } from './galleryData'
 
 interface CerebroSphereWallProps {
   radius?: number

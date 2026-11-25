@@ -18,7 +18,8 @@
     "e2e:agent": "playwright test --project=chromium --reporter=line",
     "typecheck": "tsc --noEmit",
     "lint": "oxlint src",
-    "verify:agent": "oxlint src && tsc --noEmit && vitest run --silent --reporter=dot"
+    "verify:agent": "oxlint src && tsc --noEmit && vitest run --silent --reporter=dot",
+    "gallery:thumbnails": "python scripts/generate-gallery-thumbnails.py"
   },
   "repository": {
     "type": "git",

@@ -1,6 +1,7 @@
 import React, { useEffect, useCallback, useState } from 'react'
-import { GalleryItem, GALLERY_DATA } from '../gallery/galleryData'
+import { GalleryItem, GALLERY_DATA } from './galleryData'
 import { ArrowLeft, ArrowRight, X } from 'lucide-react'
+import { preloadAndDecodeImage } from '@/utils/imagePreload'
 
 export interface GalleryTheaterOverlayProps {
   activeVideo?: GalleryItem | null
@@ -77,6 +78,24 @@ export const GalleryTheaterOverlay: React.FC<GalleryTheaterOverlayProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [currentItem, handleInitiateClose, handlePrev, handleNext])
 
+  // Pre-decode adjacent gallery items for hitch-free Prev / Next cycling
+  useEffect(() => {
+    if (currentIndex < 0 || items.length === 0) return
+
+    const prevIndex = currentIndex > 0 ? currentIndex - 1 : items.length - 1
+    const nextIndex = currentIndex < items.length - 1 ? currentIndex + 1 : 0
+
+    const prevItem = items[prevIndex]
+    const nextItem = items[nextIndex]
+
+    if (prevItem && prevItem.type === 'photo') {
+      preloadAndDecodeImage(prevItem.hqImageUrl || prevItem.imageUrl)
+    }
+    if (nextItem && nextItem.type === 'photo') {
+      preloadAndDecodeImage(nextItem.hqImageUrl || nextItem.imageUrl)
+    }
+  }, [currentIndex, items])
+
   if (!currentItem) return null
 
   const isVideo = currentItem.type === 'video'
@@ -114,11 +133,11 @@ export const GalleryTheaterOverlay: React.FC<GalleryTheaterOverlayProps> = ({
 
       {/* Center Media Container */}
       <div
-        className="relative w-full max-w-[95vw] md:max-w-[92vw] xl:max-w-[88vw] max-h-[82vh] mx-auto my-auto flex-1 flex flex-col items-center justify-center p-1 md:p-2 z-10"
+        className="relative w-full max-w-[90vw] max-h-[80vh] mx-auto my-auto flex-1 flex flex-col items-center justify-center p-0 z-10"
         onClick={(e) => e.stopPropagation()}
       >
         {isVideo ? (
-          <div className="relative w-full h-full max-h-[80vh] aspect-video rounded-lg overflow-hidden border border-[var(--theme-primary)]/40 shadow-[0_0_60px_rgba(0,0,0,0.9)] bg-black transition-transform duration-300 scale-100">
+          <div className="relative w-full h-full max-w-[90vw] max-h-[80vh] aspect-video rounded-lg overflow-hidden border border-[var(--theme-primary)]/40 shadow-[0_0_60px_rgba(0,0,0,0.9)] bg-black transition-transform duration-300 scale-100">
             <iframe
               src={`https://www.youtube-nocookie.com/embed/${currentItem.youtubeId}?autoplay=1&rel=0&modestbranding=1`}
               title={currentItem.title}
@@ -128,11 +147,24 @@ export const GalleryTheaterOverlay: React.FC<GalleryTheaterOverlayProps> = ({
             />
           </div>
         ) : (
-          <div className="relative max-w-full max-h-[80vh] rounded-lg overflow-hidden border border-[var(--theme-primary)]/40 shadow-[0_0_60px_rgba(0,0,0,0.9)] bg-[#0d0c12] transition-transform duration-300 scale-100 flex items-center justify-center">
+          <div className="relative max-w-[90vw] max-h-[80vh] rounded-lg overflow-hidden border border-[var(--theme-primary)]/40 shadow-[0_0_60px_rgba(0,0,0,0.9)] bg-[#0d0c12] transition-transform duration-300 scale-100 flex items-center justify-center">
+            {/* Instant cached thumbnail placeholder from 3D sphere texture */}
+            {currentItem.thumbnailUrl && (
+              <img
+                src={currentItem.thumbnailUrl}
+                alt=""
+                aria-hidden="true"
+                className="absolute inset-0 w-full h-full object-contain filter blur-[1px] select-none pointer-events-none opacity-60"
+              />
+            )}
+            {/* High-res full size image loaded asynchronously off-thread */}
             <img
+              data-testid="theater-main-image"
               src={currentItem.hqImageUrl || currentItem.imageUrl}
               alt={currentItem.title}
-              className="max-w-[92vw] max-h-[78vh] w-auto h-auto object-contain select-none pointer-events-none"
+              decoding="async"
+              loading="eager"
+              className="relative max-w-[90vw] max-h-[80vh] w-auto h-auto object-contain select-none pointer-events-none z-10"
             />
           </div>
         )}
@@ -140,7 +172,7 @@ export const GalleryTheaterOverlay: React.FC<GalleryTheaterOverlayProps> = ({
 
       {/* Bottom HUD Bar: Item Title & Prev/Next Controls */}
       <div
-        className="w-full max-w-[95vw] md:max-w-[92vw] xl:max-w-[88vw] mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-mono tracking-wider text-[var(--theme-primary)] z-10"
+        className="w-full max-w-[90vw] mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-mono tracking-wider text-[var(--theme-primary)] z-10"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex flex-col text-center sm:text-left lowercase">

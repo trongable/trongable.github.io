@@ -1,10 +1,15 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
-import { VideoTheaterOverlay } from '../VideoTheaterOverlay'
-import { GALLERY_DATA, VIDEOS_DATA } from '../videoData'
+import { GalleryTheaterOverlay as VideoTheaterOverlay } from '../GalleryTheaterOverlay'
+import { GALLERY_DATA, VIDEOS_DATA } from '../galleryData'
+import { isImageDecoded, clearImagePreloadCache } from '@/utils/imagePreload'
 
 describe('VideoTheaterOverlay Component', () => {
   const mockVideo = VIDEOS_DATA[0] // qopBymi9FYY
+
+  beforeEach(() => {
+    clearImagePreloadCache()
+  })
 
   it('renders null when activeVideo is null', () => {
     const { container } = render(
@@ -59,6 +64,35 @@ describe('VideoTheaterOverlay Component', () => {
     const img = screen.getByAltText(photoItem.title)
     expect(img).toBeInTheDocument()
     expect(img).toHaveAttribute('src', photoItem.imageUrl)
+    expect(img).toHaveAttribute('decoding', 'async')
+    expect(img).toHaveAttribute('loading', 'eager')
+  })
+
+  it('pre-decodes adjacent items in the background when an item is active', async () => {
+    const photoIdx = GALLERY_DATA.findIndex((i) => i.type === 'photo')
+    const activeItem = GALLERY_DATA[photoIdx]
+    const prevItem = photoIdx > 0 ? GALLERY_DATA[photoIdx - 1] : GALLERY_DATA[GALLERY_DATA.length - 1]
+    const nextItem = photoIdx < GALLERY_DATA.length - 1 ? GALLERY_DATA[photoIdx + 1] : GALLERY_DATA[0]
+
+    render(
+      <VideoTheaterOverlay
+        activeItem={activeItem}
+        items={GALLERY_DATA}
+        onClose={vi.fn()}
+        onSelectItem={vi.fn()}
+      />
+    )
+
+    await vi.waitFor(() => {
+      if (prevItem.type === 'photo') {
+        const prevUrl = prevItem.hqImageUrl || prevItem.imageUrl
+        expect(isImageDecoded(prevUrl)).toBe(true)
+      }
+      if (nextItem.type === 'photo') {
+        const nextUrl = nextItem.hqImageUrl || nextItem.imageUrl
+        expect(isImageDecoded(nextUrl)).toBe(true)
+      }
+    })
   })
 
   it('calls onClose when clicking return button', () => {

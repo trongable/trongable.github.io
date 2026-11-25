@@ -23,10 +23,10 @@ import {
 import { CameraAngles } from '../canvas/SceneContainer'
 import { PowerMode } from '@/hooks/usePowerManager'
 import {
-  VideoChamberParams,
-  DEFAULT_VIDEO_CHAMBER_PARAMS,
-  VIDEO_CHAMBER_PARAM_BOUNDS,
-} from '../videos/videoTunerConfig'
+  GalleryChamberParams,
+  DEFAULT_GALLERY_CHAMBER_PARAMS,
+  GALLERY_CHAMBER_PARAM_BOUNDS,
+} from '@/components/gallery/galleryTunerConfig'
 import {
   computeHighlightColor,
   isValidHex,
@@ -85,11 +85,10 @@ export interface TunerProps {
   // Animation / Effect Pause
   isPaused?: boolean
   onTogglePause?: (paused?: boolean) => void
-  // Video / Gallery Chamber Specific Controls
+  // Gallery Chamber Specific Controls
   isGalleryPage?: boolean
-  isVideosPage?: boolean
-  videoParams?: VideoChamberParams
-  onVideoParamChange?: <K extends keyof VideoChamberParams>(key: K, val: VideoChamberParams[K]) => void
+  videoParams?: GalleryChamberParams
+  onVideoParamChange?: <K extends keyof GalleryChamberParams>(key: K, val: GalleryChamberParams[K]) => void
   onResetVideoParams?: () => void
 }
 
@@ -135,12 +134,11 @@ export const Tuner: React.FC<TunerProps> = ({
   isPaused = false,
   onTogglePause,
   isGalleryPage = false,
-  isVideosPage = false,
-  videoParams = DEFAULT_VIDEO_CHAMBER_PARAMS,
+  videoParams = DEFAULT_GALLERY_CHAMBER_PARAMS,
   onVideoParamChange = () => {},
   onResetVideoParams = () => {},
 }) => {
-  const isEffectiveGallery = Boolean(isGalleryPage || isVideosPage)
+  const isEffectiveGallery = Boolean(isGalleryPage)
   const { containerStyle: ctxContainerStyle, setContainerStyle: ctxSetContainerStyle } = useSonnyContainer()
   const activeSonnyContainer = sonnyContainer ?? ctxContainerStyle
   const handleContainerChange = (style: SonnyContainerStyle) => {
@@ -337,9 +335,9 @@ export const Tuner: React.FC<TunerProps> = ({
                 <input
                   type="range"
                   aria-label="Sphere Radius"
-                  min={VIDEO_CHAMBER_PARAM_BOUNDS.sphereRadius.min}
-                  max={VIDEO_CHAMBER_PARAM_BOUNDS.sphereRadius.max}
-                  step={VIDEO_CHAMBER_PARAM_BOUNDS.sphereRadius.step}
+                  min={GALLERY_CHAMBER_PARAM_BOUNDS.sphereRadius.min}
+                  max={GALLERY_CHAMBER_PARAM_BOUNDS.sphereRadius.max}
+                  step={GALLERY_CHAMBER_PARAM_BOUNDS.sphereRadius.step}
                   value={videoParams.sphereRadius}
                   onChange={(e) => onVideoParamChange('sphereRadius', parseFloat(e.target.value))}
                   className="w-full accent-[var(--theme-primary)] cursor-pointer"
@@ -354,9 +352,9 @@ export const Tuner: React.FC<TunerProps> = ({
                 <input
                   type="range"
                   aria-label="Thumbnail Scale"
-                  min={VIDEO_CHAMBER_PARAM_BOUNDS.thumbnailScale.min}
-                  max={VIDEO_CHAMBER_PARAM_BOUNDS.thumbnailScale.max}
-                  step={VIDEO_CHAMBER_PARAM_BOUNDS.thumbnailScale.step}
+                  min={GALLERY_CHAMBER_PARAM_BOUNDS.thumbnailScale.min}
+                  max={GALLERY_CHAMBER_PARAM_BOUNDS.thumbnailScale.max}
+                  step={GALLERY_CHAMBER_PARAM_BOUNDS.thumbnailScale.step}
                   value={videoParams.thumbnailScale}
                   onChange={(e) => onVideoParamChange('thumbnailScale', parseFloat(e.target.value))}
                   className="w-full accent-[var(--theme-primary)] cursor-pointer"
@@ -371,9 +369,9 @@ export const Tuner: React.FC<TunerProps> = ({
                 <input
                   type="range"
                   aria-label="Horizontal Wrap Arc"
-                  min={VIDEO_CHAMBER_PARAM_BOUNDS.arcDegrees.min}
-                  max={VIDEO_CHAMBER_PARAM_BOUNDS.arcDegrees.max}
-                  step={VIDEO_CHAMBER_PARAM_BOUNDS.arcDegrees.step}
+                  min={GALLERY_CHAMBER_PARAM_BOUNDS.arcDegrees.min}
+                  max={GALLERY_CHAMBER_PARAM_BOUNDS.arcDegrees.max}
+                  step={GALLERY_CHAMBER_PARAM_BOUNDS.arcDegrees.step}
                   value={videoParams.arcDegrees}
                   onChange={(e) => onVideoParamChange('arcDegrees', parseFloat(e.target.value))}
                   className="w-full accent-[var(--theme-primary)] cursor-pointer"
@@ -388,9 +386,9 @@ export const Tuner: React.FC<TunerProps> = ({
                 <input
                   type="range"
                   aria-label="Row Separation"
-                  min={VIDEO_CHAMBER_PARAM_BOUNDS.rowSeparation.min}
-                  max={VIDEO_CHAMBER_PARAM_BOUNDS.rowSeparation.max}
-                  step={VIDEO_CHAMBER_PARAM_BOUNDS.rowSeparation.step}
+                  min={GALLERY_CHAMBER_PARAM_BOUNDS.rowSeparation.min}
+                  max={GALLERY_CHAMBER_PARAM_BOUNDS.rowSeparation.max}
+                  step={GALLERY_CHAMBER_PARAM_BOUNDS.rowSeparation.step}
                   value={videoParams.rowSeparation}
                   onChange={(e) => onVideoParamChange('rowSeparation', parseFloat(e.target.value))}
                   className="w-full accent-[var(--theme-primary)] cursor-pointer"
@@ -405,11 +403,45 @@ export const Tuner: React.FC<TunerProps> = ({
                 <input
                   type="range"
                   aria-label="Pan Sensitivity"
-                  min={VIDEO_CHAMBER_PARAM_BOUNDS.panSensitivity.min}
-                  max={VIDEO_CHAMBER_PARAM_BOUNDS.panSensitivity.max}
-                  step={VIDEO_CHAMBER_PARAM_BOUNDS.panSensitivity.step}
+                  min={GALLERY_CHAMBER_PARAM_BOUNDS.panSensitivity.min}
+                  max={GALLERY_CHAMBER_PARAM_BOUNDS.panSensitivity.max}
+                  step={GALLERY_CHAMBER_PARAM_BOUNDS.panSensitivity.step}
                   value={videoParams.panSensitivity}
                   onChange={(e) => onVideoParamChange('panSensitivity', parseFloat(e.target.value))}
+                  className="w-full accent-[var(--theme-primary)] cursor-pointer"
+                />
+              </div>
+
+              <div>
+                <div className="flex justify-between text-[11px] mb-1">
+                  <span className="opacity-80">Drag Multiplier</span>
+                  <span className="font-semibold">{videoParams.dragMultiplier.toFixed(1)}x</span>
+                </div>
+                <input
+                  type="range"
+                  aria-label="Drag Multiplier"
+                  min={GALLERY_CHAMBER_PARAM_BOUNDS.dragMultiplier.min}
+                  max={GALLERY_CHAMBER_PARAM_BOUNDS.dragMultiplier.max}
+                  step={GALLERY_CHAMBER_PARAM_BOUNDS.dragMultiplier.step}
+                  value={videoParams.dragMultiplier}
+                  onChange={(e) => onVideoParamChange('dragMultiplier', parseFloat(e.target.value))}
+                  className="w-full accent-[var(--theme-primary)] cursor-pointer"
+                />
+              </div>
+
+              <div>
+                <div className="flex justify-between text-[11px] mb-1">
+                  <span className="opacity-80">Fling Inertia</span>
+                  <span className="font-semibold">{videoParams.flingInertia.toFixed(1)}x</span>
+                </div>
+                <input
+                  type="range"
+                  aria-label="Fling Inertia"
+                  min={GALLERY_CHAMBER_PARAM_BOUNDS.flingInertia.min}
+                  max={GALLERY_CHAMBER_PARAM_BOUNDS.flingInertia.max}
+                  step={GALLERY_CHAMBER_PARAM_BOUNDS.flingInertia.step}
+                  value={videoParams.flingInertia}
+                  onChange={(e) => onVideoParamChange('flingInertia', parseFloat(e.target.value))}
                   className="w-full accent-[var(--theme-primary)] cursor-pointer"
                 />
               </div>
@@ -423,9 +455,9 @@ export const Tuner: React.FC<TunerProps> = ({
                   <input
                     type="range"
                     aria-label="Max Yaw"
-                    min={VIDEO_CHAMBER_PARAM_BOUNDS.maxYawDeg.min}
-                    max={VIDEO_CHAMBER_PARAM_BOUNDS.maxYawDeg.max}
-                    step={VIDEO_CHAMBER_PARAM_BOUNDS.maxYawDeg.step}
+                    min={GALLERY_CHAMBER_PARAM_BOUNDS.maxYawDeg.min}
+                    max={GALLERY_CHAMBER_PARAM_BOUNDS.maxYawDeg.max}
+                    step={GALLERY_CHAMBER_PARAM_BOUNDS.maxYawDeg.step}
                     value={videoParams.maxYawDeg}
                     onChange={(e) => onVideoParamChange('maxYawDeg', parseFloat(e.target.value))}
                     className="w-full accent-[var(--theme-primary)] cursor-pointer"
@@ -440,9 +472,9 @@ export const Tuner: React.FC<TunerProps> = ({
                   <input
                     type="range"
                     aria-label="Max Pitch"
-                    min={VIDEO_CHAMBER_PARAM_BOUNDS.maxPitchDeg.min}
-                    max={VIDEO_CHAMBER_PARAM_BOUNDS.maxPitchDeg.max}
-                    step={VIDEO_CHAMBER_PARAM_BOUNDS.maxPitchDeg.step}
+                    min={GALLERY_CHAMBER_PARAM_BOUNDS.maxPitchDeg.min}
+                    max={GALLERY_CHAMBER_PARAM_BOUNDS.maxPitchDeg.max}
+                    step={GALLERY_CHAMBER_PARAM_BOUNDS.maxPitchDeg.step}
                     value={videoParams.maxPitchDeg}
                     onChange={(e) => onVideoParamChange('maxPitchDeg', parseFloat(e.target.value))}
                     className="w-full accent-[var(--theme-primary)] cursor-pointer"
@@ -458,9 +490,9 @@ export const Tuner: React.FC<TunerProps> = ({
                 <input
                   type="range"
                   aria-label="Flight Transit Speed"
-                  min={VIDEO_CHAMBER_PARAM_BOUNDS.transitSpeed.min}
-                  max={VIDEO_CHAMBER_PARAM_BOUNDS.transitSpeed.max}
-                  step={VIDEO_CHAMBER_PARAM_BOUNDS.transitSpeed.step}
+                  min={GALLERY_CHAMBER_PARAM_BOUNDS.transitSpeed.min}
+                  max={GALLERY_CHAMBER_PARAM_BOUNDS.transitSpeed.max}
+                  step={GALLERY_CHAMBER_PARAM_BOUNDS.transitSpeed.step}
                   value={videoParams.transitSpeed}
                   onChange={(e) => onVideoParamChange('transitSpeed', parseFloat(e.target.value))}
                   className="w-full accent-[var(--theme-primary)] cursor-pointer"
@@ -475,9 +507,9 @@ export const Tuner: React.FC<TunerProps> = ({
                 <input
                   type="range"
                   aria-label="Dim Intensity"
-                  min={VIDEO_CHAMBER_PARAM_BOUNDS.dimIntensity.min}
-                  max={VIDEO_CHAMBER_PARAM_BOUNDS.dimIntensity.max}
-                  step={VIDEO_CHAMBER_PARAM_BOUNDS.dimIntensity.step}
+                  min={GALLERY_CHAMBER_PARAM_BOUNDS.dimIntensity.min}
+                  max={GALLERY_CHAMBER_PARAM_BOUNDS.dimIntensity.max}
+                  step={GALLERY_CHAMBER_PARAM_BOUNDS.dimIntensity.step}
                   value={videoParams.dimIntensity}
                   onChange={(e) => onVideoParamChange('dimIntensity', parseFloat(e.target.value))}
                   className="w-full accent-[var(--theme-primary)] cursor-pointer"
@@ -492,9 +524,9 @@ export const Tuner: React.FC<TunerProps> = ({
                 <input
                   type="range"
                   aria-label="Synaptic Particles"
-                  min={VIDEO_CHAMBER_PARAM_BOUNDS.particleCount.min}
-                  max={VIDEO_CHAMBER_PARAM_BOUNDS.particleCount.max}
-                  step={VIDEO_CHAMBER_PARAM_BOUNDS.particleCount.step}
+                  min={GALLERY_CHAMBER_PARAM_BOUNDS.particleCount.min}
+                  max={GALLERY_CHAMBER_PARAM_BOUNDS.particleCount.max}
+                  step={GALLERY_CHAMBER_PARAM_BOUNDS.particleCount.step}
                   value={videoParams.particleCount}
                   onChange={(e) => onVideoParamChange('particleCount', parseInt(e.target.value, 10))}
                   className="w-full accent-[var(--theme-primary)] cursor-pointer"

@@ -781,7 +781,7 @@ describe('Tuner Component', () => {
     expect(screen.queryByTestId('compact-inspection-dock')).not.toBeInTheDocument()
   })
 
-  it('renders Gallery Chamber tab and controls when isVideosPage is true', () => {
+  it('renders Gallery Chamber tab and controls when isGalleryPage is true', () => {
     const onVideoParamChange = vi.fn()
     const onResetVideoParams = vi.fn()
 
@@ -816,7 +816,7 @@ describe('Tuner Component', () => {
     // When paused, pause button uses cyber emerald green accent
     rerender(
       <Tuner
-        isVideosPage={true}
+        isGalleryPage={true}
         isPaused={true}
         onVideoParamChange={onVideoParamChange}
         onResetVideoParams={onResetVideoParams}
