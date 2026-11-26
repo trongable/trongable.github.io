@@ -4,6 +4,7 @@ import * as THREE from 'three'
 import { ThemeColor } from '@/context/ThemeContext'
 import { MenuItemBadge } from './MenuItemBadge'
 import { OrigamiParams } from './geometryConfig'
+import { updateExpandCollapse } from './shared/topologyHelpers'
 
 export interface OrigamiMenuProps {
   isExpanded: boolean
@@ -71,23 +72,12 @@ export const OrigamiMenu: React.FC<OrigamiMenuProps> = ({
 
   useFrame((_, delta) => {
     if (!rootGroupRef.current) return
-
-    const targetScale = isExpanded ? 1 : 0.05
-    const targetOpacity = isExpanded ? 1 : 0
-    const targetUnfold = isExpanded ? params.unfold : 0.0
-
-    currentScale.current = THREE.MathUtils.lerp(currentScale.current, targetScale, Math.min(delta * 4.5, 1))
-    currentOpacity.current = THREE.MathUtils.lerp(currentOpacity.current, targetOpacity, Math.min(delta * 4.5, 1))
-    currentUnfold.current = THREE.MathUtils.lerp(currentUnfold.current, targetUnfold, Math.min(delta * 4.0, 1))
-
-    rootGroupRef.current.scale.setScalar(currentScale.current)
-    rootGroupRef.current.visible = currentScale.current > 0.06
-
-    // Sleep guard: bypass calculations when collapsed and fully shrunk
-    if (!isExpanded && currentScale.current <= 0.051) {
-      if (rootGroupRef.current.visible) rootGroupRef.current.visible = false
+    if (updateExpandCollapse(rootGroupRef.current, currentScale, currentOpacity, isExpanded, delta)) {
       return
     }
+
+    const targetUnfold = isExpanded ? params.unfold : 0.0
+    currentUnfold.current = THREE.MathUtils.lerp(currentUnfold.current, targetUnfold, Math.min(delta * 4.0, 1))
 
     // Slow tumble of the crystal core
     if (!isPaused && tumbleGroupRef.current) {

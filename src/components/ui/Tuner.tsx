@@ -1,17 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import {
-  GeometryMode,
   GEOMETRY_MODES,
-  AllGeometryParams,
   DEFAULT_GEOMETRY_PARAMS,
-  GUIDE_STYLES,
-  LINE_GUIDE_STYLES,
-  FACET_GUIDE_STYLES,
-} from '../canvas/geometries/geometryConfig'
-import { ThemeId, THEME_PALETTES, THEME_IDS } from '@/context/ThemeContext'
+} from '@/components/canvas/geometries/geometryConfig'
 import {
   SonnyContainerStyle,
-  SONNY_CONTAINER_STYLES,
   useSonnyContainer,
 } from '@/context/SonnyContainerContext'
 import {
@@ -20,77 +13,19 @@ import {
   CoordFrame,
   CameraElevation,
 } from '@/context/DebugDistanceContext'
-import { CameraAngles } from '../canvas/SceneContainer'
-import { PowerMode } from '@/hooks/usePowerManager'
-import {
-  GalleryChamberParams,
-  DEFAULT_GALLERY_CHAMBER_PARAMS,
-  GALLERY_CHAMBER_PARAM_BOUNDS,
-} from '@/components/gallery/galleryTunerConfig'
+import { DEFAULT_GALLERY_CHAMBER_PARAMS } from '@/components/gallery/galleryTunerConfig'
 import {
   computeHighlightColor,
   isValidHex,
   normalizeHex,
   getContrastRatio,
 } from '@/utils/colorUtils'
+import { TunerProps, TunerTabId } from './tuner/tunerTypes'
+import { TunerGalleryTab } from './tuner/TunerGalleryTab'
+import { TunerGeometryTab } from './tuner/TunerGeometryTab'
+import { TunerVfxTab } from './tuner/TunerVfxTab'
 
-export interface TunerProps {
-  activeMode?: GeometryMode
-  onModeChange?: (mode: GeometryMode) => void
-  params?: AllGeometryParams
-  onParamChange?: <M extends GeometryMode, K extends keyof AllGeometryParams[M]>(
-    mode: M,
-    key: K,
-    val: AllGeometryParams[M][K]
-  ) => void
-  onResetParams?: (mode: GeometryMode) => void
-  onClose?: () => void
-  // VFX & Glitch Controls
-  currentThemeId?: ThemeId
-  currentThemePrimary?: string
-  currentThemeHighlight?: string
-  onThemeChange?: (id: ThemeId) => void
-  onCustomColorChange?: (primaryHex: string) => void
-  isThemeLocked?: boolean
-  onToggleThemeLock?: (locked: boolean) => void
-  glitchInterval?: number
-  onGlitchIntervalChange?: (seconds: number) => void
-  imageRate?: number
-  onImageRateChange?: (rate: number) => void
-  onTriggerGlitch?: () => void
-  // Power & Performance Controls
-  powerMode?: PowerMode
-  onPowerModeChange?: (mode: PowerMode) => void
-  isBattery?: boolean
-  targetFps?: number | null
-  targetDpr?: number | [number, number]
-  // Sonny 3D Container Controls
-  sonnyContainer?: SonnyContainerStyle
-  onSonnyContainerChange?: (style: SonnyContainerStyle) => void
-  // Debug & Telemetry Controls
-  showDistance?: boolean
-  onToggleShowDistance?: (show: boolean) => void
-  distanceMetric?: DistanceMetric
-  onDistanceMetricChange?: (metric: DistanceMetric) => void
-  showCoordinates?: boolean
-  onToggleShowCoordinates?: (show: boolean) => void
-  coordFrame?: CoordFrame
-  onCoordFrameChange?: (frame: CoordFrame) => void
-  cameraElevation?: CameraElevation
-  onCameraElevationChange?: (elevation: CameraElevation) => void
-  // Camera Orbit Inspection
-  cameraAngles?: CameraAngles
-  onCameraAnglesChange?: (angles: CameraAngles) => void
-  onResetCameraAngles?: () => void
-  // Animation / Effect Pause
-  isPaused?: boolean
-  onTogglePause?: (paused?: boolean) => void
-  // Gallery Chamber Specific Controls
-  isGalleryPage?: boolean
-  videoParams?: GalleryChamberParams
-  onVideoParamChange?: <K extends keyof GalleryChamberParams>(key: K, val: GalleryChamberParams[K]) => void
-  onResetVideoParams?: () => void
-}
+export type { TunerProps }
 
 export const Tuner: React.FC<TunerProps> = ({
   activeMode = 'halo',
@@ -139,7 +74,8 @@ export const Tuner: React.FC<TunerProps> = ({
   onResetVideoParams = () => {},
 }) => {
   const isEffectiveGallery = Boolean(isGalleryPage)
-  const { containerStyle: ctxContainerStyle, setContainerStyle: ctxSetContainerStyle } = useSonnyContainer()
+  const { containerStyle: ctxContainerStyle, setContainerStyle: ctxSetContainerStyle } =
+    useSonnyContainer()
   const activeSonnyContainer = sonnyContainer ?? ctxContainerStyle
   const handleContainerChange = (style: SonnyContainerStyle) => {
     if (onSonnyContainerChange) {
@@ -161,6 +97,7 @@ export const Tuner: React.FC<TunerProps> = ({
     cameraElevation: ctxCameraElevation,
     setCameraElevation: ctxSetCameraElevation,
   } = useDebugDistance()
+
   const activeShowDistance = typeof showDistance === 'boolean' ? showDistance : ctxShowDistance
   const activeDistanceMetric = distanceMetric ?? ctxDistanceMetric ?? 'euclid'
   const activeShowCoords = typeof showCoordinates === 'boolean' ? showCoordinates : ctxShowCoordinates
@@ -208,10 +145,11 @@ export const Tuner: React.FC<TunerProps> = ({
   }
 
   const [isOpen, setIsOpen] = useState(false)
-  const [activeTab, setActiveTab] = useState<'geo' | 'vfx'>('geo')
-  const [customHexInput, setCustomHexInput] = useState<string>(() => currentThemePrimary || '#e2f872')
+  const [activeTab, setActiveTab] = useState<TunerTabId>('geo')
+  const [customHexInput, setCustomHexInput] = useState<string>(
+    () => currentThemePrimary || '#e2f872'
+  )
 
-  // Keep customHexInput in sync when theme changes externally
   useEffect(() => {
     if (currentThemePrimary) {
       setCustomHexInput(currentThemePrimary)
@@ -231,11 +169,9 @@ export const Tuner: React.FC<TunerProps> = ({
   const activePrimaryHex = isValidHex(customHexInput)
     ? normalizeHex(customHexInput)!
     : currentThemePrimary || '#e2f872'
-  const autoHighlightHex =
-    currentThemeHighlight || computeHighlightColor(activePrimaryHex)
+  const autoHighlightHex = currentThemeHighlight || computeHighlightColor(activePrimaryHex)
   const contrastRatio = getContrastRatio(autoHighlightHex, '#1c1b22')
 
-  // Cycle to next mode
   const handleCycle = () => {
     if (!onModeChange) return
     const currentIndex = GEOMETRY_MODES.findIndex((m) => m.id === activeMode)
@@ -324,1513 +260,65 @@ export const Tuner: React.FC<TunerProps> = ({
             </button>
           </div>
 
-          {/* Tab 1: Gallery Chamber Controls (for Gallery Page) */}
           {activeTab === 'geo' && isEffectiveGallery && videoParams && onVideoParamChange && (
-            <div data-testid="gallery-chamber-tuner-tab" className="space-y-2.5">
-              <div>
-                <div className="flex justify-between text-[11px] mb-1">
-                  <span className="opacity-80">Sphere Radius</span>
-                  <span className="font-semibold">{videoParams.sphereRadius.toFixed(1)}</span>
-                </div>
-                <input
-                  type="range"
-                  aria-label="Sphere Radius"
-                  min={GALLERY_CHAMBER_PARAM_BOUNDS.sphereRadius.min}
-                  max={GALLERY_CHAMBER_PARAM_BOUNDS.sphereRadius.max}
-                  step={GALLERY_CHAMBER_PARAM_BOUNDS.sphereRadius.step}
-                  value={videoParams.sphereRadius}
-                  onChange={(e) => onVideoParamChange('sphereRadius', parseFloat(e.target.value))}
-                  className="w-full accent-[var(--theme-primary)] cursor-pointer"
-                />
-              </div>
-
-              <div>
-                <div className="flex justify-between text-[11px] mb-1">
-                  <span className="opacity-80">Thumbnail Scale</span>
-                  <span className="font-semibold">{videoParams.thumbnailScale.toFixed(2)}x</span>
-                </div>
-                <input
-                  type="range"
-                  aria-label="Thumbnail Scale"
-                  min={GALLERY_CHAMBER_PARAM_BOUNDS.thumbnailScale.min}
-                  max={GALLERY_CHAMBER_PARAM_BOUNDS.thumbnailScale.max}
-                  step={GALLERY_CHAMBER_PARAM_BOUNDS.thumbnailScale.step}
-                  value={videoParams.thumbnailScale}
-                  onChange={(e) => onVideoParamChange('thumbnailScale', parseFloat(e.target.value))}
-                  className="w-full accent-[var(--theme-primary)] cursor-pointer"
-                />
-              </div>
-
-              <div>
-                <div className="flex justify-between text-[11px] mb-1">
-                  <span className="opacity-80">Horizontal Wrap Arc</span>
-                  <span className="font-semibold">{videoParams.arcDegrees}°</span>
-                </div>
-                <input
-                  type="range"
-                  aria-label="Horizontal Wrap Arc"
-                  min={GALLERY_CHAMBER_PARAM_BOUNDS.arcDegrees.min}
-                  max={GALLERY_CHAMBER_PARAM_BOUNDS.arcDegrees.max}
-                  step={GALLERY_CHAMBER_PARAM_BOUNDS.arcDegrees.step}
-                  value={videoParams.arcDegrees}
-                  onChange={(e) => onVideoParamChange('arcDegrees', parseFloat(e.target.value))}
-                  className="w-full accent-[var(--theme-primary)] cursor-pointer"
-                />
-              </div>
-
-              <div>
-                <div className="flex justify-between text-[11px] mb-1">
-                  <span className="opacity-80">Row Separation</span>
-                  <span className="font-semibold">{videoParams.rowSeparation.toFixed(2)}</span>
-                </div>
-                <input
-                  type="range"
-                  aria-label="Row Separation"
-                  min={GALLERY_CHAMBER_PARAM_BOUNDS.rowSeparation.min}
-                  max={GALLERY_CHAMBER_PARAM_BOUNDS.rowSeparation.max}
-                  step={GALLERY_CHAMBER_PARAM_BOUNDS.rowSeparation.step}
-                  value={videoParams.rowSeparation}
-                  onChange={(e) => onVideoParamChange('rowSeparation', parseFloat(e.target.value))}
-                  className="w-full accent-[var(--theme-primary)] cursor-pointer"
-                />
-              </div>
-
-              <div>
-                <div className="flex justify-between text-[11px] mb-1">
-                  <span className="opacity-80">Pan Sensitivity</span>
-                  <span className="font-semibold">{videoParams.panSensitivity.toFixed(1)}x</span>
-                </div>
-                <input
-                  type="range"
-                  aria-label="Pan Sensitivity"
-                  min={GALLERY_CHAMBER_PARAM_BOUNDS.panSensitivity.min}
-                  max={GALLERY_CHAMBER_PARAM_BOUNDS.panSensitivity.max}
-                  step={GALLERY_CHAMBER_PARAM_BOUNDS.panSensitivity.step}
-                  value={videoParams.panSensitivity}
-                  onChange={(e) => onVideoParamChange('panSensitivity', parseFloat(e.target.value))}
-                  className="w-full accent-[var(--theme-primary)] cursor-pointer"
-                />
-              </div>
-
-              <div>
-                <div className="flex justify-between text-[11px] mb-1">
-                  <span className="opacity-80">Drag Multiplier</span>
-                  <span className="font-semibold">{videoParams.dragMultiplier.toFixed(1)}x</span>
-                </div>
-                <input
-                  type="range"
-                  aria-label="Drag Multiplier"
-                  min={GALLERY_CHAMBER_PARAM_BOUNDS.dragMultiplier.min}
-                  max={GALLERY_CHAMBER_PARAM_BOUNDS.dragMultiplier.max}
-                  step={GALLERY_CHAMBER_PARAM_BOUNDS.dragMultiplier.step}
-                  value={videoParams.dragMultiplier}
-                  onChange={(e) => onVideoParamChange('dragMultiplier', parseFloat(e.target.value))}
-                  className="w-full accent-[var(--theme-primary)] cursor-pointer"
-                />
-              </div>
-
-              <div>
-                <div className="flex justify-between text-[11px] mb-1">
-                  <span className="opacity-80">Fling Inertia</span>
-                  <span className="font-semibold">{videoParams.flingInertia.toFixed(1)}x</span>
-                </div>
-                <input
-                  type="range"
-                  aria-label="Fling Inertia"
-                  min={GALLERY_CHAMBER_PARAM_BOUNDS.flingInertia.min}
-                  max={GALLERY_CHAMBER_PARAM_BOUNDS.flingInertia.max}
-                  step={GALLERY_CHAMBER_PARAM_BOUNDS.flingInertia.step}
-                  value={videoParams.flingInertia}
-                  onChange={(e) => onVideoParamChange('flingInertia', parseFloat(e.target.value))}
-                  className="w-full accent-[var(--theme-primary)] cursor-pointer"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <div className="flex justify-between text-[11px] mb-1">
-                    <span className="opacity-80">Max Yaw</span>
-                    <span className="font-semibold">±{videoParams.maxYawDeg}°</span>
-                  </div>
-                  <input
-                    type="range"
-                    aria-label="Max Yaw"
-                    min={GALLERY_CHAMBER_PARAM_BOUNDS.maxYawDeg.min}
-                    max={GALLERY_CHAMBER_PARAM_BOUNDS.maxYawDeg.max}
-                    step={GALLERY_CHAMBER_PARAM_BOUNDS.maxYawDeg.step}
-                    value={videoParams.maxYawDeg}
-                    onChange={(e) => onVideoParamChange('maxYawDeg', parseFloat(e.target.value))}
-                    className="w-full accent-[var(--theme-primary)] cursor-pointer"
-                  />
-                </div>
-
-                <div>
-                  <div className="flex justify-between text-[11px] mb-1">
-                    <span className="opacity-80">Max Pitch</span>
-                    <span className="font-semibold">±{videoParams.maxPitchDeg}°</span>
-                  </div>
-                  <input
-                    type="range"
-                    aria-label="Max Pitch"
-                    min={GALLERY_CHAMBER_PARAM_BOUNDS.maxPitchDeg.min}
-                    max={GALLERY_CHAMBER_PARAM_BOUNDS.maxPitchDeg.max}
-                    step={GALLERY_CHAMBER_PARAM_BOUNDS.maxPitchDeg.step}
-                    value={videoParams.maxPitchDeg}
-                    onChange={(e) => onVideoParamChange('maxPitchDeg', parseFloat(e.target.value))}
-                    className="w-full accent-[var(--theme-primary)] cursor-pointer"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <div className="flex justify-between text-[11px] mb-1">
-                  <span className="opacity-80">Flight Transit Speed</span>
-                  <span className="font-semibold">{videoParams.transitSpeed}</span>
-                </div>
-                <input
-                  type="range"
-                  aria-label="Flight Transit Speed"
-                  min={GALLERY_CHAMBER_PARAM_BOUNDS.transitSpeed.min}
-                  max={GALLERY_CHAMBER_PARAM_BOUNDS.transitSpeed.max}
-                  step={GALLERY_CHAMBER_PARAM_BOUNDS.transitSpeed.step}
-                  value={videoParams.transitSpeed}
-                  onChange={(e) => onVideoParamChange('transitSpeed', parseFloat(e.target.value))}
-                  className="w-full accent-[var(--theme-primary)] cursor-pointer"
-                />
-              </div>
-
-              <div>
-                <div className="flex justify-between text-[11px] mb-1">
-                  <span className="opacity-80">Dim Intensity</span>
-                  <span className="font-semibold">{(videoParams.dimIntensity * 100).toFixed(0)}%</span>
-                </div>
-                <input
-                  type="range"
-                  aria-label="Dim Intensity"
-                  min={GALLERY_CHAMBER_PARAM_BOUNDS.dimIntensity.min}
-                  max={GALLERY_CHAMBER_PARAM_BOUNDS.dimIntensity.max}
-                  step={GALLERY_CHAMBER_PARAM_BOUNDS.dimIntensity.step}
-                  value={videoParams.dimIntensity}
-                  onChange={(e) => onVideoParamChange('dimIntensity', parseFloat(e.target.value))}
-                  className="w-full accent-[var(--theme-primary)] cursor-pointer"
-                />
-              </div>
-
-              <div>
-                <div className="flex justify-between text-[11px] mb-1">
-                  <span className="opacity-80">Synaptic Particles</span>
-                  <span className="font-semibold">{videoParams.particleCount}</span>
-                </div>
-                <input
-                  type="range"
-                  aria-label="Synaptic Particles"
-                  min={GALLERY_CHAMBER_PARAM_BOUNDS.particleCount.min}
-                  max={GALLERY_CHAMBER_PARAM_BOUNDS.particleCount.max}
-                  step={GALLERY_CHAMBER_PARAM_BOUNDS.particleCount.step}
-                  value={videoParams.particleCount}
-                  onChange={(e) => onVideoParamChange('particleCount', parseInt(e.target.value, 10))}
-                  className="w-full accent-[var(--theme-primary)] cursor-pointer"
-                />
-              </div>
-
-              <button
-                type="button"
-                onClick={onResetVideoParams}
-                className="w-full mt-3 py-1.5 px-3 rounded border border-[var(--theme-primary)]/40 hover:bg-[var(--theme-primary)] hover:text-[#1c1b22] text-xs font-semibold cursor-pointer transition-all active:scale-[0.98] text-center"
-              >
-                ↺ Reset Gallery Chamber
-              </button>
-            </div>
+            <TunerGalleryTab
+              videoParams={videoParams}
+              onVideoParamChange={onVideoParamChange}
+              onResetVideoParams={onResetVideoParams}
+            />
           )}
 
-          {/* Tab 1: 3D Topologies (for Home Page) */}
           {activeTab === 'geo' && !isEffectiveGallery && (
-            <div>
-              {/* Direct Mode Selector Grid */}
-              <div className="grid grid-cols-4 gap-1.5 mb-3">
-                {GEOMETRY_MODES.map((mode) => {
-                  const isActive = mode.id === activeMode
-                  return (
-                    <button
-                      key={mode.id}
-                      type="button"
-                      onClick={() => onModeChange(mode.id)}
-                      className={`px-1.5 py-1 text-[10px] rounded transition-colors cursor-pointer text-center truncate ${
-                        isActive
-                          ? 'bg-[var(--theme-primary)] text-[#1c1b22] font-semibold'
-                          : 'border border-[var(--theme-primary)]/30 opacity-70 hover:opacity-100 hover:border-[var(--theme-primary)]'
-                      }`}
-                      title={mode.name}
-                    >
-                      {mode.label}
-                    </button>
-                  )
-                })}
-              </div>
-
-              {/* Sonny 3D Container Selector */}
-              <div className="mb-3 pt-2.5 border-t border-[var(--theme-primary)]/20">
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="font-semibold uppercase tracking-wider text-[10px]">
-                    Sonny 3D Container
-                  </span>
-                  <span className="text-[10px] opacity-70 lowercase">
-                    {activeSonnyContainer}
-                  </span>
-                </div>
-                <div className="grid grid-cols-3 gap-1 text-[10px]">
-                  {SONNY_CONTAINER_STYLES.map((style) => {
-                    const isContainerActive = activeSonnyContainer === style.id
-                    return (
-                      <button
-                        key={style.id}
-                        type="button"
-                        data-testid={`sonny-container-${style.id}`}
-                        onClick={() => handleContainerChange(style.id)}
-                        className={`px-1 py-1 rounded transition-colors cursor-pointer text-center truncate capitalize ${
-                          isContainerActive
-                            ? 'bg-[var(--theme-primary)] text-[#1c1b22] font-semibold'
-                            : 'border border-[var(--theme-primary)]/30 opacity-70 hover:opacity-100 hover:border-[var(--theme-primary)]'
-                        }`}
-                        title={style.description}
-                      >
-                        {style.label}
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-
-              {/* Debug Telemetry Controls */}
-              <div className="mb-3 pt-2.5 border-t border-[var(--theme-primary)]/20">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <span className="font-semibold uppercase tracking-wider text-[10px] block">
-                      Distance Labels (HUD)
-                    </span>
-                    <span className="text-[9px] opacity-60">
-                      Show camera distance above objects
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    data-testid="toggle-distance-labels"
-                    onClick={handleToggleDistance}
-                    className={`px-2.5 py-1 rounded text-[10px] font-semibold transition-colors cursor-pointer ${
-                      activeShowDistance
-                        ? 'bg-[var(--theme-primary)] text-[#1c1b22]'
-                        : 'border border-[var(--theme-primary)]/30 opacity-70 hover:opacity-100 hover:border-[var(--theme-primary)]'
-                    }`}
-                  >
-                    {activeShowDistance ? 'ON' : 'OFF'}
-                  </button>
-                </div>
-
-                {activeShowDistance && (
-                  <>
-                    <div className="flex items-center justify-between mt-2 pt-1.5 border-t border-[var(--theme-primary)]/10 text-[9px]">
-                      <span className="opacity-70">Metric:</span>
-                      <div className="flex gap-1">
-                        <button
-                          type="button"
-                          data-testid="metric-euclid"
-                          onClick={() => handleSetMetric('euclid')}
-                          className={`px-2 py-0.5 rounded text-[9px] font-mono transition-colors cursor-pointer ${
-                            activeDistanceMetric === 'euclid'
-                              ? 'bg-[var(--theme-primary)] text-[#1c1b22] font-bold'
-                              : 'border border-[var(--theme-primary)]/30 opacity-60 hover:opacity-100'
-                          }`}
-                          title="Radial 3D Euclidean distance (d: X.XX)"
-                        >
-                          Euclid (d:)
-                        </button>
-                        <button
-                          type="button"
-                          data-testid="metric-depth"
-                          onClick={() => handleSetMetric('depth')}
-                          className={`px-2 py-0.5 rounded text-[9px] font-mono transition-colors cursor-pointer ${
-                            activeDistanceMetric === 'depth'
-                              ? 'bg-[var(--theme-primary)] text-[#1c1b22] font-bold'
-                              : 'border border-[var(--theme-primary)]/30 opacity-60 hover:opacity-100'
-                          }`}
-                          title="Camera view-plane perpendicular depth (z: X.XX)"
-                        >
-                          View Depth (z:)
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between mt-1.5 pt-1.5 border-t border-[var(--theme-primary)]/10 text-[9px]">
-                      <span className="opacity-70">Coords (XYZ):</span>
-                      <button
-                        type="button"
-                        data-testid="toggle-coords"
-                        onClick={handleToggleCoords}
-                        className={`px-2 py-0.5 rounded text-[9px] font-mono transition-colors cursor-pointer ${
-                          activeShowCoords
-                            ? 'bg-[var(--theme-primary)] text-[#1c1b22] font-bold'
-                            : 'border border-[var(--theme-primary)]/30 opacity-60 hover:opacity-100'
-                        }`}
-                        title="Display real-time 3D (x, y, z) coordinates"
-                      >
-                        {activeShowCoords ? 'ON' : 'OFF'}
-                      </button>
-                    </div>
-
-                    {activeShowCoords && (
-                      <div className="flex items-center justify-between mt-1.5 pt-1.5 border-t border-[var(--theme-primary)]/10 text-[9px]">
-                        <span className="opacity-70">Coord Frame:</span>
-                        <div className="flex gap-1">
-                          <button
-                            type="button"
-                            data-testid="frame-view"
-                            onClick={() => handleSetCoordFrame('view')}
-                            className={`px-2 py-0.5 rounded text-[9px] font-mono transition-colors cursor-pointer ${
-                              activeCoordFrame === 'view'
-                                ? 'bg-[var(--theme-primary)] text-[#1c1b22] font-bold'
-                                : 'border border-[var(--theme-primary)]/30 opacity-60 hover:opacity-100'
-                            }`}
-                            title="Screen View Space: Screen-relative coordinates (x: right, y: up, z: front)"
-                          >
-                            View (Screen)
-                          </button>
-                          <button
-                            type="button"
-                            data-testid="frame-world"
-                            onClick={() => handleSetCoordFrame('world')}
-                            className={`px-2 py-0.5 rounded text-[9px] font-mono transition-colors cursor-pointer ${
-                              activeCoordFrame === 'world'
-                                ? 'bg-[var(--theme-primary)] text-[#1c1b22] font-bold'
-                                : 'border border-[var(--theme-primary)]/30 opacity-60 hover:opacity-100'
-                            }`}
-                            title="World Space: Global manifold coordinates (x, y, z)"
-                          >
-                            World (Global)
-                          </button>
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="flex items-center justify-between mt-1.5 pt-1.5 border-t border-[var(--theme-primary)]/10 text-[9px]">
-                      <span className="opacity-70">Camera Angle:</span>
-                      <div className="flex gap-1">
-                        <button
-                          type="button"
-                          data-testid="elevation-elevated"
-                          onClick={() => handleSetCameraElevation('elevated')}
-                          className={`px-2 py-0.5 rounded text-[9px] font-mono transition-colors cursor-pointer ${
-                            activeCameraElevation === 'elevated'
-                              ? 'bg-[var(--theme-primary)] text-[#1c1b22] font-bold'
-                              : 'border border-[var(--theme-primary)]/30 opacity-60 hover:opacity-100'
-                          }`}
-                          title="Elevated (25° downward pitch): [0, 2.55, 5.45] looking down at scene origin"
-                        >
-                          Elevated (25°)
-                        </button>
-                        <button
-                          type="button"
-                          data-testid="elevation-eye-level"
-                          onClick={() => handleSetCameraElevation('eye-level')}
-                          className={`px-2 py-0.5 rounded text-[9px] font-mono transition-colors cursor-pointer ${
-                            activeCameraElevation === 'eye-level'
-                              ? 'bg-[var(--theme-primary)] text-[#1c1b22] font-bold'
-                              : 'border border-[var(--theme-primary)]/30 opacity-60 hover:opacity-100'
-                          }`}
-                          title="Eye-Level (0° pitch): Pure horizontal perspective [0, 0, 6.0] eliminating vertical elevation skew"
-                        >
-                          Eye-Level (0°)
-                        </button>
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
-
-              {/* 360° Camera Orbit Inspection */}
-              <div
-                data-testid="camera-orbit-inspection-drawer"
-                className={`p-2.5 rounded border mb-3 transition-colors ${
-                  isPaused
-                    ? 'border-[#10b981]/50 bg-[#10b981]/5 shadow-sm'
-                    : 'border-[var(--theme-primary)]/20 bg-[var(--theme-primary)]/5'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[11px] font-semibold opacity-90">Camera Orbit Inspection</span>
-                    {isPaused && (
-                      <span className="text-[9px] px-1.5 py-0.2 rounded font-mono font-bold bg-[#10b981] text-white">
-                        PAUSED
-                      </span>
-                    )}
-                  </div>
-                  <button
-                    type="button"
-                    data-testid="reset-camera-angles"
-                    onClick={onResetCameraAngles}
-                    className="text-[9px] uppercase tracking-wider opacity-60 hover:opacity-100 hover:text-[var(--theme-highlight)] cursor-pointer"
-                    title="Reset camera angles to default view"
-                  >
-                    ↺ reset
-                  </button>
-                </div>
-
-                {/* Yaw Slider (-180° to +180°) */}
-                <div className="mb-2">
-                  <div className="flex justify-between mb-0.5 text-[10px] font-mono">
-                    <span className="opacity-70">Yaw (Azimuth)</span>
-                    <span className="text-[var(--theme-primary)] font-bold">
-                      {cameraAngles?.yaw !== undefined ? `${cameraAngles.yaw > 0 ? '+' : ''}${cameraAngles.yaw.toFixed(0)}°` : '0°'}
-                    </span>
-                  </div>
-                  <input
-                    type="range"
-                    data-testid="slider-yaw"
-                    min="-180"
-                    max="180"
-                    step="1"
-                    value={cameraAngles?.yaw ?? 0}
-                    onChange={(e) =>
-                      onCameraAnglesChange?.({
-                        ...(cameraAngles ?? { yaw: 0, pitch: 25.07, distance: 6.017 }),
-                        yaw: parseFloat(e.target.value),
-                      })
-                    }
-                    className="w-full accent-[var(--theme-primary)] cursor-pointer h-1 bg-[var(--theme-primary)]/20 rounded-lg appearance-none"
-                  />
-                </div>
-
-                {/* Pitch Slider (-85° to +85°) */}
-                <div className="mb-2">
-                  <div className="flex justify-between mb-0.5 text-[10px] font-mono">
-                    <span className="opacity-70">Pitch (Elevation)</span>
-                    <span className="text-[var(--theme-primary)] font-bold">
-                      {cameraAngles?.pitch !== undefined ? `${cameraAngles.pitch > 0 ? '+' : ''}${cameraAngles.pitch.toFixed(0)}°` : '25°'}
-                    </span>
-                  </div>
-                  <input
-                    type="range"
-                    data-testid="slider-pitch"
-                    min="-85"
-                    max="85"
-                    step="1"
-                    value={cameraAngles?.pitch ?? 25.07}
-                    onChange={(e) =>
-                      onCameraAnglesChange?.({
-                        ...(cameraAngles ?? { yaw: 0, pitch: 25.07, distance: 6.017 }),
-                        pitch: parseFloat(e.target.value),
-                      })
-                    }
-                    className="w-full accent-[var(--theme-primary)] cursor-pointer h-1 bg-[var(--theme-primary)]/20 rounded-lg appearance-none"
-                  />
-                </div>
-
-                {/* Distance Slider (2.5 to 12.0) */}
-                <div className="mb-2">
-                  <div className="flex justify-between mb-0.5 text-[10px] font-mono">
-                    <span className="opacity-70">Distance (Zoom)</span>
-                    <span className="text-[var(--theme-primary)] font-bold">
-                      {cameraAngles?.distance !== undefined ? `${cameraAngles.distance.toFixed(1)}x` : '6.0x'}
-                    </span>
-                  </div>
-                  <input
-                    type="range"
-                    data-testid="slider-distance"
-                    min="2.5"
-                    max="12.0"
-                    step="0.1"
-                    value={cameraAngles?.distance ?? 6.017}
-                    onChange={(e) =>
-                      onCameraAnglesChange?.({
-                        ...(cameraAngles ?? { yaw: 0, pitch: 25.07, distance: 6.017 }),
-                        distance: parseFloat(e.target.value),
-                      })
-                    }
-                    className="w-full accent-[var(--theme-primary)] cursor-pointer h-1 bg-[var(--theme-primary)]/20 rounded-lg appearance-none"
-                  />
-                </div>
-
-                {/* Angle Presets */}
-                <div className="flex gap-1 pt-1 border-t border-[var(--theme-primary)]/10 text-[9px] font-mono">
-                  <button
-                    type="button"
-                    data-testid="preset-front"
-                    onClick={() =>
-                      onCameraAnglesChange?.({
-                        ...(cameraAngles ?? { distance: 6.017 }),
-                        yaw: 0,
-                        pitch: 0,
-                        distance: cameraAngles?.distance ?? 6.0,
-                      })
-                    }
-                    className="flex-1 py-0.5 rounded border border-[var(--theme-primary)]/30 opacity-70 hover:opacity-100 hover:border-[var(--theme-primary)] cursor-pointer text-center"
-                    title="Front Eye-Level (Yaw 0°, Pitch 0°)"
-                  >
-                    Front
-                  </button>
-                  <button
-                    type="button"
-                    data-testid="preset-side"
-                    onClick={() =>
-                      onCameraAnglesChange?.({
-                        ...(cameraAngles ?? { distance: 6.017 }),
-                        yaw: 90,
-                        pitch: 0,
-                        distance: cameraAngles?.distance ?? 6.0,
-                      })
-                    }
-                    className="flex-1 py-0.5 rounded border border-[var(--theme-primary)]/30 opacity-70 hover:opacity-100 hover:border-[var(--theme-primary)] cursor-pointer text-center"
-                    title="Side Profile (Yaw 90°, Pitch 0°)"
-                  >
-                    Side
-                  </button>
-                  <button
-                    type="button"
-                    data-testid="preset-top"
-                    onClick={() =>
-                      onCameraAnglesChange?.({
-                        ...(cameraAngles ?? { distance: 6.017 }),
-                        yaw: 0,
-                        pitch: 85,
-                        distance: cameraAngles?.distance ?? 6.0,
-                      })
-                    }
-                    className="flex-1 py-0.5 rounded border border-[var(--theme-primary)]/30 opacity-70 hover:opacity-100 hover:border-[var(--theme-primary)] cursor-pointer text-center"
-                    title="Top Birds-Eye (Pitch 85°)"
-                  >
-                    Top
-                  </button>
-                </div>
-              </div>
-
-              {/* Mode-Specific Sliders */}
-              <div className="space-y-3 pt-1">
-                {activeMode === 'halo' && (
-                  <>
-                    <div>
-                      <div className="flex justify-between mb-1 text-[11px]">
-                        <span>speed</span>
-                        <span>{params.halo.speed.toFixed(3)}</span>
-                      </div>
-                      <input
-                        type="range"
-                        min="0.02"
-                        max="0.25"
-                        step="0.005"
-                        value={params.halo.speed}
-                        onChange={(e) => onParamChange('halo', 'speed', parseFloat(e.target.value))}
-                        className="w-full accent-[var(--theme-primary)] cursor-pointer"
-                      />
-                    </div>
-                    <div>
-                      <div className="flex justify-between mb-1 text-[11px]">
-                        <span>radius scale</span>
-                        <span>{params.halo.radius.toFixed(2)}x</span>
-                      </div>
-                      <input
-                        type="range"
-                        min="0.6"
-                        max="1.8"
-                        step="0.05"
-                        value={params.halo.radius}
-                        onChange={(e) => onParamChange('halo', 'radius', parseFloat(e.target.value))}
-                        className="w-full accent-[var(--theme-primary)] cursor-pointer"
-                      />
-                    </div>
-                    <div>
-                      <div className="flex justify-between mb-1 text-[11px]">
-                        <span>tilt / upright</span>
-                        <span>{params.halo.tilt.toFixed(0)}°</span>
-                      </div>
-                      <input
-                        type="range"
-                        min="-90"
-                        max="90"
-                        step="1"
-                        value={params.halo.tilt}
-                        onChange={(e) => onParamChange('halo', 'tilt', parseFloat(e.target.value))}
-                        className="w-full accent-[var(--theme-primary)] cursor-pointer"
-                      />
-                    </div>
-                    <div>
-                      <div className="flex justify-between mb-1 text-[11px]">
-                        <span>yaw</span>
-                        <span>{params.halo.yaw.toFixed(0)}°</span>
-                      </div>
-                      <input
-                        type="range"
-                        min="0"
-                        max="360"
-                        step="1"
-                        value={params.halo.yaw}
-                        onChange={(e) => onParamChange('halo', 'yaw', parseFloat(e.target.value))}
-                        className="w-full accent-[var(--theme-primary)] cursor-pointer"
-                      />
-                    </div>
-                    <div>
-                      <div className="flex justify-between mb-1 text-[11px]">
-                        <span>guide width</span>
-                        <span>{params.halo.guideWidth.toFixed(3)}</span>
-                      </div>
-                      <input
-                        type="range"
-                        min="0.005"
-                        max="0.045"
-                        step="0.002"
-                        value={params.halo.guideWidth}
-                        onChange={(e) => onParamChange('halo', 'guideWidth', parseFloat(e.target.value))}
-                        className="w-full accent-[var(--theme-primary)] cursor-pointer"
-                      />
-                    </div>
-                    <div>
-                      <span className="block text-[10px] uppercase tracking-wider opacity-70 mb-1">guide style</span>
-                      <div className="grid grid-cols-4 gap-1">
-                        {GUIDE_STYLES.map((st) => (
-                          <button
-                            key={st.id}
-                            type="button"
-                            onClick={() => onParamChange('halo', 'guideStyle', st.id)}
-                            className={`px-1 py-1 text-[10px] rounded transition-colors cursor-pointer text-center truncate ${
-                              params.halo.guideStyle === st.id
-                                ? 'bg-[var(--theme-primary)] text-[#1c1b22] font-semibold'
-                                : 'border border-[var(--theme-primary)]/30 opacity-70 hover:opacity-100 hover:border-[var(--theme-primary)]'
-                            }`}
-                          >
-                            {st.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    <label className="flex items-center gap-2 cursor-pointer pt-1">
-                      <input
-                        type="checkbox"
-                        checked={params.halo.showGuide}
-                        onChange={(e) => onParamChange('halo', 'showGuide', e.target.checked)}
-                        className="accent-[var(--theme-primary)]"
-                      />
-                      <span>show guide ring</span>
-                    </label>
-                  </>
-                )}
-
-                {activeMode === 'trefoil' && (
-                  <>
-                    <div>
-                      <div className="flex justify-between mb-1 text-[11px]">
-                        <span>transit speed</span>
-                        <span>{params.trefoil.speed.toFixed(2)}</span>
-                      </div>
-                      <input
-                        type="range"
-                        min="0.05"
-                        max="0.50"
-                        step="0.01"
-                        value={params.trefoil.speed}
-                        onChange={(e) => onParamChange('trefoil', 'speed', parseFloat(e.target.value))}
-                        className="w-full accent-[var(--theme-primary)] cursor-pointer"
-                      />
-                    </div>
-                    <div>
-                      <div className="flex justify-between mb-1 text-[11px]">
-                        <span>knot scale</span>
-                        <span>{params.trefoil.scale.toFixed(2)}x</span>
-                      </div>
-                      <input
-                        type="range"
-                        min="0.6"
-                        max="1.8"
-                        step="0.05"
-                        value={params.trefoil.scale}
-                        onChange={(e) => onParamChange('trefoil', 'scale', parseFloat(e.target.value))}
-                        className="w-full accent-[var(--theme-primary)] cursor-pointer"
-                      />
-                    </div>
-                    <div>
-                      <div className="flex justify-between mb-1 text-[11px]">
-                        <span>tube radius</span>
-                        <span>{params.trefoil.tubeRadius.toFixed(3)}</span>
-                      </div>
-                      <input
-                        type="range"
-                        min="0.005"
-                        max="0.045"
-                        step="0.002"
-                        value={params.trefoil.tubeRadius}
-                        onChange={(e) => onParamChange('trefoil', 'tubeRadius', parseFloat(e.target.value))}
-                        className="w-full accent-[var(--theme-primary)] cursor-pointer"
-                      />
-                    </div>
-                    <div>
-                      <span className="block text-[10px] uppercase tracking-wider opacity-70 mb-1">track style</span>
-                      <div className="grid grid-cols-4 gap-1">
-                        {GUIDE_STYLES.map((st) => (
-                          <button
-                            key={st.id}
-                            type="button"
-                            onClick={() => onParamChange('trefoil', 'trackStyle', st.id)}
-                            className={`px-1 py-1 text-[10px] rounded transition-colors cursor-pointer text-center truncate ${
-                              params.trefoil.trackStyle === st.id
-                                ? 'bg-[var(--theme-primary)] text-[#1c1b22] font-semibold'
-                                : 'border border-[var(--theme-primary)]/30 opacity-70 hover:opacity-100 hover:border-[var(--theme-primary)]'
-                            }`}
-                          >
-                            {st.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    <label className="flex items-center gap-2 cursor-pointer pt-1">
-                      <input
-                        type="checkbox"
-                        checked={params.trefoil.showTrack}
-                        onChange={(e) => onParamChange('trefoil', 'showTrack', e.target.checked)}
-                        className="accent-[var(--theme-primary)]"
-                      />
-                      <span>show knot track ribbon</span>
-                    </label>
-                  </>
-                )}
-
-                {activeMode === 'tesseract' && (
-                  <>
-                    <div>
-                      <div className="flex justify-between mb-1 text-[11px]">
-                        <span>4D spin speed</span>
-                        <span>{params.tesseract.speed4D.toFixed(2)}</span>
-                      </div>
-                      <input
-                        type="range"
-                        min="0.05"
-                        max="0.70"
-                        step="0.02"
-                        value={params.tesseract.speed4D}
-                        onChange={(e) => onParamChange('tesseract', 'speed4D', parseFloat(e.target.value))}
-                        className="w-full accent-[var(--theme-primary)] cursor-pointer"
-                      />
-                    </div>
-                    <div>
-                      <div className="flex justify-between mb-1 text-[11px]">
-                        <span>projection distance</span>
-                        <span>{params.tesseract.distance.toFixed(2)}</span>
-                      </div>
-                      <input
-                        type="range"
-                        min="1.4"
-                        max="3.2"
-                        step="0.05"
-                        value={params.tesseract.distance}
-                        onChange={(e) => onParamChange('tesseract', 'distance', parseFloat(e.target.value))}
-                        className="w-full accent-[var(--theme-primary)] cursor-pointer"
-                      />
-                    </div>
-                    <div>
-                      <div className="flex justify-between mb-1 text-[11px]">
-                        <span>cube size</span>
-                        <span>{params.tesseract.cubeSize.toFixed(2)}x</span>
-                      </div>
-                      <input
-                        type="range"
-                        min="0.6"
-                        max="1.8"
-                        step="0.05"
-                        value={params.tesseract.cubeSize}
-                        onChange={(e) => onParamChange('tesseract', 'cubeSize', parseFloat(e.target.value))}
-                        className="w-full accent-[var(--theme-primary)] cursor-pointer"
-                      />
-                    </div>
-                    <div>
-                      <span className="block text-[10px] uppercase tracking-wider opacity-70 mb-1">wire style</span>
-                      <div className="grid grid-cols-3 gap-1">
-                        {LINE_GUIDE_STYLES.map((st) => (
-                          <button
-                            key={st.id}
-                            type="button"
-                            onClick={() => onParamChange('tesseract', 'wireStyle', st.id)}
-                            className={`px-1 py-1 text-[10px] rounded transition-colors cursor-pointer text-center truncate ${
-                              params.tesseract.wireStyle === st.id
-                                ? 'bg-[var(--theme-primary)] text-[#1c1b22] font-semibold'
-                                : 'border border-[var(--theme-primary)]/30 opacity-70 hover:opacity-100 hover:border-[var(--theme-primary)]'
-                            }`}
-                          >
-                            {st.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    <label className="flex items-center gap-2 cursor-pointer pt-1">
-                      <input
-                        type="checkbox"
-                        checked={params.tesseract.showWires}
-                        onChange={(e) => onParamChange('tesseract', 'showWires', e.target.checked)}
-                        className="accent-[var(--theme-primary)]"
-                      />
-                      <span>show wireframe lattice</span>
-                    </label>
-                  </>
-                )}
-
-                {activeMode === 'astrolabe' && (
-                  <>
-                    <div>
-                      <div className="flex justify-between mb-1 text-[11px]">
-                        <span>speed multiplier</span>
-                        <span>{params.astrolabe.speed.toFixed(2)}x</span>
-                      </div>
-                      <input
-                        type="range"
-                        min="0.2"
-                        max="2.5"
-                        step="0.05"
-                        value={params.astrolabe.speed}
-                        onChange={(e) => onParamChange('astrolabe', 'speed', parseFloat(e.target.value))}
-                        className="w-full accent-[var(--theme-primary)] cursor-pointer"
-                      />
-                    </div>
-                    <div>
-                      <div className="flex justify-between mb-1 text-[11px]">
-                        <span>ring spacing</span>
-                        <span>{params.astrolabe.ringSpread.toFixed(2)}x</span>
-                      </div>
-                      <input
-                        type="range"
-                        min="0.6"
-                        max="1.6"
-                        step="0.05"
-                        value={params.astrolabe.ringSpread}
-                        onChange={(e) => onParamChange('astrolabe', 'ringSpread', parseFloat(e.target.value))}
-                        className="w-full accent-[var(--theme-primary)] cursor-pointer"
-                      />
-                    </div>
-                    <div>
-                      <div className="flex justify-between mb-1 text-[11px]">
-                        <span>tilt spread</span>
-                        <span>{params.astrolabe.tiltAngle}°</span>
-                      </div>
-                      <input
-                        type="range"
-                        min="15"
-                        max="75"
-                        step="1"
-                        value={params.astrolabe.tiltAngle}
-                        onChange={(e) => onParamChange('astrolabe', 'tiltAngle', parseInt(e.target.value, 10))}
-                        className="w-full accent-[var(--theme-primary)] cursor-pointer"
-                      />
-                    </div>
-                    <div>
-                      <div className="flex justify-between mb-1 text-[11px]">
-                        <span>ring width</span>
-                        <span>{params.astrolabe.ringWidth.toFixed(3)}</span>
-                      </div>
-                      <input
-                        type="range"
-                        min="0.005"
-                        max="0.045"
-                        step="0.002"
-                        value={params.astrolabe.ringWidth}
-                        onChange={(e) => onParamChange('astrolabe', 'ringWidth', parseFloat(e.target.value))}
-                        className="w-full accent-[var(--theme-primary)] cursor-pointer"
-                      />
-                    </div>
-                    <div>
-                      <span className="block text-[10px] uppercase tracking-wider opacity-70 mb-1">ring style</span>
-                      <div className="grid grid-cols-4 gap-1">
-                        {GUIDE_STYLES.map((st) => (
-                          <button
-                            key={st.id}
-                            type="button"
-                            onClick={() => onParamChange('astrolabe', 'ringStyle', st.id)}
-                            className={`px-1 py-1 text-[10px] rounded transition-colors cursor-pointer text-center truncate ${
-                              params.astrolabe.ringStyle === st.id
-                                ? 'bg-[var(--theme-primary)] text-[#1c1b22] font-semibold'
-                                : 'border border-[var(--theme-primary)]/30 opacity-70 hover:opacity-100 hover:border-[var(--theme-primary)]'
-                            }`}
-                          >
-                            {st.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    <label className="flex items-center gap-2 cursor-pointer pt-1">
-                      <input
-                        type="checkbox"
-                        checked={params.astrolabe.showRings}
-                        onChange={(e) => onParamChange('astrolabe', 'showRings', e.target.checked)}
-                        className="accent-[var(--theme-primary)]"
-                      />
-                      <span>show gimbal rings</span>
-                    </label>
-                  </>
-                )}
-
-                {activeMode === 'lorenz' && (
-                  <>
-                    <div>
-                      <div className="flex justify-between mb-1 text-[11px]">
-                        <span>simulation step (dt)</span>
-                        <span>{params.lorenz.speed.toFixed(4)}</span>
-                      </div>
-                      <input
-                        type="range"
-                        min="0.003"
-                        max="0.016"
-                        step="0.0005"
-                        value={params.lorenz.speed}
-                        onChange={(e) => onParamChange('lorenz', 'speed', parseFloat(e.target.value))}
-                        className="w-full accent-[var(--theme-primary)] cursor-pointer"
-                      />
-                    </div>
-                    <div>
-                      <div className="flex justify-between mb-1 text-[11px]">
-                        <span>manifold scale</span>
-                        <span>{params.lorenz.scale.toFixed(3)}</span>
-                      </div>
-                      <input
-                        type="range"
-                        min="0.03"
-                        max="0.11"
-                        step="0.005"
-                        value={params.lorenz.scale}
-                        onChange={(e) => onParamChange('lorenz', 'scale', parseFloat(e.target.value))}
-                        className="w-full accent-[var(--theme-primary)] cursor-pointer"
-                      />
-                    </div>
-                    <div>
-                      <div className="flex justify-between mb-1 text-[11px]">
-                        <span>Rayleigh number (rho)</span>
-                        <span>{params.lorenz.rho}</span>
-                      </div>
-                      <input
-                        type="range"
-                        min="16"
-                        max="38"
-                        step="1"
-                        value={params.lorenz.rho}
-                        onChange={(e) => onParamChange('lorenz', 'rho', parseInt(e.target.value, 10))}
-                        className="w-full accent-[var(--theme-primary)] cursor-pointer"
-                      />
-                    </div>
-                    <div>
-                      <span className="block text-[10px] uppercase tracking-wider opacity-70 mb-1">trail style</span>
-                      <div className="grid grid-cols-3 gap-1">
-                        {LINE_GUIDE_STYLES.map((st) => (
-                          <button
-                            key={st.id}
-                            type="button"
-                            onClick={() => onParamChange('lorenz', 'trailStyle', st.id)}
-                            className={`px-1 py-1 text-[10px] rounded transition-colors cursor-pointer text-center truncate ${
-                              params.lorenz.trailStyle === st.id
-                                ? 'bg-[var(--theme-primary)] text-[#1c1b22] font-semibold'
-                                : 'border border-[var(--theme-primary)]/30 opacity-70 hover:opacity-100 hover:border-[var(--theme-primary)]'
-                            }`}
-                          >
-                            {st.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    <label className="flex items-center gap-2 cursor-pointer pt-1">
-                      <input
-                        type="checkbox"
-                        checked={params.lorenz.showParticles}
-                        onChange={(e) => onParamChange('lorenz', 'showParticles', e.target.checked)}
-                        className="accent-[var(--theme-primary)]"
-                      />
-                      <span>show ribbon trails</span>
-                    </label>
-                  </>
-                )}
-
-                {activeMode === 'origami' && (
-                  <>
-                    <div>
-                      <div className="flex justify-between mb-1 text-[11px]">
-                        <span>unfold bloom</span>
-                        <span>{params.origami.unfold.toFixed(2)}x</span>
-                      </div>
-                      <input
-                        type="range"
-                        min="0.0"
-                        max="1.4"
-                        step="0.05"
-                        value={params.origami.unfold}
-                        onChange={(e) => onParamChange('origami', 'unfold', parseFloat(e.target.value))}
-                        className="w-full accent-[var(--theme-primary)] cursor-pointer"
-                      />
-                    </div>
-                    <div>
-                      <div className="flex justify-between mb-1 text-[11px]">
-                        <span>tumble speed</span>
-                        <span>{params.origami.tumbleSpeed.toFixed(2)}</span>
-                      </div>
-                      <input
-                        type="range"
-                        min="0.03"
-                        max="0.40"
-                        step="0.01"
-                        value={params.origami.tumbleSpeed}
-                        onChange={(e) => onParamChange('origami', 'tumbleSpeed', parseFloat(e.target.value))}
-                        className="w-full accent-[var(--theme-primary)] cursor-pointer"
-                      />
-                    </div>
-                    <div>
-                      <div className="flex justify-between mb-1 text-[11px]">
-                        <span>facet scale</span>
-                        <span>{params.origami.facetScale.toFixed(2)}x</span>
-                      </div>
-                      <input
-                        type="range"
-                        min="0.3"
-                        max="1.6"
-                        step="0.05"
-                        value={params.origami.facetScale}
-                        onChange={(e) => onParamChange('origami', 'facetScale', parseFloat(e.target.value))}
-                        className="w-full accent-[var(--theme-primary)] cursor-pointer"
-                      />
-                    </div>
-                    <div>
-                      <span className="block text-[10px] uppercase tracking-wider opacity-70 mb-1">facet style</span>
-                      <div className="grid grid-cols-3 gap-1">
-                        {FACET_GUIDE_STYLES.map((st) => (
-                          <button
-                            key={st.id}
-                            type="button"
-                            onClick={() => onParamChange('origami', 'wireStyle', st.id)}
-                            className={`px-1 py-1 text-[10px] rounded transition-colors cursor-pointer text-center truncate ${
-                              params.origami.wireStyle === st.id
-                                ? 'bg-[var(--theme-primary)] text-[#1c1b22] font-semibold'
-                                : 'border border-[var(--theme-primary)]/30 opacity-70 hover:opacity-100 hover:border-[var(--theme-primary)]'
-                            }`}
-                          >
-                            {st.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    <label className="flex items-center gap-2 cursor-pointer pt-1">
-                      <input
-                        type="checkbox"
-                        checked={params.origami.showWires}
-                        onChange={(e) => onParamChange('origami', 'showWires', e.target.checked)}
-                        className="accent-[var(--theme-primary)]"
-                      />
-                      <span>show core wireframe</span>
-                    </label>
-                  </>
-                )}
-
-                {activeMode === 'slingshot' && (
-                  <>
-                    <div>
-                      <div className="flex justify-between mb-1 text-[11px]">
-                        <span>eccentricity (e)</span>
-                        <span>{params.slingshot.eccentricity.toFixed(2)}</span>
-                      </div>
-                      <input
-                        type="range"
-                        min="0.2"
-                        max="0.86"
-                        step="0.02"
-                        value={params.slingshot.eccentricity}
-                        onChange={(e) => onParamChange('slingshot', 'eccentricity', parseFloat(e.target.value))}
-                        className="w-full accent-[var(--theme-primary)] cursor-pointer"
-                      />
-                    </div>
-                    <div>
-                      <div className="flex justify-between mb-1 text-[11px]">
-                        <span>semi-major axis</span>
-                        <span>{params.slingshot.axis.toFixed(2)}x</span>
-                      </div>
-                      <input
-                        type="range"
-                        min="1.2"
-                        max="2.8"
-                        step="0.05"
-                        value={params.slingshot.axis}
-                        onChange={(e) => onParamChange('slingshot', 'axis', parseFloat(e.target.value))}
-                        className="w-full accent-[var(--theme-primary)] cursor-pointer"
-                      />
-                    </div>
-                    <div>
-                      <div className="flex justify-between mb-1 text-[11px]">
-                        <span>whip acceleration</span>
-                        <span>{params.slingshot.acceleration.toFixed(2)}x</span>
-                      </div>
-                      <input
-                        type="range"
-                        min="0.4"
-                        max="2.2"
-                        step="0.05"
-                        value={params.slingshot.acceleration}
-                        onChange={(e) => onParamChange('slingshot', 'acceleration', parseFloat(e.target.value))}
-                        className="w-full accent-[var(--theme-primary)] cursor-pointer"
-                      />
-                    </div>
-                    <div>
-                      <div className="flex justify-between mb-1 text-[11px]">
-                        <span>orbit width</span>
-                        <span>{params.slingshot.orbitWidth.toFixed(3)}</span>
-                      </div>
-                      <input
-                        type="range"
-                        min="0.005"
-                        max="0.045"
-                        step="0.002"
-                        value={params.slingshot.orbitWidth}
-                        onChange={(e) => onParamChange('slingshot', 'orbitWidth', parseFloat(e.target.value))}
-                        className="w-full accent-[var(--theme-primary)] cursor-pointer"
-                      />
-                    </div>
-                    <div>
-                      <span className="block text-[10px] uppercase tracking-wider opacity-70 mb-1">orbit style</span>
-                      <div className="grid grid-cols-4 gap-1">
-                        {GUIDE_STYLES.map((st) => (
-                          <button
-                            key={st.id}
-                            type="button"
-                            onClick={() => onParamChange('slingshot', 'orbitStyle', st.id)}
-                            className={`px-1 py-1 text-[10px] rounded transition-colors cursor-pointer text-center truncate ${
-                              params.slingshot.orbitStyle === st.id
-                                ? 'bg-[var(--theme-primary)] text-[#1c1b22] font-semibold'
-                                : 'border border-[var(--theme-primary)]/30 opacity-70 hover:opacity-100 hover:border-[var(--theme-primary)]'
-                            }`}
-                          >
-                            {st.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    <label className="flex items-center gap-2 cursor-pointer pt-1">
-                      <input
-                        type="checkbox"
-                        checked={params.slingshot.showOrbits}
-                        onChange={(e) => onParamChange('slingshot', 'showOrbits', e.target.checked)}
-                        className="accent-[var(--theme-primary)]"
-                      />
-                      <span>show elliptical orbits</span>
-                    </label>
-                  </>
-                )}
-
-                {activeMode === 'helix' && (
-                  <>
-                    <div>
-                      <div className="flex justify-between mb-1 text-[11px]">
-                        <span>transit speed</span>
-                        <span>{params.helix.speed.toFixed(2)}</span>
-                      </div>
-                      <input
-                        type="range"
-                        min="0.05"
-                        max="0.50"
-                        step="0.01"
-                        value={params.helix.speed}
-                        onChange={(e) => onParamChange('helix', 'speed', parseFloat(e.target.value))}
-                        className="w-full accent-[var(--theme-primary)] cursor-pointer"
-                      />
-                    </div>
-                    <div>
-                      <div className="flex justify-between mb-1 text-[11px]">
-                        <span>coils</span>
-                        <span>{params.helix.coils}</span>
-                      </div>
-                      <input
-                        type="range"
-                        min="3"
-                        max="10"
-                        step="1"
-                        value={params.helix.coils}
-                        onChange={(e) => onParamChange('helix', 'coils', parseInt(e.target.value, 10))}
-                        className="w-full accent-[var(--theme-primary)] cursor-pointer"
-                      />
-                    </div>
-                    <div>
-                      <div className="flex justify-between mb-1 text-[11px]">
-                        <span>torus radius</span>
-                        <span>{params.helix.radius.toFixed(2)}x</span>
-                      </div>
-                      <input
-                        type="range"
-                        min="1.0"
-                        max="2.6"
-                        step="0.05"
-                        value={params.helix.radius}
-                        onChange={(e) => onParamChange('helix', 'radius', parseFloat(e.target.value))}
-                        className="w-full accent-[var(--theme-primary)] cursor-pointer"
-                      />
-                    </div>
-                    <div>
-                      <div className="flex justify-between mb-1 text-[11px]">
-                        <span>coil width</span>
-                        <span>{params.helix.coilWidth.toFixed(3)}</span>
-                      </div>
-                      <input
-                        type="range"
-                        min="0.005"
-                        max="0.045"
-                        step="0.002"
-                        value={params.helix.coilWidth}
-                        onChange={(e) => onParamChange('helix', 'coilWidth', parseFloat(e.target.value))}
-                        className="w-full accent-[var(--theme-primary)] cursor-pointer"
-                      />
-                    </div>
-                    <div>
-                      <span className="block text-[10px] uppercase tracking-wider opacity-70 mb-1">coil style</span>
-                      <div className="grid grid-cols-4 gap-1">
-                        {GUIDE_STYLES.map((st) => (
-                          <button
-                            key={st.id}
-                            type="button"
-                            onClick={() => onParamChange('helix', 'coilStyle', st.id)}
-                            className={`px-1 py-1 text-[10px] rounded transition-colors cursor-pointer text-center truncate ${
-                              params.helix.coilStyle === st.id
-                                ? 'bg-[var(--theme-primary)] text-[#1c1b22] font-semibold'
-                                : 'border border-[var(--theme-primary)]/30 opacity-70 hover:opacity-100 hover:border-[var(--theme-primary)]'
-                            }`}
-                          >
-                            {st.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    <label className="flex items-center gap-2 cursor-pointer pt-1">
-                      <input
-                        type="checkbox"
-                        checked={params.helix.showCoil}
-                        onChange={(e) => onParamChange('helix', 'showCoil', e.target.checked)}
-                        className="accent-[var(--theme-primary)]"
-                      />
-                      <span>show corkscrew coil</span>
-                    </label>
-                  </>
-                )}
-              </div>
-
-              {/* Dedicated Reset Button for Active Geometry */}
-              <div className="pt-2.5 border-t border-[var(--theme-primary)]/20 mt-3">
-                <button
-                  type="button"
-                  onClick={() => onResetParams(activeMode)}
-                  className="w-full py-1.5 px-3 rounded border border-[var(--theme-primary)]/40 hover:bg-[var(--theme-primary)]/15 text-[11px] font-semibold cursor-pointer transition-colors text-center"
-                >
-                  ↺ Reset {currentMeta.name} to Defaults
-                </button>
-              </div>
-            </div>
+            <TunerGeometryTab
+              activeMode={activeMode}
+              currentMetaName={currentMeta.name}
+              onModeChange={onModeChange}
+              params={params}
+              onParamChange={onParamChange}
+              onResetParams={onResetParams}
+              activeSonnyContainer={activeSonnyContainer}
+              onContainerChange={handleContainerChange}
+              activeShowDistance={activeShowDistance}
+              onToggleDistance={handleToggleDistance}
+              activeDistanceMetric={activeDistanceMetric}
+              onSetMetric={handleSetMetric}
+              activeShowCoords={activeShowCoords}
+              onToggleCoords={handleToggleCoords}
+              activeCoordFrame={activeCoordFrame}
+              onSetCoordFrame={handleSetCoordFrame}
+              activeCameraElevation={activeCameraElevation}
+              onSetCameraElevation={handleSetCameraElevation}
+              isPaused={isPaused}
+              cameraAngles={cameraAngles}
+              onCameraAnglesChange={onCameraAnglesChange}
+              onResetCameraAngles={onResetCameraAngles}
+            />
           )}
 
-          {/* Tab 2: VFX & Glitch Controls */}
           {activeTab === 'vfx' && (
-            <div className="space-y-4 pt-1">
-              {/* Force Theme Color */}
-              <div>
-                <span className="block text-[11px] font-semibold mb-1.5 opacity-90">Preset Palettes</span>
-                <div className="grid grid-cols-3 gap-1.5">
-                  {THEME_IDS.map((tId) => {
-                    const palette = THEME_PALETTES[tId]
-                    if (!palette) return null
-                    const isActive = currentThemeId === tId
-                    return (
-                      <button
-                        key={tId}
-                        type="button"
-                        onClick={() => onThemeChange?.(tId)}
-                        className={`flex items-center justify-center gap-1.5 px-2 py-1.5 rounded text-[10px] transition-colors cursor-pointer ${
-                          isActive
-                            ? 'bg-[var(--theme-primary)] text-[#1c1b22] font-bold shadow'
-                            : 'border border-[var(--theme-primary)]/30 opacity-70 hover:opacity-100 hover:border-[var(--theme-primary)]'
-                        }`}
-                        title={palette.name}
-                        aria-label={palette.name}
-                      >
-                        <span
-                          className="inline-block w-2 h-2 rounded-full border border-black/40"
-                          style={{ backgroundColor: palette.primary }}
-                        />
-                        <span className="truncate">{tId}</span>
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-
-              {/* Custom Hex Color Entry & Auto-Computed Colors */}
-              <div className="pt-2 border-t border-[var(--theme-primary)]/20">
-                <span className="block text-[11px] font-semibold mb-1.5 opacity-90">Custom Hex Color Entry</span>
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="relative flex items-center justify-center">
-                    <input
-                      type="color"
-                      value={isValidHex(customHexInput) ? normalizeHex(customHexInput)! : '#e2f872'}
-                      onChange={(e) => handleHexChange(e.target.value)}
-                      className="w-7 h-7 rounded border border-[var(--theme-primary)]/40 cursor-pointer bg-transparent p-0 overflow-hidden"
-                      aria-label="Color Picker"
-                    />
-                  </div>
-                  <input
-                    type="text"
-                    value={customHexInput}
-                    onChange={(e) => handleHexChange(e.target.value)}
-                    placeholder="#2e6f70"
-                    maxLength={7}
-                    className="flex-1 px-2.5 py-1 rounded bg-[#131217] border border-[var(--theme-primary)]/40 text-[11px] font-mono text-[var(--theme-primary)] focus:outline-none focus:border-[var(--theme-primary)]"
-                    aria-label="Custom Hex Input"
-                  />
-                  {currentThemeId === 'custom' && (
-                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-[var(--theme-primary)] text-[#1c1b22]">
-                      CUSTOM
-                    </span>
-                  )}
-                </div>
-
-                {/* Auto-Computed Affected Colors Display */}
-                <div className="rounded bg-[#131217] border border-[var(--theme-primary)]/20 p-2 space-y-1.5">
-                  <div className="text-[10px] font-medium opacity-75 mb-1">Computed Palette:</div>
-                  <div className="flex items-center justify-between text-[11px]">
-                    <div className="flex items-center gap-1.5">
-                      <span
-                        className="inline-block w-3 h-3 rounded-full border border-black/40 shadow-xs"
-                        style={{ backgroundColor: activePrimaryHex }}
-                      />
-                      <span className="opacity-80">Primary:</span>
-                    </div>
-                    <span className="font-mono">{activePrimaryHex}</span>
-                  </div>
-                  <div className="flex items-center justify-between text-[11px]">
-                    <div className="flex items-center gap-1.5">
-                      <span
-                        className="inline-block w-3 h-3 rounded-full border border-black/40 shadow-xs"
-                        style={{ backgroundColor: autoHighlightHex }}
-                      />
-                      <span className="opacity-80">Auto Highlight:</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 font-mono">
-                      <span>{autoHighlightHex}</span>
-                      <span className="text-[9px] opacity-60">({contrastRatio}:1)</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Lock Theme Toggle */}
-                {onToggleThemeLock && (
-                  <label className="flex items-center gap-2 cursor-pointer pt-2 text-[10px] opacity-80 hover:opacity-100">
-                    <input
-                      type="checkbox"
-                      checked={isThemeLocked}
-                      onChange={(e) => onToggleThemeLock(e.target.checked)}
-                      className="accent-[var(--theme-primary)]"
-                      aria-label="Lock Theme"
-                    />
-                    <span>Lock theme (prevent glitch mutations)</span>
-                  </label>
-                )}
-              </div>
-
-              {/* Glitch Frequency / Interval */}
-              <div>
-                <div className="flex justify-between mb-1 text-[11px]">
-                  <span>Glitch Interval</span>
-                  <span>{glitchInterval}s</span>
-                </div>
-                <input
-                  type="range"
-                  min="2"
-                  max="20"
-                  step="1"
-                  value={glitchInterval}
-                  onChange={(e) => onGlitchIntervalChange?.(parseInt(e.target.value, 10))}
-                  className="w-full accent-[var(--theme-primary)] cursor-pointer"
-                  aria-label="Glitch Interval"
-                />
-                <span className="text-[9px] opacity-60 block mt-0.5">Interval between periodic glitches (2s–20s)</span>
-              </div>
-
-              {/* Memory Picture Rate */}
-              <div>
-                <div className="flex justify-between mb-1 text-[11px]">
-                  <span>Memory Picture Rate</span>
-                  <span>{Math.round(imageRate * 100)}%</span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  step="5"
-                  value={Math.round(imageRate * 100)}
-                  onChange={(e) => onImageRateChange?.(parseInt(e.target.value, 10) / 100)}
-                  className="w-full accent-[var(--theme-primary)] cursor-pointer"
-                  aria-label="Memory Picture Rate"
-                />
-                <span className="text-[9px] opacity-60 block mt-0.5">Chance of distorted memory photo during glitches</span>
-              </div>
-
-              {/* Power & Performance Manager */}
-              <div className="pt-2 border-t border-[var(--theme-primary)]/20">
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-[11px] font-semibold opacity-90">Power & Performance</span>
-                  <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-[var(--theme-primary)]/15 text-[var(--theme-primary)]">
-                    {isBattery ? '🔋 Battery' : '🔌 AC Power'}
-                  </span>
-                </div>
-                <div className="grid grid-cols-3 gap-1.5 mb-2">
-                  {(['auto', 'eco', 'uncapped'] as PowerMode[]).map((mode) => {
-                    const isActive = (powerMode || 'auto') === mode
-                    return (
-                      <button
-                        key={mode}
-                        type="button"
-                        onClick={() => onPowerModeChange?.(mode)}
-                        className={`py-1 px-1.5 rounded text-[10px] uppercase font-semibold transition-colors cursor-pointer text-center ${
-                          isActive
-                            ? 'bg-[var(--theme-primary)] text-[#1c1b22] font-bold shadow'
-                            : 'border border-[var(--theme-primary)]/30 opacity-70 hover:opacity-100 hover:border-[var(--theme-primary)]'
-                        }`}
-                        aria-label={`Power mode: ${mode}`}
-                      >
-                        {mode}
-                      </button>
-                    )
-                  })}
-                </div>
-                <div className="flex items-center justify-between text-[10px] opacity-75 font-mono px-1">
-                  <span>Target: {targetFps ? `${targetFps} FPS` : 'Uncapped'}</span>
-                  <span>DPR: {Array.isArray(targetDpr) ? `${targetDpr[1]}x` : `${targetDpr}x`}</span>
-                </div>
-              </div>
-
-              {/* Animation Engine Pause/Resume */}
-              <div className="pt-2 border-t border-[var(--theme-primary)]/20">
-                <div className="flex items-center justify-between mb-1.5">
-                  <div>
-                    <span className="text-[11px] font-semibold opacity-90">Animation Engine</span>
-                    <span className="block text-[9px] opacity-60">Freeze 3D canvas & all visual effects</span>
-                  </div>
-                  <button
-                    type="button"
-                    data-testid="toggle-pause-drawer"
-                    onClick={() => onTogglePause?.(!isPaused)}
-                    className={`px-2.5 py-1 rounded text-[10px] font-semibold transition-colors cursor-pointer ${
-                      isPaused
-                        ? 'bg-[#10b981] text-white font-bold shadow'
-                        : 'bg-[var(--theme-primary)] text-[#1c1b22] font-bold shadow'
-                    }`}
-                    title={isPaused ? 'Resume animations & visual effects' : 'Pause animations & visual effects'}
-                  >
-                    {isPaused ? 'PAUSED (FROZEN)' : 'RUNNING (LIVE)'}
-                  </button>
-                </div>
-              </div>
-
-              {/* Instant Trigger Glitch Burst */}
-              {onTriggerGlitch && (
-                <button
-                  type="button"
-                  onClick={onTriggerGlitch}
-                  className="w-full py-2 px-3 rounded border border-[var(--theme-primary)]/40 hover:bg-[var(--theme-primary)] hover:text-[#1c1b22] text-xs font-semibold cursor-pointer transition-all active:scale-[0.98] text-center"
-                >
-                  ⚡ Trigger Glitch Burst
-                </button>
-              )}
-            </div>
+            <TunerVfxTab
+              currentThemeId={currentThemeId}
+              onThemeChange={onThemeChange}
+              customHexInput={customHexInput}
+              onHexChange={handleHexChange}
+              activePrimaryHex={activePrimaryHex}
+              autoHighlightHex={autoHighlightHex}
+              contrastRatio={contrastRatio}
+              isThemeLocked={isThemeLocked}
+              onToggleThemeLock={onToggleThemeLock}
+              glitchInterval={glitchInterval}
+              onGlitchIntervalChange={onGlitchIntervalChange}
+              imageRate={imageRate}
+              onImageRateChange={onImageRateChange}
+              powerMode={powerMode}
+              onPowerModeChange={onPowerModeChange}
+              isBattery={isBattery}
+              targetFps={targetFps}
+              targetDpr={targetDpr}
+              isPaused={isPaused}
+              onTogglePause={onTogglePause}
+              onTriggerGlitch={onTriggerGlitch}
+            />
           )}
         </div>
       )}
@@ -1843,7 +331,9 @@ export const Tuner: React.FC<TunerProps> = ({
         >
           <div className="flex items-center justify-between mb-2 pb-1 border-b border-[#10b981]/20">
             <div className="flex items-center gap-1.5">
-              <span className="text-[10px] font-bold text-[#10b981] uppercase tracking-wider">Inspect Orbit</span>
+              <span className="text-[10px] font-bold text-[#10b981] uppercase tracking-wider">
+                Inspect Orbit
+              </span>
               <span className="text-[9px] font-mono opacity-60">Paused</span>
             </div>
             <button
@@ -1857,12 +347,13 @@ export const Tuner: React.FC<TunerProps> = ({
             </button>
           </div>
 
-          {/* Compact Yaw Slider */}
           <div className="mb-1.5">
             <div className="flex justify-between text-[9px] font-mono mb-0.5">
               <span className="opacity-70">Yaw</span>
               <span className="text-[var(--theme-primary)] font-bold">
-                {cameraAngles?.yaw !== undefined ? `${cameraAngles.yaw > 0 ? '+' : ''}${cameraAngles.yaw.toFixed(0)}°` : '0°'}
+                {cameraAngles?.yaw !== undefined
+                  ? `${cameraAngles.yaw > 0 ? '+' : ''}${cameraAngles.yaw.toFixed(0)}°`
+                  : '0°'}
               </span>
             </div>
             <input
@@ -1882,12 +373,13 @@ export const Tuner: React.FC<TunerProps> = ({
             />
           </div>
 
-          {/* Compact Pitch Slider */}
           <div className="mb-1.5">
             <div className="flex justify-between text-[9px] font-mono mb-0.5">
               <span className="opacity-70">Pitch</span>
               <span className="text-[var(--theme-primary)] font-bold">
-                {cameraAngles?.pitch !== undefined ? `${cameraAngles.pitch > 0 ? '+' : ''}${cameraAngles.pitch.toFixed(0)}°` : '25°'}
+                {cameraAngles?.pitch !== undefined
+                  ? `${cameraAngles.pitch > 0 ? '+' : ''}${cameraAngles.pitch.toFixed(0)}°`
+                  : '25°'}
               </span>
             </div>
             <input
@@ -1907,7 +399,6 @@ export const Tuner: React.FC<TunerProps> = ({
             />
           </div>
 
-          {/* Compact Presets */}
           <div className="flex gap-1 pt-1 text-[8px] font-mono">
             <button
               type="button"

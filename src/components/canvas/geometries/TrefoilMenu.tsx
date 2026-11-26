@@ -5,6 +5,8 @@ import { ThemeColor } from '@/context/ThemeContext'
 import { MenuItemBadge } from './MenuItemBadge'
 import { ProceduralGuide } from './ProceduralGuide'
 import { TrefoilParams } from './geometryConfig'
+import { MENU_ITEMS } from './shared/menuItems'
+import { updateExpandCollapse } from './shared/topologyHelpers'
 
 export interface GeometryProps {
   isExpanded: boolean
@@ -15,13 +17,7 @@ export interface GeometryProps {
   params: TrefoilParams
 }
 
-const ITEMS = [
-  { label: 'about', path: '/about' },
-  { label: 'gallery', path: '/gallery' },
-  { label: 'more', path: '/more' },
-  { label: 'sonny', path: '/sonny', imageUrl: '/images/sonny.png' },
-  { label: 'dchc', path: 'https://dc-hardcore.com' },
-]
+const ITEMS = MENU_ITEMS
 
 export function getTrefoilPoint(t: number, scale = 1, target?: THREE.Vector3): THREE.Vector3 {
   // Classic (2, 3) Torus Knot in R^3
@@ -72,18 +68,7 @@ export const TrefoilMenu: React.FC<GeometryProps> = ({
 
   useFrame((_, delta) => {
     if (!groupRef.current) return
-
-    const targetScale = isExpanded ? 1 : 0.05
-    const targetOpacity = isExpanded ? 1 : 0
-    currentScale.current = THREE.MathUtils.lerp(currentScale.current, targetScale, Math.min(delta * 4.5, 1))
-    currentOpacity.current = THREE.MathUtils.lerp(currentOpacity.current, targetOpacity, Math.min(delta * 4.5, 1))
-
-    groupRef.current.scale.setScalar(currentScale.current)
-    groupRef.current.visible = currentScale.current > 0.06
-
-    // Sleep guard: bypass calculations when collapsed and fully shrunk
-    if (!isExpanded && currentScale.current <= 0.051) {
-      if (groupRef.current.visible) groupRef.current.visible = false
+    if (updateExpandCollapse(groupRef.current, currentScale, currentOpacity, isExpanded, delta)) {
       return
     }
 

@@ -55,6 +55,16 @@ describe('App Route Navigation', () => {
     expect(screen.getByRole('button', { name: 'Return home' })).toBeInTheDocument()
   })
 
+  it('renders internal ui-catalog page when navigating to /ui-catalog', () => {
+    render(<App />)
+    act(() => {
+      window.location.hash = '#/ui-catalog'
+      window.dispatchEvent(new HashChangeEvent('hashchange'))
+    })
+    expect(screen.getByTestId('ui-catalog-page')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Return home' })).toBeInTheDocument()
+  })
+
   it('navigates back to /?halo=true with expanded halo when clicking Return home', () => {
     render(<App />)
     act(() => {

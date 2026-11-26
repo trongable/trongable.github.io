@@ -41,11 +41,11 @@ npm run preview        # Preview production build
    - Never throttle FPS artificially; manage energy via dynamic DPR scaling and always clamp `dpr` to `[1, 2]`.
    - Preserve idle guards (`isSettled` in `ParticleField.tsx`, `0.0002` epsilon in `CameraController`).
 4. **Glitch VFX & Accessibility**:
-   - `GpuGlitchOverlay.tsx` geometry must remain strictly orthogonal (100% $90^\circ$ right angles; zero diagonals/trapezoids).
+   - `GpuGlitchOverlay.tsx` / `glitchGenerators.ts` geometry must remain strictly orthogonal (100% $90^\circ$ right angles; zero diagonals/trapezoids).
    - Glitch effects must remain disabled when `prefers-reduced-motion: reduce` is active.
    - Keep `Tuner.tsx` at `z-[60]` so it stays interactive during glitch bursts.
 5. **Gallery Color & Rendering**:
-   - `CerebroChamber.tsx` must keep `toneMapping: THREE.NoToneMapping`, and `CurvedMediaPanel.tsx` must keep its raw sRGB `ShaderMaterial` passthrough (`NoColorSpace` textures with `anisotropy` and `-0.75` LOD bias, `toneMapped={false}`) to prevent `GL_SRGB8_ALPHA8` linear-light mipmap contrast washout and match the 2D viewer 1:1.
+   - `CerebroChamber.tsx` must keep `toneMapping: THREE.NoToneMapping`, and `CurvedMediaPanel.tsx` / `panelShader.ts` must keep their raw sRGB `ShaderMaterial` passthrough (`NoColorSpace` textures with `anisotropy` and `-0.75` LOD bias, `toneMapped={false}`) to prevent `GL_SRGB8_ALPHA8` linear-light mipmap contrast washout and match the 2D viewer 1:1.
    - Gallery WebP thumbnails must be sRGB-converted via `npm run gallery:thumbnails` (`scripts/generate-gallery-thumbnails.py`) so Display P3 photos do not wash out in WebGL.
 6. **Mobile & Touch**: Keep `min-h-dvh`, `overscroll-behavior: none`, and `touch-action: none` on `SceneContainer` so touch drag raycasting works without scroll hijacking.
 7. **Code Conventions**:
@@ -65,7 +65,7 @@ npm run preview        # Preview production build
 
 ## Architecture & Subsystem Pointers (Read Before Editing)
 
-- **Core Layout**: `src/routes/Router.tsx` (pushState + hash fallback + URL query sync), `src/context/ThemeContext.tsx` (Volt Yellow `#e2f872` default, Purple `#d4adf0`, Teal `#83d4d4` via `--theme-primary` / `--theme-highlight`), `src/components/canvas/geometries/` (8 topologies dispatched by `GeometryDispatcher.tsx` via `geometryConfig.ts`), `src/components/gallery/` (`CerebroChamber.tsx`, `CurvedMediaPanel.tsx`, `GalleryTheaterOverlay.tsx`, `galleryData.ts`, `galleryTunerConfig.ts`), `src/pages/` (`/`, `/about`, `/more`, `/sonny`, `/gallery`, plus external `dchc` at `https://dc-hardcore.com`).
+- **Core Layout**: `src/routes/Router.tsx` (pushState + hash fallback + URL query sync), `src/context/ThemeContext.tsx` (Volt Yellow `#e2f872` default, Purple `#d4adf0`, Teal `#83d4d4` via `--theme-primary` / `--theme-highlight`), `src/components/canvas/geometries/` (8 topologies dispatched by `GeometryDispatcher.tsx` via `geometryConfig.ts`), `src/components/gallery/` (`CerebroChamber.tsx`, `CurvedMediaPanel.tsx`, `GalleryTheaterOverlay.tsx`, `galleryData.ts`, `galleryTunerConfig.ts`), `src/pages/` (`/`, `/about`, `/more`, `/sonny`, `/gallery`, `/ui-catalog` via `ui-catalog` terminal command, plus external `dchc` at `https://dc-hardcore.com`).
 
 | If you are modifying… | Read first |
 | :--- | :--- |
@@ -86,10 +86,10 @@ npm run preview        # Preview production build
 
 ### Adding a New 3D Menu Link & Route
 1. *(Optional)* Add image asset to `public/images/<name>.png` (or flipbook frames to `public/images/<name>/frame-01.png`…).
-2. Register the item (`label`, `path`, optional `imageUrl`) in `HaloMenuRing.tsx` and the other topology menus.
+2. Register the item (`label`, `path`, optional `imageUrl`) in `src/components/canvas/geometries/shared/menuItems.ts` (`MENU_ITEMS`) and add any topology-specific metadata (`AstrolabeMenu.tsx`, `LorenzMenu.tsx`, `OrigamiMenu.tsx`, `SlingshotMenu.tsx`, `TesseractMenu.tsx`).
 3. Add the path to `RoutePath` in `src/routes/Router.tsx`.
 4. Create `src/pages/<Name>Page.tsx` (using `useRouter()` and `← home` back button) and wire the `case` in `src/App.tsx`.
-5. Add an accessible `<button>` to `<nav className="sr-only">` in `src/pages/HomePage.tsx`.
+5. Add an accessible `<button>` to `<nav className="sr-only">` in `src/pages/home/HomeScreenReaderNav.tsx`.
 6. Add `src/pages/__tests__/<Name>Page.test.tsx` and update `Routing.test.tsx`.
 
 ### Adding a Glitch Memory Photo

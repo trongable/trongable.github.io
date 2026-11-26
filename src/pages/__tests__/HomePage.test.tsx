@@ -35,13 +35,6 @@ vi.mock('../../components/canvas/SceneContainer', () => ({
   ),
 }))
 
-// Mock HaloMenuRing inside SceneContainer
-vi.mock('../../components/canvas/HaloMenuRing', () => ({
-  HaloMenuRing: ({ isExpanded }: { isExpanded: boolean }) => (
-    <div data-testid="mock-halo-ring" data-expanded={isExpanded} />
-  ),
-}))
-
 // Mock GeometryDispatcher in jsdom test environment
 vi.mock('../../components/canvas/geometries/GeometryDispatcher', () => ({
   GeometryDispatcher: ({

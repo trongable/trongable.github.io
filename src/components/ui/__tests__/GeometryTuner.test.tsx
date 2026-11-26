@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
-import { GeometryTuner } from '../GeometryTuner'
+import { Tuner as GeometryTuner } from '@/components/ui/Tuner'
 import { DEFAULT_GEOMETRY_PARAMS } from '@/components/canvas/geometries/geometryConfig'
 
 describe('GeometryTuner Component', () => {

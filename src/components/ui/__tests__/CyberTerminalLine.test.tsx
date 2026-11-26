@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { CyberTerminalLine } from '../CyberTerminalLine'
 import { TunerProvider, useTuner } from '@/context/TunerContext'
+import { RouterProvider } from '@/routes/Router'
 
 function TunerStatusDisplay() {
   const { isTunerVisible } = useTuner()
@@ -105,5 +106,23 @@ describe('CyberTerminalLine Component', () => {
     fireEvent.click(terminal)
 
     expect(parentClick).not.toHaveBeenCalled()
+  })
+
+  it('navigates to /ui-catalog when typing "ui-catalog" and pressing Enter', () => {
+    window.location.hash = ''
+    render(
+      <RouterProvider>
+        <TunerProvider>
+          <CyberTerminalLine />
+        </TunerProvider>
+      </RouterProvider>
+    )
+
+    for (const char of 'ui-catalog') {
+      fireEvent.keyDown(window, { key: char })
+    }
+    fireEvent.keyDown(window, { key: 'Enter' })
+
+    expect(window.location.hash).toBe('#/ui-catalog')
   })
 })

@@ -4,6 +4,7 @@ import * as THREE from 'three'
 import { ThemeColor } from '@/context/ThemeContext'
 import { MenuItemBadge } from './MenuItemBadge'
 import { TesseractParams } from './geometryConfig'
+import { updateExpandCollapse } from './shared/topologyHelpers'
 
 export interface TesseractMenuProps {
   isExpanded: boolean
@@ -123,18 +124,7 @@ export const TesseractMenu: React.FC<TesseractMenuProps> = ({
 
   useFrame((_, delta) => {
     if (!groupRef.current) return
-
-    const targetScale = isExpanded ? 1 : 0.05
-    const targetOpacity = isExpanded ? 1 : 0
-    currentScale.current = THREE.MathUtils.lerp(currentScale.current, targetScale, Math.min(delta * 4.5, 1))
-    currentOpacity.current = THREE.MathUtils.lerp(currentOpacity.current, targetOpacity, Math.min(delta * 4.5, 1))
-
-    groupRef.current.scale.setScalar(currentScale.current)
-    groupRef.current.visible = currentScale.current > 0.06
-
-    // Sleep guard: bypass calculations when collapsed and fully shrunk
-    if (!isExpanded && currentScale.current <= 0.051) {
-      if (groupRef.current.visible) groupRef.current.visible = false
+    if (updateExpandCollapse(groupRef.current, currentScale, currentOpacity, isExpanded, delta)) {
       return
     }
 

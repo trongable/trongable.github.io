@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 
-export type RoutePath = '/' | '/about' | '/more' | '/sonny' | '/gallery'
+export type RoutePath = '/' | '/about' | '/more' | '/sonny' | '/gallery' | '/ui-catalog'
 
 export interface RouteLocation {
   currentPath: string

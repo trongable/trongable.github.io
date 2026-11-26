@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useTuner } from '@/context/TunerContext'
+import { useRouter } from '@/routes/Router'
 
 export const CyberTerminalLine: React.FC = () => {
   const { setIsTunerVisible, toggleTuner } = useTuner()
+  const { navigate } = useRouter()
   const [buffer, setBuffer] = useState('')
   const bufferRef = useRef('')
   const [statusMessage, setStatusMessage] = useState<string | null>(null)
@@ -32,6 +34,9 @@ export const CyberTerminalLine: React.FC = () => {
       } else if (cmd === 'tuner' || cmd === 'tuner toggle') {
         toggleTuner()
         setStatusMessage('[tuner toggled]')
+      } else if (cmd === 'ui-catalog') {
+        navigate('/ui-catalog')
+        setStatusMessage('[navigating to ui-catalog]')
       } else if (cmd.length > 0) {
         setStatusMessage(`[unknown command: "${rawCmd}"]`)
       }
@@ -44,7 +49,7 @@ export const CyberTerminalLine: React.FC = () => {
         setStatusMessage(null)
       }, 1600)
     },
-    [setIsTunerVisible, toggleTuner]
+    [setIsTunerVisible, toggleTuner, navigate]
   )
 
   useEffect(() => {

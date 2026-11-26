@@ -10,6 +10,7 @@ import { AboutPage } from './pages/AboutPage'
 import { MorePage } from './pages/MorePage'
 import { SonnyPage } from './pages/SonnyPage'
 import { GalleryPage } from './pages/GalleryPage'
+import { UiCatalogPage } from './pages/internal/UiCatalogPage'
 
 interface ErrorBoundaryState {
   hasError: boolean
@@ -75,6 +76,8 @@ const AppContent: React.FC = () => {
         return <SonnyPage />
       case '/gallery':
         return <GalleryPage />
+      case '/ui-catalog':
+        return <UiCatalogPage />
       case '/':
       default:
         return <HomePage />
