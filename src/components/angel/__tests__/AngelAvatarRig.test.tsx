@@ -1,9 +1,14 @@
-import { describe, it, expect, vi, afterEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, act } from '@testing-library/react'
+import { useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
 import { stepFrame } from '@/testUtils/r3fTestUtils'
 import { AngelAvatarRig } from '../AngelAvatarRig'
 import { DEFAULT_ANGEL_CONFIG } from '../angelCatalog'
+
+vi.mock('@react-three/drei', () => ({
+  useGLTF: vi.fn(),
+}))
 
 const mockDisposals: ReturnType<typeof vi.fn>[] = []
 
@@ -47,15 +52,12 @@ function makeMockScene(url: string) {
   return { scene: group }
 }
 
-vi.mock('@react-three/drei', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@react-three/drei')>()
-  return {
-    ...actual,
-    useGLTF: (url: string) => makeMockScene(url),
-  }
-})
-
 describe('AngelAvatarRig', () => {
+  beforeEach(() => {
+    vi.mocked(useGLTF).mockImplementation(((url: string) =>
+      makeMockScene(url)) as unknown as typeof useGLTF)
+  })
+
   afterEach(() => {
     mockDisposals.length = 0
     vi.restoreAllMocks()
