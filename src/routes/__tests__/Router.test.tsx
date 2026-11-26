@@ -72,14 +72,14 @@ describe('Router Module', () => {
         wrapper: RouterProvider,
       })
 
-      // When: navigating to /sonny
+      // When: navigating to /angel
       act(() => {
-        result.current.navigate('/sonny')
+        result.current.navigate('/angel')
       })
 
-      // Then: location updates to #/sonny
-      expect(window.location.hash).toBe('#/sonny')
-      expect(result.current.currentPath).toBe('/sonny')
+      // Then: location updates to #/angel
+      expect(window.location.hash).toBe('#/angel')
+      expect(result.current.currentPath).toBe('/angel')
     })
 
     it('opens external URL in new tab when navigate is called with https:// link', () => {

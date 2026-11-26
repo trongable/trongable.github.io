@@ -61,6 +61,8 @@ if (typeof HTMLCanvasElement !== 'undefined') {
         scale: () => {},
         rotate: () => {},
         arc: () => {},
+        ellipse: () => {},
+        quadraticCurveTo: () => {},
         fill: () => {},
         measureText: () => ({ width: 0 }),
         transform: () => {},
@@ -103,6 +105,14 @@ vi.mock('@react-three/fiber', () => ({
 vi.mock('@react-three/drei', () => ({
   Billboard: MockDreiBillboard,
   Text: MockDreiText,
+  OrbitControls: () => null,
+  useGLTF: () => ({
+    scene: {
+      clone: () => ({
+        traverse: () => {},
+      }),
+    },
+  }),
 }))
 
 // Suppress known React unknown-tag and prop warnings for Three.js / R3F intrinsic elements in jsdom

@@ -14,9 +14,9 @@ import {
   isValidGeometryMode,
 } from '@/components/canvas/geometries/geometryConfig'
 import {
-  useSonnyContainer,
-  isValidSonnyContainer,
-} from '@/context/SonnyContainerContext'
+  useAngelContainer,
+  isValidAngelContainer,
+} from '@/context/AngelContainerContext'
 import { useDebugDistance } from '@/context/DebugDistanceContext'
 import { useTuner } from '@/context/TunerContext'
 import { scrambleGlyphs } from '@/utils/glyphUtils'
@@ -44,8 +44,8 @@ export const HomePage: React.FC = () => {
     targetDpr,
     isSleeping,
   } = usePowerManager()
-  const { containerStyle: sonnyContainer, setContainerStyle: setSonnyContainer } =
-    useSonnyContainer()
+  const { containerStyle: angelContainer, setContainerStyle: setAngelContainer } =
+    useAngelContainer()
 
   const {
     showDistance,
@@ -230,11 +230,11 @@ export const HomePage: React.FC = () => {
   }, [isHaloParam])
 
   useEffect(() => {
-    if (queryParams.container && isValidSonnyContainer(queryParams.container)) {
-      setSonnyContainer(queryParams.container)
+    if (queryParams.container && isValidAngelContainer(queryParams.container)) {
+      setAngelContainer(queryParams.container)
       setIsExpanded(true)
     }
-  }, [queryParams.container, setSonnyContainer])
+  }, [queryParams.container, setAngelContainer])
 
   useEffect(() => {
     const isDistParam =
@@ -273,7 +273,7 @@ export const HomePage: React.FC = () => {
     setIsAnimationPaused,
     isAnimationPausedRef,
     handleModeChange,
-    setSonnyContainer,
+    setAngelContainer,
     toggleDistance,
     setShowDistance,
     setDistanceMetric,
@@ -389,8 +389,8 @@ export const HomePage: React.FC = () => {
           isBattery={isBattery}
           targetFps={targetFps}
           targetDpr={targetDpr}
-          sonnyContainer={sonnyContainer}
-          onSonnyContainerChange={setSonnyContainer}
+          angelContainer={angelContainer}
+          onAngelContainerChange={setAngelContainer}
           showDistance={showDistance}
           onToggleShowDistance={setShowDistance}
           distanceMetric={distanceMetric}

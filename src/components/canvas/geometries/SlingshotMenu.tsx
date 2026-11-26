@@ -20,7 +20,7 @@ const ITEMS = [
   { label: 'about', path: '/about', orbitTilt: [25, 0, 15], phaseOffset: 0 },
   { label: 'gallery', path: '/gallery', orbitTilt: [10, 25, -20], phaseOffset: (Math.PI * 2) / 5 },
   { label: 'more', path: '/more', orbitTilt: [-30, 40, -10], phaseOffset: (Math.PI * 4) / 5 },
-  { label: 'sonny', path: '/sonny', imageUrl: '/images/sonny.png', orbitTilt: [-15, -50, 35], phaseOffset: (Math.PI * 6) / 5 },
+  { label: 'angel', path: '/angel', imageUrl: '/images/angel.png', orbitTilt: [-15, -50, 35], phaseOffset: (Math.PI * 6) / 5 },
   { label: 'dchc', path: 'https://dc-hardcore.com', orbitTilt: [50, -45, 30], phaseOffset: (Math.PI * 8) / 5 },
 ]
 

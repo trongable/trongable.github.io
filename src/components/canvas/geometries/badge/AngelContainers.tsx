@@ -1,9 +1,9 @@
 import React from 'react'
 import * as THREE from 'three'
-import type { SonnyContainerStyle } from '@/context/SonnyContainerContext'
+import type { AngelContainerStyle } from '@/context/AngelContainerContext'
 
-export interface SonnyContainersProps {
-  containerStyle: SonnyContainerStyle
+export interface AngelContainersProps {
+  containerStyle: AngelContainerStyle
   primaryColorHex: string
   highlightColorHex: string
   bgMeshRef: React.RefObject<THREE.Mesh | null>
@@ -15,10 +15,10 @@ export interface SonnyContainersProps {
 }
 
 /**
- * Renders the selected 3D enclosure around the Sonny character sprite
+ * Renders the selected 3D enclosure around the Angel character
  * (`diorama`, `pedestal`, `capsule`, `wirebox`, `crystal`, or `none`).
  */
-export const SonnyContainers: React.FC<SonnyContainersProps> = ({
+export const AngelContainers: React.FC<AngelContainersProps> = ({
   containerStyle,
   primaryColorHex,
   highlightColorHex,

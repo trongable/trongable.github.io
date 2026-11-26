@@ -3,7 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import { UiCatalogPage } from '../UiCatalogPage'
 import { RouterProvider } from '@/routes/Router'
 import { ThemeProvider } from '@/context/ThemeContext'
-import { SonnyContainerProvider } from '@/context/SonnyContainerContext'
+import { AngelContainerProvider } from '@/context/AngelContainerContext'
 
 vi.mock('@/components/canvas/SceneContainer', () => ({
   SceneContainer: ({ children }: { children: React.ReactNode }) => (
@@ -26,9 +26,9 @@ describe('UiCatalogPage', () => {
     render(
       <RouterProvider>
         <ThemeProvider>
-          <SonnyContainerProvider>
+          <AngelContainerProvider>
             <UiCatalogPage />
-          </SonnyContainerProvider>
+          </AngelContainerProvider>
         </ThemeProvider>
       </RouterProvider>
     )
@@ -45,7 +45,7 @@ describe('UiCatalogPage', () => {
     expect(screen.getByText('5. 3D Scene & Topology Components')).toBeInTheDocument()
   })
 
-  it('switches topology mode and Sonny container in the 3D preview section', () => {
+  it('switches topology mode and Angel container in the 3D preview section', () => {
     renderPage()
 
     fireEvent.click(screen.getByRole('button', { name: 'trefoil' }))

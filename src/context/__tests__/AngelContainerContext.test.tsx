@@ -2,17 +2,17 @@ import React from 'react'
 import { describe, it, expect, beforeEach } from 'vitest'
 import { render, screen, act } from '@testing-library/react'
 import {
-  SonnyContainerProvider,
-  useSonnyContainer,
-  SONNY_CONTAINER_STYLES,
-  DEFAULT_SONNY_CONTAINER,
-  SONNY_CONTAINER_STORAGE_KEY,
-  isValidSonnyContainer,
-  SonnyContainerStyle,
-} from '../SonnyContainerContext'
+  AngelContainerProvider,
+  useAngelContainer,
+  ANGEL_CONTAINER_STYLES,
+  DEFAULT_ANGEL_CONTAINER,
+  ANGEL_CONTAINER_STORAGE_KEY,
+  isValidAngelContainer,
+  AngelContainerStyle,
+} from '../AngelContainerContext'
 
 const TestConsumer: React.FC = () => {
-  const { containerStyle, setContainerStyle, containerMeta } = useSonnyContainer()
+  const { containerStyle, setContainerStyle, containerMeta } = useAngelContainer()
   return (
     <div>
       <span data-testid="container-style">{containerStyle}</span>
@@ -31,7 +31,7 @@ const TestConsumer: React.FC = () => {
       </button>
       <button
         data-testid="set-invalid"
-        onClick={() => setContainerStyle('invalid' as SonnyContainerStyle)}
+        onClick={() => setContainerStyle('invalid' as AngelContainerStyle)}
       >
         Invalid
       </button>
@@ -39,46 +39,46 @@ const TestConsumer: React.FC = () => {
   )
 }
 
-describe('SonnyContainerContext', () => {
+describe('AngelContainerContext', () => {
   beforeEach(() => {
     window.localStorage.clear()
     window.history.replaceState({}, '', '/')
   })
 
   it('exports 6 distinct container styles with valid metadata', () => {
-    expect(SONNY_CONTAINER_STYLES).toHaveLength(6)
-    const ids = SONNY_CONTAINER_STYLES.map((s) => s.id)
+    expect(ANGEL_CONTAINER_STYLES).toHaveLength(6)
+    const ids = ANGEL_CONTAINER_STYLES.map((s) => s.id)
     expect(ids).toEqual(['diorama', 'pedestal', 'capsule', 'wirebox', 'crystal', 'none'])
   })
 
   it('validates container styles properly', () => {
-    expect(isValidSonnyContainer('diorama')).toBe(true)
-    expect(isValidSonnyContainer('pedestal')).toBe(true)
-    expect(isValidSonnyContainer('capsule')).toBe(true)
-    expect(isValidSonnyContainer('wirebox')).toBe(true)
-    expect(isValidSonnyContainer('crystal')).toBe(true)
-    expect(isValidSonnyContainer('none')).toBe(true)
-    expect(isValidSonnyContainer('box')).toBe(false)
-    expect(isValidSonnyContainer(123)).toBe(false)
-    expect(isValidSonnyContainer(null)).toBe(false)
+    expect(isValidAngelContainer('diorama')).toBe(true)
+    expect(isValidAngelContainer('pedestal')).toBe(true)
+    expect(isValidAngelContainer('capsule')).toBe(true)
+    expect(isValidAngelContainer('wirebox')).toBe(true)
+    expect(isValidAngelContainer('crystal')).toBe(true)
+    expect(isValidAngelContainer('none')).toBe(true)
+    expect(isValidAngelContainer('box')).toBe(false)
+    expect(isValidAngelContainer(123)).toBe(false)
+    expect(isValidAngelContainer(null)).toBe(false)
   })
 
   it('provides default container style (capsule)', () => {
     render(
-      <SonnyContainerProvider>
+      <AngelContainerProvider>
         <TestConsumer />
-      </SonnyContainerProvider>
+      </AngelContainerProvider>
     )
 
-    expect(screen.getByTestId('container-style')).toHaveTextContent(DEFAULT_SONNY_CONTAINER)
+    expect(screen.getByTestId('container-style')).toHaveTextContent(DEFAULT_ANGEL_CONTAINER)
     expect(screen.getByTestId('container-name')).toHaveTextContent('Stasis Cryo-Pod')
   })
 
   it('switches container style and persists to localStorage', () => {
     render(
-      <SonnyContainerProvider>
+      <AngelContainerProvider>
         <TestConsumer />
-      </SonnyContainerProvider>
+      </AngelContainerProvider>
     )
 
     act(() => {
@@ -87,7 +87,7 @@ describe('SonnyContainerContext', () => {
 
     expect(screen.getByTestId('container-style')).toHaveTextContent('crystal')
     expect(screen.getByTestId('container-name')).toHaveTextContent('Origami Crystal Cage')
-    expect(window.localStorage.getItem(SONNY_CONTAINER_STORAGE_KEY)).toBe('crystal')
+    expect(window.localStorage.getItem(ANGEL_CONTAINER_STORAGE_KEY)).toBe('crystal')
 
     act(() => {
       screen.getByTestId('set-capsule').click()
@@ -95,14 +95,14 @@ describe('SonnyContainerContext', () => {
 
     expect(screen.getByTestId('container-style')).toHaveTextContent('capsule')
     expect(screen.getByTestId('container-name')).toHaveTextContent('Stasis Cryo-Pod')
-    expect(window.localStorage.getItem(SONNY_CONTAINER_STORAGE_KEY)).toBe('capsule')
+    expect(window.localStorage.getItem(ANGEL_CONTAINER_STORAGE_KEY)).toBe('capsule')
   })
 
   it('ignores invalid container style updates', () => {
     render(
-      <SonnyContainerProvider>
+      <AngelContainerProvider>
         <TestConsumer />
-      </SonnyContainerProvider>
+      </AngelContainerProvider>
     )
 
     act(() => {
@@ -113,12 +113,12 @@ describe('SonnyContainerContext', () => {
   })
 
   it('initializes from localStorage if valid stored value exists', () => {
-    window.localStorage.setItem(SONNY_CONTAINER_STORAGE_KEY, 'wirebox')
+    window.localStorage.setItem(ANGEL_CONTAINER_STORAGE_KEY, 'wirebox')
 
     render(
-      <SonnyContainerProvider>
+      <AngelContainerProvider>
         <TestConsumer />
-      </SonnyContainerProvider>
+      </AngelContainerProvider>
     )
 
     expect(screen.getByTestId('container-style')).toHaveTextContent('wirebox')
@@ -129,9 +129,9 @@ describe('SonnyContainerContext', () => {
     window.history.replaceState({}, '', '/?container=pedestal')
 
     render(
-      <SonnyContainerProvider>
+      <AngelContainerProvider>
         <TestConsumer />
-      </SonnyContainerProvider>
+      </AngelContainerProvider>
     )
 
     expect(screen.getByTestId('container-style')).toHaveTextContent('pedestal')
@@ -140,9 +140,9 @@ describe('SonnyContainerContext', () => {
 
   it('initializes from initialStyle prop', () => {
     render(
-      <SonnyContainerProvider initialStyle="crystal">
+      <AngelContainerProvider initialStyle="crystal">
         <TestConsumer />
-      </SonnyContainerProvider>
+      </AngelContainerProvider>
     )
 
     expect(screen.getByTestId('container-style')).toHaveTextContent('crystal')
@@ -150,15 +150,15 @@ describe('SonnyContainerContext', () => {
 
   it('synchronizes container state when storage event occurs', () => {
     render(
-      <SonnyContainerProvider>
+      <AngelContainerProvider>
         <TestConsumer />
-      </SonnyContainerProvider>
+      </AngelContainerProvider>
     )
 
     act(() => {
       window.dispatchEvent(
         new StorageEvent('storage', {
-          key: SONNY_CONTAINER_STORAGE_KEY,
+          key: ANGEL_CONTAINER_STORAGE_KEY,
           newValue: 'none',
         })
       )

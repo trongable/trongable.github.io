@@ -13,7 +13,7 @@ export type { GlitchShape, LoadCurve }
 export const GLITCH_MEMORY_IMAGES = [
   '/images/glitch/memory-01.jpg',
   '/images/glitch/memory-02.jpg',
-  '/images/sonny.png',
+  '/images/angel.png',
 ]
 
 export interface GpuGlitchOverlayProps {

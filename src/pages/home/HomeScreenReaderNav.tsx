@@ -13,7 +13,7 @@ export const HomeScreenReaderNav: React.FC<HomeScreenReaderNavProps> = ({ onSele
       <button onClick={() => onSelect('/about')}>about</button>
       <button onClick={() => onSelect('/gallery')}>gallery</button>
       <button onClick={() => onSelect('/more')}>more</button>
-      <button onClick={() => onSelect('/sonny')}>sonny</button>
+      <button onClick={() => onSelect('/angel')}>angel</button>
       <a href="https://dc-hardcore.com" target="_blank" rel="noopener noreferrer">
         dchc
       </a>

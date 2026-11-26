@@ -4,7 +4,7 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import type { DistanceMetric, CoordFrame } from '@/context/DebugDistanceContext'
 import { scrambleGlyphs } from '@/utils/glyphUtils'
-import { INITIAL_WIDTHS, SONNY_FRAMES } from './badgeConstants'
+import { INITIAL_WIDTHS, ANGEL_FRAMES } from './badgeConstants'
 
 interface UseBadgeAnimationOptions {
   label: string
@@ -102,7 +102,7 @@ export function useBadgeAnimation({
   // Resolve frame sources for image-based badges
   const resolvedFrames = useMemo(() => {
     if (imageFrames && imageFrames.length > 0) return imageFrames
-    if (label === 'sonny' || (imageUrl && imageUrl.includes('sonny'))) return SONNY_FRAMES
+    if (label === 'angel' || (imageUrl && imageUrl.includes('angel'))) return ANGEL_FRAMES
     if (imageUrl) return [imageUrl]
     return []
   }, [imageFrames, imageUrl, label])

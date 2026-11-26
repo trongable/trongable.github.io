@@ -19,7 +19,7 @@ export const TESSERACT_ITEMS = [
   { label: 'about', path: '/about', vertexIdx: 13 },
   { label: 'gallery', path: '/gallery', vertexIdx: 15 },
   { label: 'more', path: '/more', vertexIdx: 7 },
-  { label: 'sonny', path: '/sonny', imageUrl: '/images/sonny.png', vertexIdx: 10 },
+  { label: 'angel', path: '/angel', imageUrl: '/images/angel.png', vertexIdx: 10 },
   { label: 'dchc', path: 'https://dc-hardcore.com', vertexIdx: 0 },
 ]
 

@@ -3,7 +3,7 @@ import { render, screen, fireEvent, act } from '@testing-library/react'
 import { HomePage } from '../HomePage'
 import { RouterProvider } from '../../routes/Router'
 import { ThemeProvider } from '../../context/ThemeContext'
-import { SonnyContainerProvider } from '../../context/SonnyContainerContext'
+import { AngelContainerProvider } from '../../context/AngelContainerContext'
 import { DebugDistanceProvider } from '../../context/DebugDistanceContext'
 
 // Mock 3D SceneContainer in jsdom test environment
@@ -397,64 +397,64 @@ describe('HomePage Component', () => {
     expect(haloRing).toHaveAttribute('data-expanded', 'false')
   })
 
-  it('supports setSonnyContainer and sonnyContainers console commands', () => {
+  it('supports setAngelContainer and angelContainers console commands', () => {
     window.location.hash = '#/'
     render(
       <RouterProvider>
         <ThemeProvider>
-          <SonnyContainerProvider>
+          <AngelContainerProvider>
             <HomePage />
-          </SonnyContainerProvider>
+          </AngelContainerProvider>
         </ThemeProvider>
       </RouterProvider>
     )
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const win = window as any
-    expect(typeof win.setSonnyContainer).toBe('function')
-    expect(typeof win.sonnyContainer).toBe('function')
-    expect(typeof win.sonnyContainers).toBe('function')
+    expect(typeof win.setAngelContainer).toBe('function')
+    expect(typeof win.angelContainer).toBe('function')
+    expect(typeof win.angelContainers).toBe('function')
 
     act(() => {
-      win.setSonnyContainer('capsule')
+      win.setAngelContainer('capsule')
     })
-    expect(window.localStorage.getItem('trongngyn_sonny_container')).toBe('capsule')
+    expect(window.localStorage.getItem('trongngyn_angel_container')).toBe('capsule')
 
     act(() => {
-      win.setSonnyContainer('crystal')
+      win.setAngelContainer('crystal')
     })
-    expect(window.localStorage.getItem('trongngyn_sonny_container')).toBe('crystal')
+    expect(window.localStorage.getItem('trongngyn_angel_container')).toBe('crystal')
 
     // Invalid style warning
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
     act(() => {
-      win.setSonnyContainer('invalid-style')
+      win.setAngelContainer('invalid-style')
     })
     expect(warnSpy).toHaveBeenCalled()
     warnSpy.mockRestore()
 
-    // sonnyContainers console table
+    // angelContainers console table
     const tableSpy = vi.spyOn(console, 'table').mockImplementation(() => {})
     act(() => {
-      win.sonnyContainers()
+      win.angelContainers()
     })
     expect(tableSpy).toHaveBeenCalled()
     tableSpy.mockRestore()
   })
 
-  it('initializes sonny container from query parameter', () => {
+  it('initializes angel container from query parameter', () => {
     window.location.hash = '#/?container=wirebox'
     render(
       <RouterProvider>
         <ThemeProvider>
-          <SonnyContainerProvider>
+          <AngelContainerProvider>
             <HomePage />
-          </SonnyContainerProvider>
+          </AngelContainerProvider>
         </ThemeProvider>
       </RouterProvider>
     )
 
-    expect(window.localStorage.getItem('trongngyn_sonny_container')).toBe('wirebox')
+    expect(window.localStorage.getItem('trongngyn_angel_container')).toBe('wirebox')
   })
 
   it('supports toggleDistance and showDistance console commands', () => {
@@ -462,11 +462,11 @@ describe('HomePage Component', () => {
     render(
       <RouterProvider>
         <ThemeProvider>
-          <SonnyContainerProvider>
+          <AngelContainerProvider>
             <DebugDistanceProvider>
               <HomePage />
             </DebugDistanceProvider>
-          </SonnyContainerProvider>
+          </AngelContainerProvider>
         </ThemeProvider>
       </RouterProvider>
     )
@@ -541,11 +541,11 @@ describe('HomePage Component', () => {
     render(
       <RouterProvider>
         <ThemeProvider>
-          <SonnyContainerProvider>
+          <AngelContainerProvider>
             <DebugDistanceProvider>
               <HomePage />
             </DebugDistanceProvider>
-          </SonnyContainerProvider>
+          </AngelContainerProvider>
         </ThemeProvider>
       </RouterProvider>
     )
@@ -586,7 +586,7 @@ describe('HomePage Component', () => {
     const srNav = screen.getByRole('navigation', { name: 'Direct Destinations' })
     const aboutBtn = screen.getByRole('button', { name: 'about' })
     const moreBtn = screen.getByRole('button', { name: 'more' })
-    const sonnyBtn = screen.getByRole('button', { name: 'sonny' })
+    const angelBtn = screen.getByRole('button', { name: 'angel' })
 
     expect(srNav).toBeInTheDocument()
 
@@ -596,8 +596,8 @@ describe('HomePage Component', () => {
     fireEvent.click(moreBtn)
     expect(window.location.hash).toBe('#/more')
 
-    fireEvent.click(sonnyBtn)
-    expect(window.location.hash).toBe('#/sonny')
+    fireEvent.click(angelBtn)
+    expect(window.location.hash).toBe('#/angel')
   })
 
   it('hides Tuner HUD and removes localStorage persistence when closing via onClose', () => {

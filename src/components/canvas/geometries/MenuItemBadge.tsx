@@ -1,12 +1,12 @@
 import React from 'react'
 import { Text, Billboard } from '@react-three/drei'
-import { useSonnyContainer, SonnyContainerStyle } from '@/context/SonnyContainerContext'
+import { useAngelContainer, AngelContainerStyle } from '@/context/AngelContainerContext'
 import { useDebugDistance, DistanceMetric, CoordFrame } from '@/context/DebugDistanceContext'
-import { SONNY_FRAMES, MenuItemBadgeProps } from './badge/badgeConstants'
-import { SonnyContainers } from './badge/SonnyContainers'
+import { ANGEL_FRAMES, MenuItemBadgeProps } from './badge/badgeConstants'
+import { AngelContainers } from './badge/AngelContainers'
 import { useBadgeAnimation } from './badge/useBadgeAnimation'
 
-export { SONNY_FRAMES }
+export { ANGEL_FRAMES }
 export type { MenuItemBadgeProps }
 
 export const MenuItemBadge: React.FC<MenuItemBadgeProps> = ({
@@ -31,8 +31,8 @@ export const MenuItemBadge: React.FC<MenuItemBadgeProps> = ({
   onSelect,
   onHover,
 }) => {
-  const { containerStyle: globalContainerStyle } = useSonnyContainer()
-  const effectiveContainer: SonnyContainerStyle = containerStyle ?? globalContainerStyle ?? 'capsule'
+  const { containerStyle: globalContainerStyle } = useAngelContainer()
+  const effectiveContainer: AngelContainerStyle = containerStyle ?? globalContainerStyle ?? 'capsule'
   const {
     showDistance: globalShowDistance,
     distanceMetric: globalMetric,
@@ -194,7 +194,7 @@ export const MenuItemBadge: React.FC<MenuItemBadgeProps> = ({
             onPointerOver={handleBadgePointerOver}
             onPointerOut={handleBadgePointerOut}
           >
-            <SonnyContainers
+            <AngelContainers
               containerStyle={effectiveContainer}
               primaryColorHex={primaryColorHex}
               highlightColorHex={highlightColorHex}

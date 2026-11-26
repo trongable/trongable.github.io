@@ -4,10 +4,10 @@ import type { PowerMode } from '@/hooks/usePowerManager'
 import type { CameraAngles } from '@/components/canvas/SceneContainer'
 import { GEOMETRY_MODES, isValidGeometryMode } from '@/components/canvas/geometries/geometryConfig'
 import {
-  SONNY_CONTAINER_STYLES,
-  SonnyContainerStyle,
-  isValidSonnyContainer,
-} from '@/context/SonnyContainerContext'
+  ANGEL_CONTAINER_STYLES,
+  AngelContainerStyle,
+  isValidAngelContainer,
+} from '@/context/AngelContainerContext'
 import type {
   DistanceMetric,
   CoordFrame,
@@ -20,7 +20,7 @@ interface UseHomeConsoleCommandsOptions {
   setIsAnimationPaused: React.Dispatch<React.SetStateAction<boolean>>
   isAnimationPausedRef: React.MutableRefObject<boolean>
   handleModeChange: (mode: (typeof GEOMETRY_MODES)[number]['id']) => void
-  setSonnyContainer: (style: SonnyContainerStyle) => void
+  setAngelContainer: (style: AngelContainerStyle) => void
   toggleDistance: () => void
   setShowDistance: (show: boolean) => void
   setDistanceMetric: (metric: DistanceMetric) => void
@@ -53,7 +53,7 @@ interface UseHomeConsoleCommandsOptions {
 
 /**
  * Registers secret developer console commands on `window` (`tuner()`, `pause()`,
- * `setGeo()`, `setSonnyContainer()`, etc.) and cleans them up on unmount.
+ * `setGeo()`, `setAngelContainer()`, etc.) and cleans them up on unmount.
  */
 export function useHomeConsoleCommands(opts: UseHomeConsoleCommandsOptions): void {
   const {
@@ -61,7 +61,7 @@ export function useHomeConsoleCommands(opts: UseHomeConsoleCommandsOptions): voi
     setIsAnimationPaused,
     isAnimationPausedRef,
     handleModeChange,
-    setSonnyContainer,
+    setAngelContainer,
     toggleDistance,
     setShowDistance,
     setDistanceMetric,
@@ -113,7 +113,7 @@ export function useHomeConsoleCommands(opts: UseHomeConsoleCommandsOptions): voi
             'color: #39ff14; font-weight: bold; background: #1c1b22; padding: 2px 6px; border-radius: 4px;'
           )
           console.log(
-            'Animation menu is now visible in the bottom-right HUD.\nCommands:\n  tuner()                  - Toggle visibility\n  pause(boolean?)          - Pause or resume animation engine\n  togglePause()            - Toggle animation pause\n  isPaused()               - Check animation pause status\n  setGeo(mode)             - Switch topology\n  geoList()                - List all topologies\n  setSonnyContainer(style) - Switch Sonny 3D container\n  sonnyContainers()        - List all Sonny containers\n  toggleDistance()         - Toggle distance debug labels\n  showDistance(boolean)    - Set distance debug labels\n  setCameraElevation(elev) - Switch camera elevation (\'elevated\', \'eye-level\')\n  toggleCameraElevation()  - Toggle camera elevation\n  hideTuner()              - Hide HUD tuner'
+            'Animation menu is now visible in the bottom-right HUD.\nCommands:\n  tuner()                  - Toggle visibility\n  pause(boolean?)          - Pause or resume animation engine\n  togglePause()            - Toggle animation pause\n  isPaused()               - Check animation pause status\n  setGeo(mode)             - Switch topology\n  geoList()                - List all topologies\n  setAngelContainer(style) - Switch Angel 3D container\n  angelContainers()        - List all Angel containers\n  toggleDistance()         - Toggle distance debug labels\n  showDistance(boolean)    - Set distance debug labels\n  setCameraElevation(elev) - Switch camera elevation (\'elevated\', \'eye-level\')\n  toggleCameraElevation()  - Toggle camera elevation\n  hideTuner()              - Hide HUD tuner'
           )
         } else {
           console.log(
@@ -158,21 +158,21 @@ export function useHomeConsoleCommands(opts: UseHomeConsoleCommandsOptions): voi
       console.table(GEOMETRY_MODES.map((m) => ({ id: m.id, name: m.name, description: m.description })))
     }
 
-    const setSonnyContainerCmd = (style: string) => {
-      if (isValidSonnyContainer(style)) {
-        setSonnyContainer(style)
-        console.log(`%c[SONNY CONTAINER] Switched to '${style}'`, 'color: #39ff14')
+    const setAngelContainerCmd = (style: string) => {
+      if (isValidAngelContainer(style)) {
+        setAngelContainer(style)
+        console.log(`%c[ANGEL CONTAINER] Switched to '${style}'`, 'color: #39ff14')
       } else {
         console.warn(
-          `[SONNY CONTAINER] Invalid container '${style}'. Available:`,
-          SONNY_CONTAINER_STYLES.map((s) => s.id)
+          `[ANGEL CONTAINER] Invalid container '${style}'. Available:`,
+          ANGEL_CONTAINER_STYLES.map((s) => s.id)
         )
       }
     }
 
-    const sonnyContainers = () => {
+    const angelContainers = () => {
       console.table(
-        SONNY_CONTAINER_STYLES.map((s) => ({
+        ANGEL_CONTAINER_STYLES.map((s) => ({
           id: s.id,
           name: s.name,
           description: s.description,
@@ -190,9 +190,9 @@ export function useHomeConsoleCommands(opts: UseHomeConsoleCommandsOptions): voi
     win.isPaused = () => isAnimationPausedRef.current
     win.setGeo = setGeo
     win.geoList = geoList
-    win.setSonnyContainer = setSonnyContainerCmd
-    win.sonnyContainer = setSonnyContainerCmd
-    win.sonnyContainers = sonnyContainers
+    win.setAngelContainer = setAngelContainerCmd
+    win.angelContainer = setAngelContainerCmd
+    win.angelContainers = angelContainers
     win.toggleDistance = toggleDistance
     win.showDistance = (show?: boolean) => setShowDistance(typeof show === 'boolean' ? show : true)
     win.setDistanceMetric = (metric: string) => {
@@ -281,9 +281,9 @@ export function useHomeConsoleCommands(opts: UseHomeConsoleCommandsOptions): voi
         'isPaused',
         'setGeo',
         'geoList',
-        'setSonnyContainer',
-        'sonnyContainer',
-        'sonnyContainers',
+        'setAngelContainer',
+        'angelContainer',
+        'angelContainers',
         'toggleDistance',
         'showDistance',
         'setDistanceMetric',
@@ -320,7 +320,7 @@ export function useHomeConsoleCommands(opts: UseHomeConsoleCommandsOptions): voi
     setIsAnimationPaused,
     isAnimationPausedRef,
     handleModeChange,
-    setSonnyContainer,
+    setAngelContainer,
     toggleDistance,
     setShowDistance,
     setDistanceMetric,

@@ -1,15 +1,15 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react'
 
-export type SonnyContainerStyle = 'diorama' | 'pedestal' | 'capsule' | 'wirebox' | 'crystal' | 'none'
+export type AngelContainerStyle = 'diorama' | 'pedestal' | 'capsule' | 'wirebox' | 'crystal' | 'none'
 
-export interface SonnyContainerMeta {
-  id: SonnyContainerStyle
+export interface AngelContainerMeta {
+  id: AngelContainerStyle
   name: string
   label: string
   description: string
 }
 
-export const SONNY_CONTAINER_STYLES: SonnyContainerMeta[] = [
+export const ANGEL_CONTAINER_STYLES: AngelContainerMeta[] = [
   {
     id: 'diorama',
     name: 'L-Shaped Diorama',
@@ -48,38 +48,38 @@ export const SONNY_CONTAINER_STYLES: SonnyContainerMeta[] = [
   },
 ]
 
-export const DEFAULT_SONNY_CONTAINER: SonnyContainerStyle = 'capsule'
-export const SONNY_CONTAINER_STORAGE_KEY = 'trongngyn_sonny_container'
+export const DEFAULT_ANGEL_CONTAINER: AngelContainerStyle = 'capsule'
+export const ANGEL_CONTAINER_STORAGE_KEY = 'trongngyn_angel_container'
 
-export function isValidSonnyContainer(val: unknown): val is SonnyContainerStyle {
+export function isValidAngelContainer(val: unknown): val is AngelContainerStyle {
   return (
     typeof val === 'string' &&
     ['diorama', 'pedestal', 'capsule', 'wirebox', 'crystal', 'none'].includes(val)
   )
 }
 
-export interface SonnyContainerContextValue {
-  containerStyle: SonnyContainerStyle
-  setContainerStyle: (style: SonnyContainerStyle) => void
-  containerMeta: SonnyContainerMeta
+export interface AngelContainerContextValue {
+  containerStyle: AngelContainerStyle
+  setContainerStyle: (style: AngelContainerStyle) => void
+  containerMeta: AngelContainerMeta
 }
 
 const defaultContainerMeta =
-  SONNY_CONTAINER_STYLES.find((meta) => meta.id === DEFAULT_SONNY_CONTAINER) ??
-  SONNY_CONTAINER_STYLES[0]
+  ANGEL_CONTAINER_STYLES.find((meta) => meta.id === DEFAULT_ANGEL_CONTAINER) ??
+  ANGEL_CONTAINER_STYLES[0]
 
-const SonnyContainerContext = createContext<SonnyContainerContextValue>({
-  containerStyle: DEFAULT_SONNY_CONTAINER,
+const AngelContainerContext = createContext<AngelContainerContextValue>({
+  containerStyle: DEFAULT_ANGEL_CONTAINER,
   setContainerStyle: () => {},
   containerMeta: defaultContainerMeta,
 })
 
-export const SonnyContainerProvider: React.FC<{
+export const AngelContainerProvider: React.FC<{
   children: React.ReactNode
-  initialStyle?: SonnyContainerStyle
+  initialStyle?: AngelContainerStyle
 }> = ({ children, initialStyle }) => {
-  const [containerStyle, setContainerStyleState] = useState<SonnyContainerStyle>(() => {
-    if (initialStyle && isValidSonnyContainer(initialStyle)) {
+  const [containerStyle, setContainerStyleState] = useState<AngelContainerStyle>(() => {
+    if (initialStyle && isValidAngelContainer(initialStyle)) {
       return initialStyle
     }
 
@@ -87,27 +87,27 @@ export const SonnyContainerProvider: React.FC<{
       try {
         const queryParams = new URLSearchParams(window.location.search)
         const paramVal = queryParams.get('container')
-        if (paramVal && isValidSonnyContainer(paramVal)) {
+        if (paramVal && isValidAngelContainer(paramVal)) {
           return paramVal
         }
 
-        const stored = window.localStorage.getItem(SONNY_CONTAINER_STORAGE_KEY)
-        if (stored && isValidSonnyContainer(stored)) {
+        const stored = window.localStorage.getItem(ANGEL_CONTAINER_STORAGE_KEY)
+        if (stored && isValidAngelContainer(stored)) {
           return stored
         }
       } catch {
         // Ignore localStorage / window access errors
       }
     }
-    return DEFAULT_SONNY_CONTAINER
+    return DEFAULT_ANGEL_CONTAINER
   })
 
-  const setContainerStyle = useCallback((style: SonnyContainerStyle) => {
-    if (!isValidSonnyContainer(style)) return
+  const setContainerStyle = useCallback((style: AngelContainerStyle) => {
+    if (!isValidAngelContainer(style)) return
     setContainerStyleState(style)
     if (typeof window !== 'undefined') {
       try {
-        window.localStorage.setItem(SONNY_CONTAINER_STORAGE_KEY, style)
+        window.localStorage.setItem(ANGEL_CONTAINER_STORAGE_KEY, style)
       } catch {
         // Ignore localStorage errors
       }
@@ -117,7 +117,7 @@ export const SonnyContainerProvider: React.FC<{
   // Keep in sync with storage across tabs/windows
   useEffect(() => {
     const handleStorage = (e: StorageEvent) => {
-      if (e.key === SONNY_CONTAINER_STORAGE_KEY && e.newValue && isValidSonnyContainer(e.newValue)) {
+      if (e.key === ANGEL_CONTAINER_STORAGE_KEY && e.newValue && isValidAngelContainer(e.newValue)) {
         setContainerStyleState(e.newValue)
       }
     }
@@ -127,7 +127,7 @@ export const SonnyContainerProvider: React.FC<{
 
   const containerMeta = useMemo(() => {
     return (
-      SONNY_CONTAINER_STYLES.find((meta) => meta.id === containerStyle) ??
+      ANGEL_CONTAINER_STYLES.find((meta) => meta.id === containerStyle) ??
       defaultContainerMeta
     )
   }, [containerStyle])
@@ -142,12 +142,12 @@ export const SonnyContainerProvider: React.FC<{
   )
 
   return (
-    <SonnyContainerContext.Provider value={value}>
+    <AngelContainerContext.Provider value={value}>
       {children}
-    </SonnyContainerContext.Provider>
+    </AngelContainerContext.Provider>
   )
 }
 
-export const useSonnyContainer = (): SonnyContainerContextValue => {
-  return useContext(SonnyContainerContext)
+export const useAngelContainer = (): AngelContainerContextValue => {
+  return useContext(AngelContainerContext)
 }

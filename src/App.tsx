@@ -1,16 +1,19 @@
-import React from 'react'
+import React, { Suspense, lazy } from 'react'
 import { RouterProvider, useRouter } from './routes/Router'
 import { ThemeProvider } from './context/ThemeContext'
 import { TunerProvider } from './context/TunerContext'
-import { SonnyContainerProvider } from './context/SonnyContainerContext'
+import { AngelContainerProvider } from './context/AngelContainerContext'
 import { DebugDistanceProvider } from './context/DebugDistanceContext'
 import { CyberTerminalLine } from './components/ui/CyberTerminalLine'
 import { HomePage } from './pages/HomePage'
 import { AboutPage } from './pages/AboutPage'
 import { MorePage } from './pages/MorePage'
-import { SonnyPage } from './pages/SonnyPage'
 import { GalleryPage } from './pages/GalleryPage'
 import { UiCatalogPage } from './pages/internal/UiCatalogPage'
+
+const AngelPage = lazy(() =>
+  import('./pages/AngelPage').then((mod) => ({ default: mod.AngelPage }))
+)
 
 interface ErrorBoundaryState {
   hasError: boolean
@@ -72,8 +75,18 @@ const AppContent: React.FC = () => {
         return <AboutPage />
       case '/more':
         return <MorePage />
-      case '/sonny':
-        return <SonnyPage />
+      case '/angel':
+        return (
+          <Suspense
+            fallback={
+              <main className="w-full h-full min-h-dvh bg-[#1c1b22] flex items-center justify-center font-mono text-xs tracking-widest lowercase text-[var(--theme-primary)]">
+                loading angel builder...
+              </main>
+            }
+          >
+            <AngelPage />
+          </Suspense>
+        )
       case '/gallery':
         return <GalleryPage />
       case '/ui-catalog':
@@ -97,12 +110,12 @@ export const App: React.FC = () => {
       <RouterProvider>
         <ThemeProvider>
           <TunerProvider>
-            <SonnyContainerProvider>
+            <AngelContainerProvider>
               <DebugDistanceProvider>
                 <AppContent />
                 <CyberTerminalLine />
               </DebugDistanceProvider>
-            </SonnyContainerProvider>
+            </AngelContainerProvider>
           </TunerProvider>
         </ThemeProvider>
       </RouterProvider>

@@ -4,9 +4,9 @@ import {
   DEFAULT_GEOMETRY_PARAMS,
 } from '@/components/canvas/geometries/geometryConfig'
 import {
-  SonnyContainerStyle,
-  useSonnyContainer,
-} from '@/context/SonnyContainerContext'
+  AngelContainerStyle,
+  useAngelContainer,
+} from '@/context/AngelContainerContext'
 import {
   useDebugDistance,
   DistanceMetric,
@@ -51,8 +51,8 @@ export const Tuner: React.FC<TunerProps> = ({
   isBattery = false,
   targetFps = 60,
   targetDpr = [1, 2],
-  sonnyContainer,
-  onSonnyContainerChange,
+  angelContainer,
+  onAngelContainerChange,
   showDistance,
   onToggleShowDistance,
   distanceMetric,
@@ -75,11 +75,11 @@ export const Tuner: React.FC<TunerProps> = ({
 }) => {
   const isEffectiveGallery = Boolean(isGalleryPage)
   const { containerStyle: ctxContainerStyle, setContainerStyle: ctxSetContainerStyle } =
-    useSonnyContainer()
-  const activeSonnyContainer = sonnyContainer ?? ctxContainerStyle
-  const handleContainerChange = (style: SonnyContainerStyle) => {
-    if (onSonnyContainerChange) {
-      onSonnyContainerChange(style)
+    useAngelContainer()
+  const activeAngelContainer = angelContainer ?? ctxContainerStyle
+  const handleContainerChange = (style: AngelContainerStyle) => {
+    if (onAngelContainerChange) {
+      onAngelContainerChange(style)
     } else {
       ctxSetContainerStyle(style)
     }
@@ -276,7 +276,7 @@ export const Tuner: React.FC<TunerProps> = ({
               params={params}
               onParamChange={onParamChange}
               onResetParams={onResetParams}
-              activeSonnyContainer={activeSonnyContainer}
+              activeAngelContainer={activeAngelContainer}
               onContainerChange={handleContainerChange}
               activeShowDistance={activeShowDistance}
               onToggleDistance={handleToggleDistance}

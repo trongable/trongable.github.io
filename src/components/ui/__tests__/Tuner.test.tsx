@@ -432,8 +432,8 @@ describe('Tuner Component', () => {
     expect(onParamChange).toHaveBeenCalledWith('origami', 'wireStyle', 'solid')
   })
 
-  it('renders all 6 Sonny 3D container buttons and triggers onSonnyContainerChange', () => {
-    const onSonnyContainerChange = vi.fn()
+  it('renders all 6 Angel 3D container buttons and triggers onAngelContainerChange', () => {
+    const onAngelContainerChange = vi.fn()
     render(
       <Tuner
         activeMode="halo"
@@ -441,20 +441,20 @@ describe('Tuner Component', () => {
         params={DEFAULT_GEOMETRY_PARAMS}
         onParamChange={vi.fn()}
         onResetParams={vi.fn()}
-        sonnyContainer="diorama"
-        onSonnyContainerChange={onSonnyContainerChange}
+        angelContainer="diorama"
+        onAngelContainerChange={onAngelContainerChange}
       />
     )
 
     fireEvent.click(screen.getByLabelText('Toggle parameter drawer'))
-    expect(screen.getByText('Sonny 3D Container')).toBeInTheDocument()
+    expect(screen.getByText('Angel 3D Container')).toBeInTheDocument()
 
-    const dioramaBtn = screen.getByTestId('sonny-container-diorama')
-    const pedestalBtn = screen.getByTestId('sonny-container-pedestal')
-    const capsuleBtn = screen.getByTestId('sonny-container-capsule')
-    const wireboxBtn = screen.getByTestId('sonny-container-wirebox')
-    const crystalBtn = screen.getByTestId('sonny-container-crystal')
-    const noneBtn = screen.getByTestId('sonny-container-none')
+    const dioramaBtn = screen.getByTestId('angel-container-diorama')
+    const pedestalBtn = screen.getByTestId('angel-container-pedestal')
+    const capsuleBtn = screen.getByTestId('angel-container-capsule')
+    const wireboxBtn = screen.getByTestId('angel-container-wirebox')
+    const crystalBtn = screen.getByTestId('angel-container-crystal')
+    const noneBtn = screen.getByTestId('angel-container-none')
 
     expect(dioramaBtn).toBeInTheDocument()
     expect(pedestalBtn).toBeInTheDocument()
@@ -464,10 +464,10 @@ describe('Tuner Component', () => {
     expect(noneBtn).toBeInTheDocument()
 
     fireEvent.click(capsuleBtn)
-    expect(onSonnyContainerChange).toHaveBeenCalledWith('capsule')
+    expect(onAngelContainerChange).toHaveBeenCalledWith('capsule')
 
     fireEvent.click(crystalBtn)
-    expect(onSonnyContainerChange).toHaveBeenCalledWith('crystal')
+    expect(onAngelContainerChange).toHaveBeenCalledWith('crystal')
   })
 
   it('renders Distance Labels (HUD) toggle and calls onToggleShowDistance', () => {

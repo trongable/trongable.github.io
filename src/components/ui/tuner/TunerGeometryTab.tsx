@@ -7,7 +7,7 @@ import {
   LINE_GUIDE_STYLES,
   FACET_GUIDE_STYLES,
 } from '@/components/canvas/geometries/geometryConfig'
-import { SonnyContainerStyle, SONNY_CONTAINER_STYLES } from '@/context/SonnyContainerContext'
+import { AngelContainerStyle, ANGEL_CONTAINER_STYLES } from '@/context/AngelContainerContext'
 import type { DistanceMetric, CoordFrame, CameraElevation } from '@/context/DebugDistanceContext'
 import type { CameraAngles } from '@/components/canvas/SceneContainer'
 import { TunerSlider, TunerCheckbox, TunerStyleGrid } from './TunerControls'
@@ -23,8 +23,8 @@ interface TunerGeometryTabProps {
     val: AllGeometryParams[M][K]
   ) => void
   onResetParams: (mode: GeometryMode) => void
-  activeSonnyContainer: SonnyContainerStyle
-  onContainerChange: (style: SonnyContainerStyle) => void
+  activeAngelContainer: AngelContainerStyle
+  onContainerChange: (style: AngelContainerStyle) => void
   activeShowDistance: boolean
   onToggleDistance: () => void
   activeDistanceMetric: DistanceMetric
@@ -42,7 +42,7 @@ interface TunerGeometryTabProps {
 }
 
 /**
- * 3D Topologies tab: mode selector, Sonny container style, telemetry HUD toggles,
+ * 3D Topologies tab: mode selector, Angel container style, telemetry HUD toggles,
  * 360° camera orbit inspection, and per-topology parameter controls.
  */
 export const TunerGeometryTab: React.FC<TunerGeometryTabProps> = ({
@@ -52,7 +52,7 @@ export const TunerGeometryTab: React.FC<TunerGeometryTabProps> = ({
   params,
   onParamChange,
   onResetParams,
-  activeSonnyContainer,
+  activeAngelContainer,
   onContainerChange,
   activeShowDistance,
   onToggleDistance,
@@ -93,22 +93,22 @@ export const TunerGeometryTab: React.FC<TunerGeometryTabProps> = ({
         })}
       </div>
 
-      {/* Sonny 3D Container Selector */}
+      {/* Angel 3D Container Selector */}
       <div className="mb-3 pt-2.5 border-t border-[var(--theme-primary)]/20">
         <div className="flex items-center justify-between mb-1.5">
           <span className="font-semibold uppercase tracking-wider text-[10px]">
-            Sonny 3D Container
+            Angel 3D Container
           </span>
-          <span className="text-[10px] opacity-70 lowercase">{activeSonnyContainer}</span>
+          <span className="text-[10px] opacity-70 lowercase">{activeAngelContainer}</span>
         </div>
         <div className="grid grid-cols-3 gap-1 text-[10px]">
-          {SONNY_CONTAINER_STYLES.map((style) => {
-            const isContainerActive = activeSonnyContainer === style.id
+          {ANGEL_CONTAINER_STYLES.map((style) => {
+            const isContainerActive = activeAngelContainer === style.id
             return (
               <button
                 key={style.id}
                 type="button"
-                data-testid={`sonny-container-${style.id}`}
+                data-testid={`angel-container-${style.id}`}
                 onClick={() => onContainerChange(style.id)}
                 className={`px-1 py-1 rounded transition-colors cursor-pointer text-center truncate capitalize ${
                   isContainerActive

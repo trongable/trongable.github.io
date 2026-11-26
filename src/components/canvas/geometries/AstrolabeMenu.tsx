@@ -29,7 +29,7 @@ export const ASTROLABE_ITEMS: AstrolabeItem[] = [
   { label: 'about', path: '/about', baseRadius: 2.1, speedMult: 0.85, tilt: [35, 10, 20] },
   { label: 'gallery', path: '/gallery', baseRadius: 1.85, speedMult: 1.05, tilt: [20, -25, 15] },
   { label: 'more', path: '/more', baseRadius: 1.65, speedMult: -1.15, tilt: [-40, 45, -15] },
-  { label: 'sonny', path: '/sonny', imageUrl: '/images/sonny.png', baseRadius: 1.30, speedMult: -1.35, tilt: [15, -60, -25] },
+  { label: 'angel', path: '/angel', imageUrl: '/images/angel.png', baseRadius: 1.30, speedMult: -1.35, tilt: [15, -60, -25] },
   { label: 'dchc', path: 'https://dc-hardcore.com', baseRadius: 0.95, speedMult: 1.65, tilt: [65, -30, 40] },
 ]
 

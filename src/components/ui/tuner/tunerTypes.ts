@@ -1,6 +1,6 @@
 import type { GeometryMode, AllGeometryParams } from '@/components/canvas/geometries/geometryConfig'
 import type { ThemeId } from '@/context/ThemeContext'
-import type { SonnyContainerStyle } from '@/context/SonnyContainerContext'
+import type { AngelContainerStyle } from '@/context/AngelContainerContext'
 import type { DistanceMetric, CoordFrame, CameraElevation } from '@/context/DebugDistanceContext'
 import type { CameraAngles } from '@/components/canvas/SceneContainer'
 import type { PowerMode } from '@/hooks/usePowerManager'
@@ -38,9 +38,9 @@ export interface TunerProps {
   isBattery?: boolean
   targetFps?: number | null
   targetDpr?: number | [number, number]
-  // Sonny 3D Container Controls
-  sonnyContainer?: SonnyContainerStyle
-  onSonnyContainerChange?: (style: SonnyContainerStyle) => void
+  // Angel 3D Container Controls
+  angelContainer?: AngelContainerStyle
+  onAngelContainerChange?: (style: AngelContainerStyle) => void
   // Debug & Telemetry Controls
   showDistance?: boolean
   onToggleShowDistance?: (show: boolean) => void

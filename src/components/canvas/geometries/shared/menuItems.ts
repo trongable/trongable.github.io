@@ -12,6 +12,6 @@ export const MENU_ITEMS: MenuItemConfig[] = [
   { label: 'about', path: '/about' },
   { label: 'gallery', path: '/gallery' },
   { label: 'more', path: '/more' },
-  { label: 'sonny', path: '/sonny', imageUrl: '/images/sonny.png' },
+  { label: 'angel', path: '/angel', imageUrl: '/images/angel.png' },
   { label: 'dchc', path: 'https://dc-hardcore.com', isExternal: true },
 ]

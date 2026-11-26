@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { useRouter } from '@/routes/Router'
 import { useTheme, THEME_IDS, THEME_PALETTES } from '@/context/ThemeContext'
-import { useSonnyContainer, SONNY_CONTAINER_STYLES } from '@/context/SonnyContainerContext'
+import { useAngelContainer, ANGEL_CONTAINER_STYLES } from '@/context/AngelContainerContext'
 import { usePowerManager } from '@/hooks/usePowerManager'
 import { SceneContainer } from '@/components/canvas/SceneContainer'
 import { GeometryDispatcher } from '@/components/canvas/geometries/GeometryDispatcher'
@@ -24,7 +24,7 @@ import { getContrastRatio, isValidHex, normalizeHex } from '@/utils/colorUtils'
 export const UiCatalogPage: React.FC = () => {
   const { navigate } = useRouter()
   const { currentTheme, setTheme, setCustomColor } = useTheme()
-  const { containerStyle, setContainerStyle } = useSonnyContainer()
+  const { containerStyle, setContainerStyle } = useAngelContainer()
   const { targetFps, targetDpr, isSleeping } = usePowerManager()
 
   const [hexInput, setHexInput] = useState(currentTheme.primary)
@@ -247,7 +247,7 @@ export const UiCatalogPage: React.FC = () => {
             </div>
 
             <div className="flex flex-wrap gap-1.5 font-mono text-[11px]">
-              {SONNY_CONTAINER_STYLES.map((s) => (
+              {ANGEL_CONTAINER_STYLES.map((s) => (
                 <button
                   key={s.id}
                   type="button"

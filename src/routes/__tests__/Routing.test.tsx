@@ -35,13 +35,13 @@ describe('App Route Navigation', () => {
     expect(screen.getByRole('button', { name: 'Return home' })).toBeInTheDocument()
   })
 
-  it('renders empty sonny page when navigating to /sonny', () => {
+  it('renders Angel Builder page when navigating to /angel', async () => {
     render(<App />)
     act(() => {
-      window.location.hash = '#/sonny'
+      window.location.hash = '#/angel'
       window.dispatchEvent(new HashChangeEvent('hashchange'))
     })
-    expect(screen.getByRole('heading', { level: 1, name: 'sonny' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 1, name: 'angel builder' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Return home' })).toBeInTheDocument()
   })
 

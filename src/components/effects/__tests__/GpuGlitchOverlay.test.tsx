@@ -52,7 +52,7 @@ describe('GpuGlitchOverlay Component', () => {
   })
 
   it('renders a distorted memory image by default (100% chance)', () => {
-    expect(GLITCH_MEMORY_IMAGES).toContain('/images/sonny.png')
+    expect(GLITCH_MEMORY_IMAGES).toContain('/images/angel.png')
     render(<GpuGlitchOverlay isActive={true} />)
     const imgContainer = screen.getByTestId('glitch-memory-image')
     expect(imgContainer).toBeInTheDocument()

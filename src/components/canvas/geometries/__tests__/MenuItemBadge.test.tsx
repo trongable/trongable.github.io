@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { render, screen, act } from '@testing-library/react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
-import { MenuItemBadge, SONNY_FRAMES } from '../MenuItemBadge'
+import { MenuItemBadge, ANGEL_FRAMES } from '../MenuItemBadge'
 
 // Mock R3F and Drei primitives for unit testing in jsdom
 vi.mock('@react-three/fiber', () => ({
@@ -102,9 +102,9 @@ describe('MenuItemBadge Component', () => {
 
     render(
       <MenuItemBadge
-        label="sonny"
-        path="/sonny"
-        imageUrl="/images/sonny.png"
+        label="angel"
+        path="/angel"
+        imageUrl="/images/angel.png"
         isHovered={false}
         isExpanded={true}
         onSelect={handleSelect}
@@ -118,11 +118,11 @@ describe('MenuItemBadge Component', () => {
     expect(screen.getByTestId('billboard')).toBeInTheDocument()
   })
 
-  it('exports SONNY_FRAMES array with 15 frames starting with the original front-facing frame', () => {
-    expect(SONNY_FRAMES).toHaveLength(15)
-    expect(SONNY_FRAMES[0]).toBe('/images/sonny.png')
-    expect(SONNY_FRAMES[1]).toBe('/images/sonny/frame-01.png')
-    expect(SONNY_FRAMES[14]).toBe('/images/sonny/frame-14.png')
+  it('exports ANGEL_FRAMES array with 15 frames starting with the original front-facing frame', () => {
+    expect(ANGEL_FRAMES).toHaveLength(15)
+    expect(ANGEL_FRAMES[0]).toBe('/images/angel.png')
+    expect(ANGEL_FRAMES[1]).toBe('/images/angel/frame-01.png')
+    expect(ANGEL_FRAMES[14]).toBe('/images/angel/frame-14.png')
   })
 
   it('renders custom imageFrames badge and billboard structure', () => {
@@ -158,9 +158,9 @@ describe('MenuItemBadge Component', () => {
 
     const { container } = render(
       <MenuItemBadge
-        label="sonny"
-        path="/sonny"
-        imageUrl="/images/sonny.png"
+        label="angel"
+        path="/angel"
+        imageUrl="/images/angel.png"
         containerStyle={containerStyle}
         isHovered={false}
         isExpanded={true}
@@ -193,9 +193,9 @@ describe('MenuItemBadge Component', () => {
     // 2. Image badge with showDistance={true}
     render(
       <MenuItemBadge
-        label="sonny"
-        path="/sonny"
-        imageUrl="/images/sonny.png"
+        label="angel"
+        path="/angel"
+        imageUrl="/images/angel.png"
         isHovered={false}
         isExpanded={true}
         showDistance={true}
@@ -280,8 +280,8 @@ describe('MenuItemBadge Component', () => {
   it('renders vertex tag prefix when vertexTag prop is provided', () => {
     render(
       <MenuItemBadge
-        label="sonny"
-        path="/sonny"
+        label="angel"
+        path="/angel"
         vertexTag="V10 outer"
         isHovered={false}
         isExpanded={true}
@@ -401,25 +401,25 @@ describe('MenuItemBadge Component', () => {
     expect(screen.getByText('work')).toBeInTheDocument()
   })
 
-  it('applies 75% scale factor to Sonny image badge', () => {
-    // Sonny badge (image-based) scale factor verification:
+  it('applies 75% scale factor to Angel image badge', () => {
+    // Angel badge (image-based) scale factor verification:
     // depthScale = scale * imageBaseScale * hoverScaleMult
     // imageBaseScale = 0.75 for image badges, 1.0 for standard text badges
     const scale = 1.0
     const textImageBaseScale = 1.0
-    const sonnyImageBaseScale = 0.75
+    const angelImageBaseScale = 0.75
     const hoverScaleMult = 1.0
 
     const textScale = scale * textImageBaseScale * hoverScaleMult
-    const sonnyScale = scale * sonnyImageBaseScale * hoverScaleMult
+    const angelScale = scale * angelImageBaseScale * hoverScaleMult
 
     expect(textScale).toBe(1.0)
-    expect(sonnyScale).toBe(0.75)
-    expect(sonnyScale / textScale).toBe(0.75)
+    expect(angelScale).toBe(0.75)
+    expect(angelScale / textScale).toBe(0.75)
   })
 
   it('selects a random resting frame from flipbook when hover effect completes', () => {
-    const frameCount = SONNY_FRAMES.length
+    const frameCount = ANGEL_FRAMES.length
     expect(frameCount).toBe(15)
 
     // Verify random selection algorithm

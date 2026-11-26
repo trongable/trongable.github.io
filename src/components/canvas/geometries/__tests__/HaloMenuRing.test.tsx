@@ -14,11 +14,11 @@ describe('HaloMenuRing Component', () => {
   })
 
   describe('Initialization & Mounting', () => {
-    it('should define 5 orbital navigation items including sonny and videos', () => {
+    it('should define 5 orbital navigation items including angel and videos', () => {
       // Given & Then: items schema holds 5 destinations
       expect(HALO_ITEMS).toHaveLength(5)
-      expect(HALO_ITEMS.map((i) => i.label)).toEqual(['about', 'gallery', 'more', 'sonny', 'dchc'])
-      expect(HALO_ITEMS.find((i) => i.label === 'sonny')?.imageUrl).toBe('/images/sonny.png')
+      expect(HALO_ITEMS.map((i) => i.label)).toEqual(['about', 'gallery', 'more', 'angel', 'dchc'])
+      expect(HALO_ITEMS.find((i) => i.label === 'angel')?.imageUrl).toBe('/images/angel.png')
     })
 
     it('should define non-zero constant angular velocity', () => {
