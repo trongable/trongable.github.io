@@ -1,13 +1,13 @@
 import type React from 'react'
 import { useEffect } from 'react'
 import type { PowerMode } from '@/hooks/usePowerManager'
-import type { CameraAngles } from '@/components/canvas/SceneContainer'
-import { GEOMETRY_MODES, isValidGeometryMode } from '@/components/canvas/geometries/geometryConfig'
+import type { CameraAngles } from '@/features/scene/SceneContainer'
+import { GEOMETRY_MODES, isValidGeometryMode } from '@/features/topologies/config/geometryConfig'
 import {
   ANGEL_CONTAINER_STYLES,
   AngelContainerStyle,
   isValidAngelContainer,
-} from '@/context/AngelContainerContext'
+} from '@/features/angel/AngelContainerContext'
 import type {
   DistanceMetric,
   CoordFrame,
@@ -49,6 +49,24 @@ interface UseHomeConsoleCommandsOptions {
   targetFps: number | null
   targetDpr: number | [number, number]
   isSleeping: boolean
+}
+
+const LOG_STYLE_OK = 'color: #39ff14'
+const LOG_STYLE_BADGE =
+  'color: #39ff14; font-weight: bold; background: #1c1b22; padding: 2px 6px; border-radius: 4px;'
+
+function persistTunerVisibility(next: boolean): void {
+  try {
+    if (next) {
+      window.localStorage.setItem('trongngyn_tuner_visible', 'true')
+      window.localStorage.removeItem('antigravity_tuner_visible')
+    } else {
+      window.localStorage.removeItem('trongngyn_tuner_visible')
+      window.localStorage.removeItem('antigravity_tuner_visible')
+    }
+  } catch {
+    // ignore localStorage errors
+  }
 }
 
 /**
@@ -96,22 +114,9 @@ export function useHomeConsoleCommands(opts: UseHomeConsoleCommandsOptions): voi
     const toggleTuner = (show?: boolean) => {
       setIsTunerVisible((prev) => {
         const next = typeof show === 'boolean' ? show : !prev
-        try {
-          if (next) {
-            window.localStorage.setItem('trongngyn_tuner_visible', 'true')
-            window.localStorage.removeItem('antigravity_tuner_visible')
-          } else {
-            window.localStorage.removeItem('trongngyn_tuner_visible')
-            window.localStorage.removeItem('antigravity_tuner_visible')
-          }
-        } catch {
-          // ignore localStorage errors
-        }
+        persistTunerVisibility(next)
         if (next) {
-          console.log(
-            '%c[TOPOLOGY TUNER] UNLOCKED',
-            'color: #39ff14; font-weight: bold; background: #1c1b22; padding: 2px 6px; border-radius: 4px;'
-          )
+          console.log('%c[TOPOLOGY TUNER] UNLOCKED', LOG_STYLE_BADGE)
           console.log(
             'Animation menu is now visible in the bottom-right HUD.\nCommands:\n  tuner()                  - Toggle visibility\n  pause(boolean?)          - Pause or resume animation engine\n  togglePause()            - Toggle animation pause\n  isPaused()               - Check animation pause status\n  setGeo(mode)             - Switch topology\n  geoList()                - List all topologies\n  setAngelContainer(style) - Switch Angel 3D container\n  angelContainers()        - List all Angel containers\n  toggleDistance()         - Toggle distance debug labels\n  showDistance(boolean)    - Set distance debug labels\n  setCameraElevation(elev) - Switch camera elevation (\'elevated\', \'eye-level\')\n  toggleCameraElevation()  - Toggle camera elevation\n  hideTuner()              - Hide HUD tuner'
           )
@@ -128,19 +133,13 @@ export function useHomeConsoleCommands(opts: UseHomeConsoleCommandsOptions): voi
     const pauseCmd = (paused?: boolean) => {
       const next = typeof paused === 'boolean' ? paused : true
       setIsAnimationPaused(next)
-      console.log(
-        `%c[ANIMATION ENGINE] ${next ? 'PAUSED' : 'RESUMED'}`,
-        'color: #39ff14; font-weight: bold; background: #1c1b22; padding: 2px 6px; border-radius: 4px;'
-      )
+      console.log(`%c[ANIMATION ENGINE] ${next ? 'PAUSED' : 'RESUMED'}`, LOG_STYLE_BADGE)
     }
 
     const togglePauseCmd = () => {
       setIsAnimationPaused((prev) => {
         const next = !prev
-        console.log(
-          `%c[ANIMATION ENGINE] ${next ? 'PAUSED' : 'RESUMED'}`,
-          'color: #39ff14; font-weight: bold; background: #1c1b22; padding: 2px 6px; border-radius: 4px;'
-        )
+        console.log(`%c[ANIMATION ENGINE] ${next ? 'PAUSED' : 'RESUMED'}`, LOG_STYLE_BADGE)
         return next
       })
     }
@@ -148,20 +147,16 @@ export function useHomeConsoleCommands(opts: UseHomeConsoleCommandsOptions): voi
     const setGeo = (mode: string) => {
       if (isValidGeometryMode(mode)) {
         handleModeChange(mode)
-        console.log(`%c[TOPOLOGY] Switched to '${mode}'`, 'color: #39ff14')
+        console.log(`%c[TOPOLOGY] Switched to '${mode}'`, LOG_STYLE_OK)
       } else {
         console.warn(`[TOPOLOGY] Invalid mode '${mode}'. Available:`, GEOMETRY_MODES.map((m) => m.id))
       }
     }
 
-    const geoList = () => {
-      console.table(GEOMETRY_MODES.map((m) => ({ id: m.id, name: m.name, description: m.description })))
-    }
-
     const setAngelContainerCmd = (style: string) => {
       if (isValidAngelContainer(style)) {
         setAngelContainer(style)
-        console.log(`%c[ANGEL CONTAINER] Switched to '${style}'`, 'color: #39ff14')
+        console.log(`%c[ANGEL CONTAINER] Switched to '${style}'`, LOG_STYLE_OK)
       } else {
         console.warn(
           `[ANGEL CONTAINER] Invalid container '${style}'. Available:`,
@@ -170,150 +165,113 @@ export function useHomeConsoleCommands(opts: UseHomeConsoleCommandsOptions): voi
       }
     }
 
-    const angelContainers = () => {
-      console.table(
-        ANGEL_CONTAINER_STYLES.map((s) => ({
-          id: s.id,
-          name: s.name,
-          description: s.description,
-        }))
-      )
+    const commands: Record<string, unknown> = {
+      tuner: toggleTuner,
+      showTuner: () => toggleTuner(true),
+      hideTuner: () => toggleTuner(false),
+      pause: pauseCmd,
+      togglePause: togglePauseCmd,
+      isPaused: () => isAnimationPausedRef.current,
+      setGeo,
+      geoList: () =>
+        console.table(GEOMETRY_MODES.map((m) => ({ id: m.id, name: m.name, description: m.description }))),
+      setAngelContainer: setAngelContainerCmd,
+      angelContainer: setAngelContainerCmd,
+      angelContainers: () =>
+        console.table(
+          ANGEL_CONTAINER_STYLES.map((s) => ({
+            id: s.id,
+            name: s.name,
+            description: s.description,
+          }))
+        ),
+      toggleDistance,
+      showDistance: (show?: boolean) => setShowDistance(typeof show === 'boolean' ? show : true),
+      setDistanceMetric: (metric: string) => {
+        if (metric === 'depth' || metric === 'euclid') {
+          setDistanceMetric(metric)
+          console.log(`%c[DISTANCE METRIC] Switched to '${metric}'`, LOG_STYLE_OK)
+        } else {
+          console.warn(`[DISTANCE METRIC] Invalid metric '${metric}'. Available: 'euclid', 'depth'`)
+        }
+      },
+      toggleDistanceMetric: () => {
+        toggleDistanceMetric()
+        console.log('%c[DISTANCE METRIC] Toggled metric', LOG_STYLE_OK)
+      },
+      distanceMetric: () => distanceMetric,
+      toggleCoords: toggleCoordinates,
+      showCoords: (show?: boolean) => setShowCoordinates(typeof show === 'boolean' ? show : true),
+      setCoordFrame: (frame: string) => {
+        if (frame === 'view' || frame === 'world') {
+          setCoordFrame(frame)
+          console.log(`%c[COORD FRAME] Switched to '${frame}'`, LOG_STYLE_OK)
+        } else {
+          console.warn(`[COORD FRAME] Invalid frame '${frame}'. Available: 'view', 'world'`)
+        }
+      },
+      toggleCoordFrame: () => {
+        toggleCoordFrame()
+        console.log('%c[COORD FRAME] Toggled coordinate frame', LOG_STYLE_OK)
+      },
+      coordFrame: () => coordFrame,
+      setCameraElevation: (elev: string) => {
+        if (elev === 'eye-level' || elev === 'elevated') {
+          setCameraElevation(elev)
+          console.log(`%c[CAMERA ELEVATION] Switched to '${elev}'`, LOG_STYLE_OK)
+        } else {
+          console.warn(`[CAMERA ELEVATION] Invalid elevation '${elev}'. Available: 'elevated', 'eye-level'`)
+        }
+      },
+      toggleCameraElevation: () => {
+        toggleCameraElevation()
+        console.log('%c[CAMERA ELEVATION] Toggled camera elevation', LOG_STYLE_OK)
+      },
+      cameraElevation: () => cameraElevation,
+      setInspectYaw: (deg: number) => {
+        setCameraAngles((prev) => ({ ...prev, yaw: deg }))
+        console.log(`%c[CAMERA INSPECT] Yaw set to ${deg}°`, LOG_STYLE_OK)
+      },
+      setInspectPitch: (deg: number) => {
+        setCameraAngles((prev) => ({ ...prev, pitch: deg }))
+        console.log(`%c[CAMERA INSPECT] Pitch set to ${deg}°`, LOG_STYLE_OK)
+      },
+      setInspectDistance: (dist: number) => {
+        setCameraAngles((prev) => ({ ...prev, distance: dist }))
+        console.log(`%c[CAMERA INSPECT] Distance set to ${dist}`, LOG_STYLE_OK)
+      },
+      resetCameraAngles: () => {
+        handleResetCameraAngles()
+        console.log('%c[CAMERA INSPECT] Reset camera angles to default view', LOG_STYLE_OK)
+      },
+      cameraAngles: () => cameraAnglesRef.current,
+      glitch: handleTriggerGlitchBurst,
+      triggerGlitch: handleTriggerGlitchBurst,
+      setTheme,
+      setColor: (hex: string, highlight?: string) => setCustomColor(hex, highlight),
+      setCustomColor: (hex: string, highlight?: string) => setCustomColor(hex, highlight),
+      lockTheme: (locked?: boolean) =>
+        setIsThemeLocked((prev: boolean) => (typeof locked === 'boolean' ? locked : !prev)),
+      setImageRate: (r: number) => setGlitchImageRate(Math.max(0, Math.min(1, r))),
+      setGlitchInterval: (s: number) => setGlitchInterval(Math.max(1, s)),
+      setPowerMode: (mode: PowerMode) => setPowerMode(mode),
+      powerMode: () => {
+        console.log(
+          `%c[POWER MODE] ${powerMode.toUpperCase()}`,
+          'color: #39ff14; font-weight: bold;',
+          `\nSource: ${isBattery ? 'Battery' : 'AC Power'}\nTarget FPS: ${targetFps ? `${targetFps} FPS` : 'Uncapped (Native)'}\nTarget DPR: ${Array.isArray(targetDpr) ? targetDpr.join('-') : targetDpr}\nStatus: ${isSleeping ? 'Sleeping (Background Tab)' : 'Active'}`
+        )
+      },
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const win = window as any
-    win.tuner = toggleTuner
-    win.showTuner = () => toggleTuner(true)
-    win.hideTuner = () => toggleTuner(false)
-    win.pause = pauseCmd
-    win.togglePause = togglePauseCmd
-    win.isPaused = () => isAnimationPausedRef.current
-    win.setGeo = setGeo
-    win.geoList = geoList
-    win.setAngelContainer = setAngelContainerCmd
-    win.angelContainer = setAngelContainerCmd
-    win.angelContainers = angelContainers
-    win.toggleDistance = toggleDistance
-    win.showDistance = (show?: boolean) => setShowDistance(typeof show === 'boolean' ? show : true)
-    win.setDistanceMetric = (metric: string) => {
-      if (metric === 'depth' || metric === 'euclid') {
-        setDistanceMetric(metric)
-        console.log(`%c[DISTANCE METRIC] Switched to '${metric}'`, 'color: #39ff14')
-      } else {
-        console.warn(`[DISTANCE METRIC] Invalid metric '${metric}'. Available: 'euclid', 'depth'`)
-      }
-    }
-    win.toggleDistanceMetric = () => {
-      toggleDistanceMetric()
-      console.log('%c[DISTANCE METRIC] Toggled metric', 'color: #39ff14')
-    }
-    win.distanceMetric = () => distanceMetric
-    win.toggleCoords = toggleCoordinates
-    win.showCoords = (show?: boolean) => setShowCoordinates(typeof show === 'boolean' ? show : true)
-    win.setCoordFrame = (frame: string) => {
-      if (frame === 'view' || frame === 'world') {
-        setCoordFrame(frame)
-        console.log(`%c[COORD FRAME] Switched to '${frame}'`, 'color: #39ff14')
-      } else {
-        console.warn(`[COORD FRAME] Invalid frame '${frame}'. Available: 'view', 'world'`)
-      }
-    }
-    win.toggleCoordFrame = () => {
-      toggleCoordFrame()
-      console.log('%c[COORD FRAME] Toggled coordinate frame', 'color: #39ff14')
-    }
-    win.coordFrame = () => coordFrame
-    win.setCameraElevation = (elev: string) => {
-      if (elev === 'eye-level' || elev === 'elevated') {
-        setCameraElevation(elev)
-        console.log(`%c[CAMERA ELEVATION] Switched to '${elev}'`, 'color: #39ff14')
-      } else {
-        console.warn(`[CAMERA ELEVATION] Invalid elevation '${elev}'. Available: 'elevated', 'eye-level'`)
-      }
-    }
-    win.toggleCameraElevation = () => {
-      toggleCameraElevation()
-      console.log('%c[CAMERA ELEVATION] Toggled camera elevation', 'color: #39ff14')
-    }
-    win.cameraElevation = () => cameraElevation
-    win.setInspectYaw = (deg: number) => {
-      setCameraAngles((prev) => ({ ...prev, yaw: deg }))
-      console.log(`%c[CAMERA INSPECT] Yaw set to ${deg}°`, 'color: #39ff14')
-    }
-    win.setInspectPitch = (deg: number) => {
-      setCameraAngles((prev) => ({ ...prev, pitch: deg }))
-      console.log(`%c[CAMERA INSPECT] Pitch set to ${deg}°`, 'color: #39ff14')
-    }
-    win.setInspectDistance = (dist: number) => {
-      setCameraAngles((prev) => ({ ...prev, distance: dist }))
-      console.log(`%c[CAMERA INSPECT] Distance set to ${dist}`, 'color: #39ff14')
-    }
-    win.resetCameraAngles = () => {
-      handleResetCameraAngles()
-      console.log('%c[CAMERA INSPECT] Reset camera angles to default view', 'color: #39ff14')
-    }
-    win.cameraAngles = () => cameraAnglesRef.current
-    win.glitch = handleTriggerGlitchBurst
-    win.triggerGlitch = handleTriggerGlitchBurst
-    win.setTheme = setTheme
-    win.setColor = (hex: string, highlight?: string) => setCustomColor(hex, highlight)
-    win.setCustomColor = (hex: string, highlight?: string) => setCustomColor(hex, highlight)
-    win.lockTheme = (locked?: boolean) =>
-      setIsThemeLocked((prev: boolean) => (typeof locked === 'boolean' ? locked : !prev))
-    win.setImageRate = (r: number) => setGlitchImageRate(Math.max(0, Math.min(1, r)))
-    win.setGlitchInterval = (s: number) => setGlitchInterval(Math.max(1, s))
-    win.setPowerMode = (mode: PowerMode) => setPowerMode(mode)
-    win.powerMode = () => {
-      console.log(
-        `%c[POWER MODE] ${powerMode.toUpperCase()}`,
-        'color: #39ff14; font-weight: bold;',
-        `\nSource: ${isBattery ? 'Battery' : 'AC Power'}\nTarget FPS: ${targetFps ? `${targetFps} FPS` : 'Uncapped (Native)'}\nTarget DPR: ${Array.isArray(targetDpr) ? targetDpr.join('-') : targetDpr}\nStatus: ${isSleeping ? 'Sleeping (Background Tab)' : 'Active'}`
-      )
-    }
+    Object.assign(win, commands)
 
     return () => {
-      const keys = [
-        'tuner',
-        'showTuner',
-        'hideTuner',
-        'pause',
-        'togglePause',
-        'isPaused',
-        'setGeo',
-        'geoList',
-        'setAngelContainer',
-        'angelContainer',
-        'angelContainers',
-        'toggleDistance',
-        'showDistance',
-        'setDistanceMetric',
-        'toggleDistanceMetric',
-        'distanceMetric',
-        'toggleCoords',
-        'showCoords',
-        'setCoordFrame',
-        'toggleCoordFrame',
-        'coordFrame',
-        'setCameraElevation',
-        'toggleCameraElevation',
-        'cameraElevation',
-        'setInspectYaw',
-        'setInspectPitch',
-        'setInspectDistance',
-        'resetCameraAngles',
-        'cameraAngles',
-        'glitch',
-        'triggerGlitch',
-        'setTheme',
-        'setColor',
-        'setCustomColor',
-        'lockTheme',
-        'setImageRate',
-        'setGlitchInterval',
-        'setPowerMode',
-        'powerMode',
-      ]
-      keys.forEach((k) => delete win[k])
+      Object.keys(commands).forEach((key) => {
+        delete win[key]
+      })
     }
   }, [
     setIsTunerVisible,

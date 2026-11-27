@@ -1,18 +1,18 @@
 import React, { Suspense, lazy } from 'react'
-import { RouterProvider, useRouter } from './routes/Router'
-import { ThemeProvider } from './context/ThemeContext'
-import { TunerProvider } from './context/TunerContext'
-import { AngelContainerProvider } from './context/AngelContainerContext'
-import { DebugDistanceProvider } from './context/DebugDistanceContext'
-import { CyberTerminalLine } from './components/ui/CyberTerminalLine'
-import { HomePage } from './pages/HomePage'
-import { AboutPage } from './pages/AboutPage'
-import { MorePage } from './pages/MorePage'
-import { GalleryPage } from './pages/GalleryPage'
-import { UiCatalogPage } from './pages/internal/UiCatalogPage'
+import { RouterProvider, useRouter } from '@/routes/Router'
+import { ThemeProvider } from '@/context/ThemeContext'
+import { TunerProvider } from '@/features/tuner/TunerContext'
+import { AngelContainerProvider } from '@/features/angel/AngelContainerContext'
+import { DebugDistanceProvider } from '@/context/DebugDistanceContext'
+import { CyberTerminalLine } from '@/features/tuner/CyberTerminalLine'
+import { HomePage } from '@/pages/HomePage'
+import { AboutPage } from '@/pages/AboutPage'
+import { MorePage } from '@/pages/MorePage'
+import { GalleryPage } from '@/pages/GalleryPage'
+import { UiCatalogPage } from '@/pages/internal/UiCatalogPage'
 
 const AngelPage = lazy(() =>
-  import('./pages/AngelPage').then((mod) => ({ default: mod.AngelPage }))
+  import('@/pages/AngelPage').then((mod) => ({ default: mod.AngelPage }))
 )
 
 interface ErrorBoundaryState {

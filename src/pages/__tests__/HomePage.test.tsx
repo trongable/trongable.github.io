@@ -1,13 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, act } from '@testing-library/react'
-import { HomePage } from '../HomePage'
-import { RouterProvider } from '../../routes/Router'
-import { ThemeProvider } from '../../context/ThemeContext'
-import { AngelContainerProvider } from '../../context/AngelContainerContext'
-import { DebugDistanceProvider } from '../../context/DebugDistanceContext'
+import { HomePage } from '@/pages/HomePage'
+import { RouterProvider } from '@/routes/Router'
+import { ThemeProvider } from '@/context/ThemeContext'
+import { AngelContainerProvider } from '@/features/angel/AngelContainerContext'
+import { DebugDistanceProvider } from '@/context/DebugDistanceContext'
 
 // Mock 3D SceneContainer in jsdom test environment
-vi.mock('../../components/canvas/SceneContainer', () => ({
+vi.mock('@/features/scene/SceneContainer', () => ({
   SceneContainer: ({
     children,
     onBackgroundClick,
@@ -36,7 +36,7 @@ vi.mock('../../components/canvas/SceneContainer', () => ({
 }))
 
 // Mock GeometryDispatcher in jsdom test environment
-vi.mock('../../components/canvas/geometries/GeometryDispatcher', () => ({
+vi.mock('@/features/topologies/GeometryDispatcher', () => ({
   GeometryDispatcher: ({
     mode,
     isExpanded,

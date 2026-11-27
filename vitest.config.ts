@@ -19,9 +19,9 @@ export default defineConfig({
     },
     environmentMatchGlobs: [
       ['src/utils/**', 'node'],
-      ['src/components/canvas/geometries/__tests__/geometryMath.test.ts', 'node'],
-      ['src/components/canvas/geometries/__tests__/geometryConfig.test.ts', 'node'],
-      ['src/components/videos/__tests__/videoData.test.ts', 'node'],
+      ['src/features/topologies/__tests__/geometryMath.test.ts', 'node'],
+      ['src/features/topologies/__tests__/geometryConfig.test.ts', 'node'],
+      ['src/features/gallery/__tests__/galleryData.test.ts', 'node'],
     ],
     pool: 'vmThreads',
     globals: true,
@@ -37,9 +37,7 @@ export default defineConfig({
         'src/vite-env.d.ts',
         '**/*.test.{ts,tsx}',
         'src/testUtils/**',
-        'src/components/canvas/geometries/index.ts',
-        'src/components/canvas/HaloMenuRing.tsx',
-        'src/components/ui/GeometryTuner.tsx',
+        'src/features/topologies/index.ts',
       ],
       thresholds: {
         lines: 85,

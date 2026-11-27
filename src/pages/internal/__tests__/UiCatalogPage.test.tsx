@@ -3,15 +3,15 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import { UiCatalogPage } from '../UiCatalogPage'
 import { RouterProvider } from '@/routes/Router'
 import { ThemeProvider } from '@/context/ThemeContext'
-import { AngelContainerProvider } from '@/context/AngelContainerContext'
+import { AngelContainerProvider } from '@/features/angel/AngelContainerContext'
 
-vi.mock('@/components/canvas/SceneContainer', () => ({
+vi.mock('@/features/scene/SceneContainer', () => ({
   SceneContainer: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="mock-catalog-scene">{children}</div>
   ),
 }))
 
-vi.mock('@/components/canvas/geometries/GeometryDispatcher', () => ({
+vi.mock('@/features/topologies/GeometryDispatcher', () => ({
   GeometryDispatcher: ({ mode }: { mode: string }) => (
     <div data-testid="mock-catalog-dispatcher" data-mode={mode} />
   ),

@@ -1,19 +1,19 @@
 import React, { useState } from 'react'
 import { useRouter } from '@/routes/Router'
 import { useTheme, THEME_IDS, THEME_PALETTES } from '@/context/ThemeContext'
-import { useAngelContainer, ANGEL_CONTAINER_STYLES } from '@/context/AngelContainerContext'
+import { useAngelContainer, ANGEL_CONTAINER_STYLES } from '@/features/angel/AngelContainerContext'
 import { usePowerManager } from '@/hooks/usePowerManager'
-import { SceneContainer } from '@/components/canvas/SceneContainer'
-import { GeometryDispatcher } from '@/components/canvas/geometries/GeometryDispatcher'
+import { SceneContainer } from '@/features/scene/SceneContainer'
+import { GeometryDispatcher } from '@/features/topologies/GeometryDispatcher'
 import {
   GeometryMode,
   GEOMETRY_MODES,
   DEFAULT_GEOMETRY_PARAMS,
   GUIDE_STYLES,
   GuideStyle,
-} from '@/components/canvas/geometries/geometryConfig'
-import { GpuGlitchOverlay } from '@/components/effects/GpuGlitchOverlay'
-import { TunerSlider, TunerCheckbox, TunerStyleGrid } from '@/components/ui/tuner/TunerControls'
+} from '@/features/topologies/config/geometryConfig'
+import { GpuGlitchOverlay } from '@/features/effects/GpuGlitchOverlay'
+import { TunerSlider, TunerCheckbox, TunerStyleGrid } from '@/features/tuner/TunerControls'
 import { scrambleGlyphs } from '@/utils/glyphUtils'
 import { getContrastRatio, isValidHex, normalizeHex } from '@/utils/colorUtils'
 

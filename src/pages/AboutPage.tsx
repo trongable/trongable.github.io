@@ -1,5 +1,5 @@
 import React from 'react'
-import { useRouter } from '../routes/Router'
+import { useRouter } from '@/routes/Router'
 
 export const AboutPage: React.FC = () => {
   const { navigate } = useRouter()

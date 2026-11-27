@@ -61,25 +61,28 @@ export function usePowerManager(): PowerState {
   useEffect(() => {
     if (typeof navigator === 'undefined' || !('getBattery' in navigator)) return
 
+    let isMounted = true
     let batteryInstance: BatteryManagerLike | null = null
+    const updateCharging = () => {
+      if (batteryInstance && isMounted) {
+        setIsBattery(!batteryInstance.charging)
+      }
+    }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ;(navigator as any).getBattery().then((battery: BatteryManagerLike) => {
+      if (!isMounted) return
       batteryInstance = battery
       setIsBattery(!battery.charging)
-
-      const updateCharging = () => {
-        setIsBattery(!battery.charging)
-      }
-
       battery.addEventListener('chargingchange', updateCharging)
     }).catch(() => {
       // getBattery rejected or blocked by permissions policy
     })
 
     return () => {
+      isMounted = false
       if (batteryInstance) {
-        // cleanup if needed
+        batteryInstance.removeEventListener('chargingchange', updateCharging)
       }
     }
   }, [])

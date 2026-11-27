@@ -1,9 +1,9 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, act, fireEvent } from '@testing-library/react'
-import { App } from '../../App'
+import { App } from '@/App'
 
 // Mock 3D Canvas elements
-vi.mock('../../components/canvas/SceneContainer', () => ({
+vi.mock('@/features/scene/SceneContainer', () => ({
   SceneContainer: () => <div data-testid="mock-scene-container" />,
 }))
 

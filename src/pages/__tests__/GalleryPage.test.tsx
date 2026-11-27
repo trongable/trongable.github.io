@@ -3,7 +3,7 @@ import { render, screen, fireEvent, act } from '@testing-library/react'
 import { GalleryPage } from '../GalleryPage'
 import { RouterProvider } from '@/routes/Router'
 import { ThemeProvider } from '@/context/ThemeContext'
-import { GALLERY_DATA, VIDEOS_DATA } from '@/components/gallery/galleryData'
+import { GALLERY_DATA, VIDEOS_DATA } from '@/features/gallery/data/galleryData'
 import { clearFrameRegistry } from '@/testUtils/r3fTestUtils'
 
 describe('GalleryPage Component', () => {

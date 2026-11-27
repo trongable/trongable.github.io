@@ -1,15 +1,15 @@
 import React from 'react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
-import App from '../App'
+import App from '@/App'
 
-vi.mock('../components/canvas/SceneContainer', () => ({
+vi.mock('@/features/scene/SceneContainer', () => ({
   SceneContainer: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="mock-scene-container">{children}</div>
   ),
 }))
 
-vi.mock('../components/canvas/geometries/GeometryDispatcher', () => ({
+vi.mock('@/features/topologies/GeometryDispatcher', () => ({
   GeometryDispatcher: () => <div data-testid="mock-geometry-dispatcher" />,
 }))
 

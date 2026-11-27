@@ -2,28 +2,45 @@ import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from '@/routes/Router'
 import { useTheme } from '@/context/ThemeContext'
 import { usePowerManager } from '@/hooks/usePowerManager'
-import { SceneContainer, CameraAngles } from '@/components/canvas/SceneContainer'
-import { GpuGlitchOverlay } from '@/components/effects/GpuGlitchOverlay'
-import { GeometryDispatcher } from '@/components/canvas/geometries/GeometryDispatcher'
-import { Tuner } from '@/components/ui/Tuner'
+import { SceneContainer } from '@/features/scene/SceneContainer'
+import { GpuGlitchOverlay } from '@/features/effects/GpuGlitchOverlay'
+import { GeometryDispatcher } from '@/features/topologies/GeometryDispatcher'
+import { Tuner } from '@/features/tuner/Tuner'
 import {
   GeometryMode,
   AllGeometryParams,
   DEFAULT_GEOMETRY_PARAMS,
   DEFAULT_GEOMETRY_MODE,
   isValidGeometryMode,
-} from '@/components/canvas/geometries/geometryConfig'
-import {
-  useAngelContainer,
-  isValidAngelContainer,
-} from '@/context/AngelContainerContext'
+} from '@/features/topologies/config/geometryConfig'
+import { useAngelContainer } from '@/features/angel/AngelContainerContext'
 import { useDebugDistance } from '@/context/DebugDistanceContext'
-import { useTuner } from '@/context/TunerContext'
+import { useTuner } from '@/features/tuner/TunerContext'
 import { scrambleGlyphs } from '@/utils/glyphUtils'
-import { useGlitchScheduler } from './home/useGlitchScheduler'
-import { useHomeConsoleCommands } from './home/useHomeConsoleCommands'
-import { HomeHudOverlay } from './home/HomeHudOverlay'
-import { HomeScreenReaderNav } from './home/HomeScreenReaderNav'
+import { useGlitchScheduler } from '@/pages/home/useGlitchScheduler'
+import { useHomeCamera } from '@/pages/home/useHomeCamera'
+import { useHomeQuerySync } from '@/pages/home/useHomeQuerySync'
+import { useHomeConsoleCommands } from '@/pages/home/useHomeConsoleCommands'
+import { HomeHudOverlay } from '@/pages/home/HomeHudOverlay'
+import { HomeScreenReaderNav } from '@/pages/home/HomeScreenReaderNav'
+
+function readInitialStandaloneTuner(queryParams: Record<string, string>): boolean {
+  try {
+    if (
+      queryParams.tuner === 'true' ||
+      queryParams.tuner === '1' ||
+      queryParams.debug === 'true'
+    ) {
+      return true
+    }
+    return (
+      window.localStorage.getItem('trongngyn_tuner_visible') === 'true' ||
+      window.localStorage.getItem('antigravity_tuner_visible') === 'true'
+    )
+  } catch {
+    return false
+  }
+}
 
 export const HomePage: React.FC = () => {
   const { navigate, queryParams } = useRouter()
@@ -70,26 +87,14 @@ export const HomePage: React.FC = () => {
     : DEFAULT_GEOMETRY_MODE
 
   const tunerContext = useTuner()
-  const [localTunerVisible, setLocalTunerVisible] = useState<boolean>(() => {
-    try {
-      if (
-        queryParams.tuner === 'true' ||
-        queryParams.tuner === '1' ||
-        queryParams.debug === 'true'
-      ) {
-        return true
-      }
-      return (
-        window.localStorage.getItem('trongngyn_tuner_visible') === 'true' ||
-        window.localStorage.getItem('antigravity_tuner_visible') === 'true'
-      )
-    } catch {
-      return false
-    }
-  })
+  const [localTunerVisible, setLocalTunerVisible] = useState<boolean>(() =>
+    readInitialStandaloneTuner(queryParams)
+  )
 
   const isTunerVisible = tunerContext.isStandAlone ? localTunerVisible : tunerContext.isTunerVisible
-  const setIsTunerVisible = tunerContext.isStandAlone ? setLocalTunerVisible : tunerContext.setIsTunerVisible
+  const setIsTunerVisible = tunerContext.isStandAlone
+    ? setLocalTunerVisible
+    : tunerContext.setIsTunerVisible
 
   const isPauseParam =
     queryParams.paused === 'true' ||
@@ -101,47 +106,12 @@ export const HomePage: React.FC = () => {
   const isAnimationPausedRef = useRef(isAnimationPaused)
   isAnimationPausedRef.current = isAnimationPaused
 
-  const defaultInspectPitch = cameraElevation === 'eye-level' ? 0 : 25.07
-  const defaultInspectDist = cameraElevation === 'eye-level' ? 6.0 : 6.017
-
-  const [cameraAngles, setCameraAngles] = useState<CameraAngles>(() => {
-    let initialYaw = 0
-    let initialPitch = defaultInspectPitch
-    let initialDist = defaultInspectDist
-    if (queryParams.yaw) {
-      const parsed = parseFloat(queryParams.yaw)
-      if (!Number.isNaN(parsed)) initialYaw = parsed
-    }
-    if (queryParams.pitch) {
-      const parsed = parseFloat(queryParams.pitch)
-      if (!Number.isNaN(parsed)) initialPitch = parsed
-    }
-    if (queryParams.zoom || queryParams.distance || queryParams.dist_zoom) {
-      const parsed = parseFloat(queryParams.zoom || queryParams.distance || queryParams.dist_zoom)
-      if (!Number.isNaN(parsed)) initialDist = parsed
-    }
-    return { yaw: initialYaw, pitch: initialPitch, distance: initialDist }
-  })
-  const cameraAnglesRef = useRef(cameraAngles)
-  useEffect(() => {
-    cameraAnglesRef.current = cameraAngles
-  }, [cameraAngles])
-
-  const prevCameraElevationRef = useRef(cameraElevation)
-  useEffect(() => {
-    if (prevCameraElevationRef.current !== cameraElevation) {
-      prevCameraElevationRef.current = cameraElevation
-      const targetPitch = cameraElevation === 'eye-level' ? 0 : 25.07
-      const targetDist = cameraElevation === 'eye-level' ? 6.0 : 6.017
-      setCameraAngles((prev) => ({ ...prev, pitch: targetPitch, distance: targetDist }))
-    }
-  }, [cameraElevation])
-
-  const handleResetCameraAngles = useCallback(() => {
-    const targetPitch = cameraElevation === 'eye-level' ? 0 : 25.07
-    const targetDist = cameraElevation === 'eye-level' ? 6.0 : 6.017
-    setCameraAngles({ yaw: 0, pitch: targetPitch, distance: targetDist })
-  }, [cameraElevation])
+  const {
+    cameraAngles,
+    setCameraAngles,
+    cameraAnglesRef,
+    handleResetCameraAngles,
+  } = useHomeCamera(cameraElevation, queryParams)
 
   const [geometryParams, setGeometryParams] = useState<AllGeometryParams>(DEFAULT_GEOMETRY_PARAMS)
 
@@ -154,8 +124,7 @@ export const HomePage: React.FC = () => {
         params.set('geo', newMode)
       }
       const queryString = params.toString()
-      const targetPath = queryString ? `/?${queryString}` : '/'
-      navigate(targetPath)
+      navigate(queryString ? `/?${queryString}` : '/')
     },
     [navigate]
   )
@@ -220,53 +189,18 @@ export const HomePage: React.FC = () => {
     return () => window.clearInterval(interval)
   }, [isTouchHovered, isAnimationPaused])
 
-  // Query parameter synchronization
-  useEffect(() => {
-    if (isPauseParam) setIsAnimationPaused(true)
-  }, [isPauseParam])
-
-  useEffect(() => {
-    if (isHaloParam) setIsExpanded(true)
-  }, [isHaloParam])
-
-  useEffect(() => {
-    if (queryParams.container && isValidAngelContainer(queryParams.container)) {
-      setAngelContainer(queryParams.container)
-      setIsExpanded(true)
-    }
-  }, [queryParams.container, setAngelContainer])
-
-  useEffect(() => {
-    const isDistParam =
-      queryParams.dist === 'true' ||
-      queryParams.dist === '1' ||
-      queryParams.debugDistance === 'true' ||
-      queryParams.debugDistance === '1'
-    if (isDistParam) {
-      setShowDistance(true)
-      setIsExpanded(true)
-    }
-  }, [queryParams.dist, queryParams.debugDistance, setShowDistance])
-
-  useEffect(() => {
-    const elev = queryParams.elevation ?? queryParams.camera
-    if (elev === 'eye-level' || elev === 'elevated') {
-      setCameraElevation(elev)
-    }
-  }, [queryParams.elevation, queryParams.camera, setCameraElevation])
-
-  // Allow Escape key to collapse the halo and bring back "welcome"
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setIsExpanded(false)
-        setIsTouchHovered(false)
-        setWelcomeDisplay('welcome')
-      }
-    }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [])
+  useHomeQuerySync({
+    queryParams,
+    isPauseParam,
+    isHaloParam,
+    setIsAnimationPaused,
+    setIsExpanded,
+    setIsTouchHovered,
+    setWelcomeDisplay,
+    setAngelContainer,
+    setShowDistance,
+    setCameraElevation,
+  })
 
   useHomeConsoleCommands({
     setIsTunerVisible,

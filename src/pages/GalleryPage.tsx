@@ -1,21 +1,21 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react'
-import { useRouter } from '../routes/Router'
-import { useTuner } from '../context/TunerContext'
-import { useTheme } from '../context/ThemeContext'
-import { usePowerManager } from '../hooks/usePowerManager'
-import { CerebroChamber } from '@/components/gallery/CerebroChamber'
-import { GalleryTheaterOverlay } from '@/components/gallery/GalleryTheaterOverlay'
+import { useRouter } from '@/routes/Router'
+import { useTuner } from '@/features/tuner/TunerContext'
+import { useTheme } from '@/context/ThemeContext'
+import { usePowerManager } from '@/hooks/usePowerManager'
+import { CerebroChamber } from '@/features/gallery/chamber/CerebroChamber'
+import { GalleryTheaterOverlay } from '@/features/gallery/theater/GalleryTheaterOverlay'
 import {
   GalleryItem,
   GALLERY_DATA,
   layoutGalleryTiers,
   randomizeGallery,
-} from '../components/gallery/galleryData'
+} from '@/features/gallery/data/galleryData'
 import {
   GalleryChamberParams,
   DEFAULT_GALLERY_CHAMBER_PARAMS,
-} from '../components/gallery/galleryTunerConfig'
-import { Tuner } from '../components/ui/Tuner'
+} from '@/features/gallery/data/galleryTunerConfig'
+import { Tuner } from '@/features/tuner/Tuner'
 import { preloadAndDecodeImage } from '@/utils/imagePreload'
 
 export const GalleryPage: React.FC = () => {

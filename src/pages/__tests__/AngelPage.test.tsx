@@ -2,14 +2,14 @@ import { describe, it, expect, vi, afterEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { AngelPage } from '../AngelPage'
 import { RouterProvider, useRouter } from '@/routes/Router'
-import { TunerProvider } from '@/context/TunerContext'
+import { TunerProvider } from '@/features/tuner/TunerContext'
 import {
   ANGEL_AVATAR_STORAGE_KEY,
   DEFAULT_ANGEL_CONFIG,
   encodeAngelConfig,
-} from '@/components/angel/angelCatalog'
+} from '@/features/angel/angelCatalog'
 
-vi.mock('@/components/angel/AngelStudioCanvas', () => ({
+vi.mock('@/features/angel/AngelStudioCanvas', () => ({
   AngelStudioCanvas: ({
     config,
     focusPreset,

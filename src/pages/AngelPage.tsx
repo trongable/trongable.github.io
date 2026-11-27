@@ -2,8 +2,8 @@ import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from '@/routes/Router'
 import { useTheme } from '@/context/ThemeContext'
 import { usePowerManager } from '@/hooks/usePowerManager'
-import { useTuner } from '@/context/TunerContext'
-import { Tuner } from '@/components/ui/Tuner'
+import { useTuner } from '@/features/tuner/TunerContext'
+import { Tuner } from '@/features/tuner/Tuner'
 import {
   ANGEL_AVATAR_STORAGE_KEY,
   AngelAvatarConfig,
@@ -11,12 +11,12 @@ import {
   decodeAngelConfig,
   encodeAngelConfig,
   randomizeAngelConfig,
-} from '@/components/angel/angelCatalog'
+} from '@/features/angel/angelCatalog'
 import {
   AngelStudioCanvas,
   CameraFocusPreset,
-} from '@/components/angel/AngelStudioCanvas'
-import { AngelCustomizerPanel } from '@/components/angel/AngelCustomizerPanel'
+} from '@/features/angel/AngelStudioCanvas'
+import { AngelCustomizerPanel } from '@/features/angel/AngelCustomizerPanel'
 
 export const AngelPage: React.FC = () => {
   const { navigate, queryParams } = useRouter()

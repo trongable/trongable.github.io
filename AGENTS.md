@@ -69,7 +69,7 @@ npm run prepare        # Configure git core.hooksPath to .githooks
 
 ## Architecture & Subsystem Pointers (Read Before Editing)
 
-- **Core Layout**: `src/routes/Router.tsx` (pushState + hash fallback + URL query sync), `src/context/ThemeContext.tsx` (Volt Yellow `#e2f872` default, Purple `#d4adf0`, Teal `#83d4d4` via `--theme-primary` / `--theme-highlight`), `src/components/canvas/geometries/` (8 topologies dispatched by `GeometryDispatcher.tsx` via `geometryConfig.ts`), `src/components/gallery/` (`CerebroChamber.tsx`, `CurvedMediaPanel.tsx`, `GalleryTheaterOverlay.tsx`, `galleryData.ts`, `galleryTunerConfig.ts`), `src/pages/` (`/`, `/about`, `/more`, `/sonny`, `/gallery`, `/ui-catalog` via `ui-catalog` terminal command, plus external `dchc` at `https://dc-hardcore.com`).
+- **Core Layout**: `src/routes/Router.tsx` (pushState + hash fallback + URL query sync), `src/context/ThemeContext.tsx` (Volt Yellow `#e2f872` default, Purple `#d4adf0`, Teal `#83d4d4` via `--theme-primary` / `--theme-highlight`), `src/features/scene/` (`SceneContainer.tsx`, `CameraController.tsx`, `ParticleField.tsx`, `FrameGovernor.tsx`), `src/features/topologies/` (8 topologies dispatched by `GeometryDispatcher.tsx` via `config/geometryConfig.ts`, pure math in `math/`, badges in `badge/`), `src/features/gallery/` (`chamber/CerebroChamber.tsx`, `chamber/CurvedMediaPanel.tsx`, `theater/GalleryTheaterOverlay.tsx`, `data/galleryCatalog.ts`, `data/galleryLayout.ts`, `data/galleryTunerConfig.ts`), `src/features/angel/` (`AngelContainerContext.tsx`, `AngelContainers.tsx`, `AngelStudioCanvas.tsx`, `AngelCustomizerPanel.tsx`), `src/features/tuner/` (`Tuner.tsx`, `TunerContext.tsx`, `CyberTerminalLine.tsx`), `src/features/effects/` (`GpuGlitchOverlay.tsx`, `glitchGenerators.ts`), `src/pages/` (`/`, `/about`, `/more`, `/angel`, `/gallery`, `/ui-catalog` via `ui-catalog` terminal command, plus external `dchc` at `https://dc-hardcore.com`).
 
 | If you are modifying… | Read first |
 | :--- | :--- |
@@ -78,7 +78,7 @@ npm run prepare        # Configure git core.hooksPath to .githooks
 | Glitch VFX, orthogonality, memory photos (`GpuGlitchOverlay.tsx`) | `docs/chronicles/03-cyber-gpu-glitch-vfx-and-memory-corruption.md` |
 | Theme palettes, luminance math, Tuner HUD (`Tuner.tsx`) | `docs/tuner-manual.md` & `docs/chronicles/04-dynamic-theming-color-science-and-tuner-hud.md` |
 | `useFrame` performance, GPU sleep, DPR scaling, memory | `docs/chronicles/05-zero-allocation-and-energy-governance.md` |
-| Sonny 3D containers (`capsule`, `diorama`, `pedestal`, `wirebox`, `crystal`, `none`) & turntable | `docs/chronicles/06-sonny-3d-containers-and-turntable-animation.md` |
+| Angel 3D containers (`capsule`, `diorama`, `pedestal`, `wirebox`, `crystal`, `none`) & turntable | `docs/chronicles/06-sonny-3d-containers-and-turntable-animation.md` |
 | Perspective scaling & depth sorting | `docs/chronicles/07-pure-optical-perspective-scaling.md` |
 | 4D Tesseract projection & Clifford quad (`[13, 7, 10, 0]`) | `docs/chronicles/08-tesseract-4d-degeneracy-and-clifford-quad.md` |
 | Telemetry HUD, XYZ coordinates, camera elevation/orbit | `docs/chronicles/09-realtime-3d-telemetry-hud-and-coordinates.md` |
@@ -90,7 +90,7 @@ npm run prepare        # Configure git core.hooksPath to .githooks
 
 ### Adding a New 3D Menu Link & Route
 1. *(Optional)* Add image asset to `public/images/<name>.png` (or flipbook frames to `public/images/<name>/frame-01.png`…).
-2. Register the item (`label`, `path`, optional `imageUrl`) in `src/components/canvas/geometries/shared/menuItems.ts` (`MENU_ITEMS`) and add any topology-specific metadata (`AstrolabeMenu.tsx`, `LorenzMenu.tsx`, `OrigamiMenu.tsx`, `SlingshotMenu.tsx`, `TesseractMenu.tsx`).
+2. Register the item (`label`, `path`, optional `imageUrl`) in `src/features/topologies/config/menuItems.ts` (`MENU_ITEMS`) and add any topology-specific metadata (`AstrolabeMenu.tsx`, `LorenzMenu.tsx`, `OrigamiMenu.tsx`, `SlingshotMenu.tsx`, `TesseractMenu.tsx` in `src/features/topologies/menus/`).
 3. Add the path to `RoutePath` in `src/routes/Router.tsx`.
 4. Create `src/pages/<Name>Page.tsx` (using `useRouter()` and `← home` back button) and wire the `case` in `src/App.tsx`.
 5. Add an accessible `<button>` to `<nav className="sr-only">` in `src/pages/home/HomeScreenReaderNav.tsx`.
@@ -98,11 +98,11 @@ npm run prepare        # Configure git core.hooksPath to .githooks
 
 ### Adding a Glitch Memory Photo
 1. Add the JPG/PNG to `public/images/glitch/` or `public/images/`.
-2. Append its public path to `GLITCH_MEMORY_IMAGES` in `src/components/effects/GpuGlitchOverlay.tsx`.
-3. Verify the test in `src/components/effects/__tests__/GpuGlitchOverlay.test.tsx` covers `GLITCH_MEMORY_IMAGES`.
+2. Append its public path to `GLITCH_MEMORY_IMAGES` in `src/features/effects/GpuGlitchOverlay.tsx`.
+3. Verify the test in `src/features/effects/__tests__/GpuGlitchOverlay.test.tsx` covers `GLITCH_MEMORY_IMAGES`.
 
 ### Adding a Gallery Photo
 1. Drop the full-resolution `.jpg` into `public/images/gallery/<slug>.jpg`.
 2. Run `npm run gallery:thumbnails` (`python scripts/generate-gallery-thumbnails.py`) to generate the sRGB 640px WebP thumbnail in `public/images/gallery/thumbnails/<slug>.webp` and print the `aspectRatio` snippet.
-3. Append the item (`id`, `type: 'photo'`, lowercase `title`, `author`, `imageUrl`, `hqImageUrl`, `aspectRatio`) to `RAW_GALLERY_DATA` in `src/components/gallery/galleryData.ts` (`layoutGalleryTiers` distributes items across the 3 spherical tiers automatically).
-4. Update the total item count assertions in `src/components/gallery/__tests__/galleryData.test.ts` and `e2e/gallery.spec.ts`.
+3. Append the item (`id`, `type: 'photo'`, lowercase `title`, `author`, `imageUrl`, `hqImageUrl`, `aspectRatio`) to `RAW_GALLERY_DATA` in `src/features/gallery/data/galleryCatalog.ts` (`layoutGalleryTiers` in `galleryLayout.ts` distributes items across the spherical tiers automatically).
+4. Update the total item count assertions in `src/features/gallery/__tests__/galleryData.test.ts` and `e2e/gallery.spec.ts`.
