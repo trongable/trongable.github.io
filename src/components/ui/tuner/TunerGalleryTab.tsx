@@ -139,6 +139,54 @@ export const TunerGalleryTab: React.FC<TunerGalleryTabProps> = ({
         onChange={(checked) => onVideoParamChange('freeSpin', checked)}
       />
 
+      <div className="pt-1 border-t border-[var(--theme-primary)]/15">
+        <span className="block text-[10px] uppercase tracking-wider opacity-70 mb-1">Chamber Effects</span>
+        <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 text-[10px]">
+          <TunerCheckbox
+            label="Intro Collapse"
+            ariaLabel="Intro Collapse"
+            checked={videoParams.introCollapse}
+            onChange={(checked) => onVideoParamChange('introCollapse', checked)}
+          />
+          <TunerCheckbox
+            label="Scatter on Select"
+            ariaLabel="Scatter on Select"
+            checked={videoParams.scatterOnSelect}
+            onChange={(checked) => onVideoParamChange('scatterOnSelect', checked)}
+          />
+          <TunerCheckbox
+            label="Center Gaze Zoom"
+            ariaLabel="Center Gaze Zoom"
+            checked={videoParams.centerZoom}
+            onChange={(checked) => onVideoParamChange('centerZoom', checked)}
+          />
+          <TunerCheckbox
+            label="Vignette"
+            ariaLabel="Vignette"
+            checked={videoParams.vignette}
+            onChange={(checked) => onVideoParamChange('vignette', checked)}
+          />
+          <TunerCheckbox
+            label="Ambient Float"
+            ariaLabel="Ambient Float"
+            checked={videoParams.ambientFloat}
+            onChange={(checked) => onVideoParamChange('ambientFloat', checked)}
+          />
+          <TunerCheckbox
+            label="Corner Reticles"
+            ariaLabel="Corner Reticles"
+            checked={videoParams.focusReticles}
+            onChange={(checked) => onVideoParamChange('focusReticles', checked)}
+          />
+          <TunerCheckbox
+            label="Motion Blur"
+            ariaLabel="Motion Blur"
+            checked={videoParams.motionBlur}
+            onChange={(checked) => onVideoParamChange('motionBlur', checked)}
+          />
+        </div>
+      </div>
+
       <div className="grid grid-cols-2 gap-2">
         <TunerSlider
           label="Max Yaw"

@@ -177,8 +177,17 @@ test.describe('Gallery Page End-to-End Suite', () => {
     const overlay = page.locator('[data-testid="video-theater-overlay"]')
     await expect(overlay).toBeVisible({ timeout: 4000 })
 
-    // Verify title in overlay
-    await expect(overlay.getByText(photo.title.toLowerCase())).toBeVisible()
+    // Verify title in overlay is horizontally centered below the media
+    const titleEl = overlay.getByText(photo.title.toLowerCase())
+    await expect(titleEl).toBeVisible()
+    const stageEl = overlay.locator('[data-testid="theater-media-stage"]')
+    const [titleBox, stageBox] = await Promise.all([titleEl.boundingBox(), stageEl.boundingBox()])
+    expect(titleBox).not.toBeNull()
+    expect(stageBox).not.toBeNull()
+    const titleCenterX = titleBox!.x + titleBox!.width / 2
+    const stageCenterX = stageBox!.x + stageBox!.width / 2
+    expect(Math.abs(titleCenterX - stageCenterX)).toBeLessThan(4)
+    expect(titleBox!.y).toBeGreaterThan(stageBox!.y + stageBox!.height - 2)
 
     // Verify high-resolution image is rendered
     const img = overlay.locator('[data-testid="theater-main-image"]')
@@ -285,6 +294,13 @@ test.describe('Gallery Page End-to-End Suite', () => {
     await expect(drawer.getByRole('button', { name: '4-Tier (B)' })).toBeVisible()
     await expect(drawer.getByRole('button', { name: '3-Tier (A)' })).toBeVisible()
     await expect(drawer.getByLabel('Free Spin (360°+)')).toBeChecked()
+    await expect(drawer.getByLabel('Intro Collapse')).toBeChecked()
+    await expect(drawer.getByLabel('Scatter on Select')).toBeChecked()
+    await expect(drawer.getByLabel('Center Gaze Zoom')).toBeChecked()
+    await expect(drawer.getByLabel('Vignette')).toBeChecked()
+    await expect(drawer.getByLabel('Ambient Float')).toBeChecked()
+    await expect(drawer.getByLabel('Corner Reticles')).toBeChecked()
+    await expect(drawer.getByLabel('Motion Blur')).not.toBeChecked()
     await expect(drawer.locator('text=360°').first()).toBeVisible()
     await drawer.getByRole('button', { name: '3-Tier (A)' }).click()
     await expect(drawer.locator('text=6.0')).toBeVisible()
@@ -310,5 +326,37 @@ test.describe('Gallery Page End-to-End Suite', () => {
     const navRandom = page.getByRole('navigation', { name: 'Available Gallery Items' })
     const buttons = await navRandom.locator('button').all()
     expect(buttons).toHaveLength(60)
+  })
+
+  test('TC-11: Opening terminal shifts open Tuner above it on Y-axis without overlap', async ({ page }) => {
+    await page.goto('/#/gallery?tuner=true')
+
+    const tuner = page.locator('[data-testid="geometry-tuner"]')
+    await expect(tuner).toBeVisible()
+    const beforeBox = await tuner.boundingBox()
+    expect(beforeBox).not.toBeNull()
+
+    // Wake CyberTerminalLine by typing a character
+    await page.keyboard.press('t')
+    const terminal = page.locator('[data-testid="cyber-terminal-line"]')
+    await expect(terminal).toBeVisible()
+
+    // Wait for bottom-5 -> bottom-16 CSS transition (150ms) to settle
+    await page.waitForTimeout(220)
+
+    const [raisedTunerBox, terminalBox] = await Promise.all([tuner.boundingBox(), terminal.boundingBox()])
+    expect(raisedTunerBox).not.toBeNull()
+    expect(terminalBox).not.toBeNull()
+
+    // Tuner must move upward on Y axis and sit cleanly above the terminal bar
+    expect(raisedTunerBox!.y).toBeLessThan(beforeBox!.y - 20)
+    expect(raisedTunerBox!.y + raisedTunerBox!.height).toBeLessThan(terminalBox!.y)
+
+    // Dismissing terminal returns Tuner back down
+    await page.keyboard.press('Escape')
+    await expect(terminal).not.toBeVisible()
+    await page.waitForTimeout(220)
+    const restoredBox = await tuner.boundingBox()
+    expect(restoredBox!.y).toBeCloseTo(beforeBox!.y, 0)
   })
 })

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { CyberTerminalLine } from '../CyberTerminalLine'
+import { Tuner } from '../Tuner'
 import { TunerProvider, useTuner } from '@/context/TunerContext'
 import { RouterProvider } from '@/routes/Router'
 
@@ -124,5 +125,31 @@ describe('CyberTerminalLine Component', () => {
     fireEvent.keyDown(window, { key: 'Enter' })
 
     expect(window.location.hash).toBe('#/ui-catalog')
+  })
+
+  it('shifts open Tuner upward on Y-axis above terminal line without changing z-index and restores on Escape', () => {
+    render(
+      <RouterProvider>
+        <TunerProvider>
+          <Tuner onClose={vi.fn()} />
+          <CyberTerminalLine />
+        </TunerProvider>
+      </RouterProvider>
+    )
+
+    const tuner = screen.getByTestId('geometry-tuner')
+    expect(tuner).toHaveClass('bottom-5', 'z-[60]')
+    expect(tuner).not.toHaveClass('bottom-16')
+
+    // Opening terminal via typing moves Tuner upward along Y axis while keeping z-[60]
+    fireEvent.keyDown(window, { key: 't' })
+    expect(screen.getByTestId('cyber-terminal-line')).toBeInTheDocument()
+    expect(tuner).toHaveClass('bottom-16', 'z-[60]')
+    expect(tuner).not.toHaveClass('bottom-5')
+
+    // Dismissing terminal with Escape restores Tuner back to bottom-5
+    fireEvent.keyDown(window, { key: 'Escape' })
+    expect(screen.queryByTestId('cyber-terminal-line')).not.toBeInTheDocument()
+    expect(tuner).toHaveClass('bottom-5', 'z-[60]')
   })
 })

@@ -3,6 +3,13 @@ export type GalleryLayoutMode = '4-tier' | '3-tier'
 export interface GalleryChamberParams {
   tierCount: 3 | 4
   freeSpin: boolean
+  introCollapse: boolean
+  scatterOnSelect: boolean
+  centerZoom: boolean
+  vignette: boolean
+  ambientFloat: boolean
+  focusReticles: boolean
+  motionBlur: boolean
   sphereRadius: number
   thumbnailScale: number
   arcDegrees: number
@@ -49,6 +56,13 @@ export const GALLERY_LAYOUT_PRESETS: Record<
 
 export const DEFAULT_GALLERY_CHAMBER_PARAMS: GalleryChamberParams = {
   ...GALLERY_LAYOUT_PRESETS['4-tier'],
+  introCollapse: true,
+  scatterOnSelect: true,
+  centerZoom: true,
+  vignette: true,
+  ambientFloat: true,
+  focusReticles: true,
+  motionBlur: false,
   panSensitivity: 1.2,
   dragMultiplier: 1.8,
   flingInertia: 1.9,

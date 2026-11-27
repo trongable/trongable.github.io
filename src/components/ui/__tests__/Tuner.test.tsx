@@ -806,10 +806,19 @@ describe('Tuner Component', () => {
     expect(screen.getByText('Sphere Radius')).toBeInTheDocument()
     expect(screen.getByText('Thumbnail Scale')).toBeInTheDocument()
     expect(screen.getByLabelText('Free Spin (360°+)')).toBeChecked()
+    expect(screen.getByLabelText('Intro Collapse')).toBeChecked()
+    expect(screen.getByLabelText('Scatter on Select')).toBeChecked()
+    expect(screen.getByLabelText('Center Gaze Zoom')).toBeChecked()
+    expect(screen.getByLabelText('Vignette')).toBeChecked()
+    expect(screen.getByLabelText('Ambient Float')).toBeChecked()
+    expect(screen.getByLabelText('Corner Reticles')).toBeChecked()
+    expect(screen.getByLabelText('Motion Blur')).not.toBeChecked()
 
-    // Toggle Free Spin checkbox
+    // Toggle Free Spin and Chamber Effect checkboxes
     fireEvent.click(screen.getByLabelText('Free Spin (360°+)'))
     expect(onVideoParamChange).toHaveBeenCalledWith('freeSpin', false)
+    fireEvent.click(screen.getByLabelText('Ambient Float'))
+    expect(onVideoParamChange).toHaveBeenCalledWith('ambientFloat', false)
 
     // Toggle layout preset to 3-Tier (A)
     fireEvent.click(screen.getByRole('button', { name: '3-Tier (A)' }))

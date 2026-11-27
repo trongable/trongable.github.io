@@ -1,7 +1,7 @@
 import React, { useEffect, useCallback, useState } from 'react'
 import { GalleryItem, GALLERY_DATA } from './galleryData'
-import { ArrowLeft, ArrowRight, X } from 'lucide-react'
-import { preloadAndDecodeImage } from '@/utils/imagePreload'
+import { ArrowLeft, ArrowRight } from 'lucide-react'
+import { preloadAndDecodeImage, isImageDecoded } from '@/utils/imagePreload'
 
 export interface GalleryTheaterOverlayProps {
   activeVideo?: GalleryItem | null
@@ -26,10 +26,26 @@ export const GalleryTheaterOverlay: React.FC<GalleryTheaterOverlayProps> = ({
   const handleSelect = onSelectItem ?? onSelectVideo ?? (() => { })
 
   const [isExiting, setIsExiting] = useState(false)
+  const [hasEntered, setHasEntered] = useState(false)
+  const [loadedHqUrl, setLoadedHqUrl] = useState<string | null>(null)
+
+  const hqUrl = currentItem && currentItem.type === 'photo'
+    ? (currentItem.hqImageUrl || currentItem.imageUrl)
+    : null
+  const isHqReady = Boolean(hqUrl && (loadedHqUrl === hqUrl || isImageDecoded(hqUrl)))
 
   const currentIndex = currentItem
     ? items.findIndex((v) => v.id === currentItem.id)
     : -1
+
+  useEffect(() => {
+    if (!currentItem) {
+      setHasEntered(false)
+      return
+    }
+    const raf = requestAnimationFrame(() => setHasEntered(true))
+    return () => cancelAnimationFrame(raf)
+  }, [currentItem])
 
   // Hitch-free closing transition: smoothly dissolves overlay before invoking unmount
   const handleInitiateClose = useCallback(() => {
@@ -100,16 +116,24 @@ export const GalleryTheaterOverlay: React.FC<GalleryTheaterOverlayProps> = ({
 
   const isVideo = currentItem.type === 'video'
 
+  const aspect = currentItem.type === 'video' ? 16 / 9 : currentItem.aspectRatio
+  const stageSizeStyle = {
+    width: `min(90vw, ${(80 * aspect).toFixed(2)}vh)`,
+    height: `min(80vh, ${(90 / aspect).toFixed(2)}vw)`,
+  }
+  const chromeVisibleClass = hasEntered && !isExiting ? 'opacity-100' : 'opacity-0'
+
   return (
     <div
       data-testid="video-theater-overlay"
-      className={`fixed inset-0 z-50 flex flex-col justify-between p-3 md:p-6 bg-[#0a090e]/95 backdrop-blur-md transition-all duration-200 ease-out select-none ${isExiting ? 'opacity-0 scale-98 pointer-events-none' : 'opacity-100 scale-100 animate-in fade-in'
-        }`}
+      className={`fixed inset-0 z-50 flex items-center justify-center bg-[#0a090e]/95 transition-opacity duration-200 ease-out select-none ${
+        isExiting ? 'opacity-0 pointer-events-none' : 'opacity-100'
+      }`}
       onClick={handleInitiateClose}
     >
       {/* Top HUD Bar */}
       <div
-        className="w-full flex items-center justify-between text-xs font-mono tracking-widest text-[var(--theme-primary)] z-10"
+        className={`absolute inset-x-0 top-0 p-3 md:p-6 flex items-center justify-between text-xs font-mono tracking-widest text-[var(--theme-primary)] z-20 transition-opacity duration-200 ${chromeVisibleClass}`}
         onClick={(e) => e.stopPropagation()}
       >
         <button
@@ -121,23 +145,19 @@ export const GalleryTheaterOverlay: React.FC<GalleryTheaterOverlayProps> = ({
           <span>return</span>
           <span className="hidden md:inline text-[var(--theme-primary)]/50 ml-1">[esc]</span>
         </button>
-
-        <button
-          onClick={handleInitiateClose}
-          className="p-1.5 rounded border border-[var(--theme-primary)]/30 bg-[#14131a]/80 hover:bg-[#ff0055]/20 hover:border-[#ff0055]/60 hover:text-[#ff0055] transition-colors cursor-pointer"
-          aria-label="Close media player"
-        >
-          <X className="w-4 h-4" />
-        </button>
       </div>
 
-      {/* Center Media Container */}
+      {/* Center Media Container locked 1:1 to 3D arrival bounds at exact viewport center (50vw, 50vh) */}
       <div
-        className="relative w-full max-w-[90vw] max-h-[80vh] mx-auto my-auto flex-1 flex flex-col items-center justify-center p-0 z-10"
+        data-testid="theater-media-stage"
+        className="relative flex items-center justify-center p-0 z-10"
         onClick={(e) => e.stopPropagation()}
       >
         {isVideo ? (
-          <div className="relative w-full h-full max-w-[90vw] max-h-[80vh] aspect-video rounded-lg overflow-hidden border border-[var(--theme-primary)]/40 shadow-[0_0_60px_rgba(0,0,0,0.9)] bg-black transition-transform duration-300 scale-100">
+          <div
+            className="relative rounded-sm overflow-hidden border border-[var(--theme-primary)]/40 shadow-[0_0_60px_rgba(0,0,0,0.9)] bg-black"
+            style={stageSizeStyle}
+          >
             <iframe
               src={`https://www.youtube-nocookie.com/embed/${currentItem.youtubeId}?autoplay=1&rel=0&modestbranding=1`}
               title={currentItem.title}
@@ -147,58 +167,73 @@ export const GalleryTheaterOverlay: React.FC<GalleryTheaterOverlayProps> = ({
             />
           </div>
         ) : (
-          <div className="relative max-w-[90vw] max-h-[80vh] rounded-lg overflow-hidden border border-[var(--theme-primary)]/40 shadow-[0_0_60px_rgba(0,0,0,0.9)] bg-[#0d0c12] transition-transform duration-300 scale-100 flex items-center justify-center">
-            {/* Instant cached thumbnail placeholder from 3D sphere texture */}
+          <div
+            data-testid="theater-photo-frame"
+            className="relative rounded-sm overflow-hidden border border-[var(--theme-primary)]/40 shadow-[0_0_60px_rgba(0,0,0,0.9)] bg-[#0c0b10] flex items-center justify-center"
+            style={stageSizeStyle}
+          >
+            {/* Instant cached thumbnail matching the flat 3D panel 1:1 until full-res finishes loading */}
             {currentItem.thumbnailUrl && (
               <img
+                data-testid="theater-thumbnail-placeholder"
                 src={currentItem.thumbnailUrl}
                 alt=""
                 aria-hidden="true"
-                className="absolute inset-0 w-full h-full object-contain filter blur-[1px] select-none pointer-events-none opacity-60"
+                className="absolute inset-0 w-full h-full object-contain select-none pointer-events-none opacity-100"
               />
             )}
-            {/* High-res full size image loaded asynchronously off-thread */}
+            {/* High-res full size image loaded asynchronously off-thread and crossfaded cleanly */}
             <img
               data-testid="theater-main-image"
-              src={currentItem.hqImageUrl || currentItem.imageUrl}
+              src={hqUrl!}
               alt={currentItem.title}
               decoding="async"
               loading="eager"
-              className="relative max-w-[90vw] max-h-[80vh] w-auto h-auto object-contain select-none pointer-events-none z-10"
+              onLoad={() => setLoadedHqUrl(hqUrl)}
+              className={`relative w-full h-full object-contain select-none pointer-events-none z-10 transition-opacity duration-150 ${
+                isHqReady ? 'opacity-100' : 'opacity-0'
+              }`}
             />
           </div>
         )}
       </div>
 
-      {/* Bottom HUD Bar: Item Title & Prev/Next Controls */}
+      {/* Bottom HUD Bar: Centered Title & Right-Aligned Prev/Next Controls */}
       <div
-        className="w-full max-w-[90vw] mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-mono tracking-wider text-[var(--theme-primary)] z-10"
+        className={`absolute inset-x-0 bottom-0 p-3 md:p-6 z-20 transition-opacity duration-200 ${chromeVisibleClass}`}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex flex-col text-center sm:text-left lowercase">
-          <span className="font-serif italic font-normal text-[var(--theme-highlight)] text-base md:text-lg line-clamp-1 lowercase">
-            {currentItem.title.toLowerCase()}
-          </span>
-        </div>
+        <div className="w-full max-w-[90vw] mx-auto grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr] items-center gap-3 text-xs font-mono tracking-wider text-[var(--theme-primary)]">
+          <div className="hidden sm:block" aria-hidden="true" />
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handlePrev}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded border border-[var(--theme-primary)]/30 bg-[#14131a]/80 hover:bg-[var(--theme-primary)]/15 hover:border-[var(--theme-highlight)] text-[var(--theme-primary)] hover:text-[var(--theme-highlight)] transition-colors cursor-pointer"
-            aria-label={isVideo ? 'Previous video' : 'Previous item'}
+          <div
+            data-testid="theater-title-wrapper"
+            className="flex flex-col items-center text-center lowercase sm:col-start-2 sm:justify-self-center"
           >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span className="text-[11px]">prev</span>
-          </button>
+            <span className="font-serif italic font-normal text-[var(--theme-highlight)] text-base md:text-lg line-clamp-1 lowercase">
+              {currentItem.title.toLowerCase()}
+            </span>
+          </div>
 
-          <button
-            onClick={handleNext}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded border border-[var(--theme-primary)]/30 bg-[#14131a]/80 hover:bg-[var(--theme-primary)]/15 hover:border-[var(--theme-highlight)] text-[var(--theme-primary)] hover:text-[var(--theme-highlight)] transition-colors cursor-pointer"
-            aria-label={isVideo ? 'Next video' : 'Next item'}
-          >
-            <span className="text-[11px]">next</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
+          <div className="flex items-center justify-center sm:justify-end gap-2 sm:col-start-3 sm:justify-self-end">
+            <button
+              onClick={handlePrev}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded border border-[var(--theme-primary)]/30 bg-[#14131a]/80 hover:bg-[var(--theme-primary)]/15 hover:border-[var(--theme-highlight)] text-[var(--theme-primary)] hover:text-[var(--theme-highlight)] transition-colors cursor-pointer"
+              aria-label={isVideo ? 'Previous video' : 'Previous item'}
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span className="text-[11px]">prev</span>
+            </button>
+
+            <button
+              onClick={handleNext}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded border border-[var(--theme-primary)]/30 bg-[#14131a]/80 hover:bg-[var(--theme-primary)]/15 hover:border-[var(--theme-highlight)] text-[var(--theme-primary)] hover:text-[var(--theme-highlight)] transition-colors cursor-pointer"
+              aria-label={isVideo ? 'Next video' : 'Next item'}
+            >
+              <span className="text-[11px]">next</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
       </div>
     </div>

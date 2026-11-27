@@ -556,4 +556,63 @@ describe('CerebroChamber Component', () => {
     container.dispatchEvent(dimmedEvent)
     expect(dimmedEvent.defaultPrevented).toBe(false)
   })
+
+  it('auto-focuses the center-most panel while panning and yields priority to explicit mouse hover', () => {
+    render(
+      <ThemeProvider>
+        <CerebroChamber activeVideo={null} onSelectVideo={vi.fn()} />
+      </ThemeProvider>
+    )
+
+    // Pan around the sphere so center-gaze evaluation selects the centered panel
+    fireEvent.keyDown(window, { key: 'ArrowRight' })
+    act(() => {
+      runFrames(20, 0.016)
+    })
+    fireEvent.keyUp(window, { key: 'ArrowRight' })
+
+    // Explicitly hovering a panel takes priority over center-gaze focus
+    const hoveredMesh = screen.getByTestId(`curved-video-mesh-${VIDEOS_DATA[0].id}`)
+    fireEvent.pointerOver(hoveredMesh)
+    act(() => {
+      runFrames(5, 0.016)
+    })
+    expect(screen.getByTestId(`curved-panel-reticle-${VIDEOS_DATA[0].id}`)).toBeInTheDocument()
+
+    fireEvent.pointerOut(hoveredMesh)
+  })
+
+  it('toggles cerebro-vignette-overlay opacity with vignette param and active item selection', () => {
+    const onSelectVideo = vi.fn()
+    const { rerender } = render(
+      <ThemeProvider>
+        <CerebroChamber onSelectVideo={onSelectVideo} activeVideo={null} />
+      </ThemeProvider>
+    )
+
+    const vignette = screen.getByTestId('cerebro-vignette-overlay')
+    expect(vignette).toHaveClass('opacity-100')
+
+    rerender(
+      <ThemeProvider>
+        <CerebroChamber
+          onSelectVideo={onSelectVideo}
+          activeVideo={null}
+          params={{ ...DEFAULT_GALLERY_CHAMBER_PARAMS, vignette: false }}
+        />
+      </ThemeProvider>
+    )
+    expect(screen.getByTestId('cerebro-vignette-overlay')).toHaveClass('opacity-0')
+
+    rerender(
+      <ThemeProvider>
+        <CerebroChamber
+          onSelectVideo={onSelectVideo}
+          activeVideo={VIDEOS_DATA[0]}
+          params={{ ...DEFAULT_GALLERY_CHAMBER_PARAMS, vignette: true }}
+        />
+      </ThemeProvider>
+    )
+    expect(screen.getByTestId('cerebro-vignette-overlay')).toHaveClass('opacity-0')
+  })
 })

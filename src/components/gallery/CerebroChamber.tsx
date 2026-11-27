@@ -1,11 +1,22 @@
-import React, { useRef, useState, useEffect } from 'react'
+import React, { useRef, useState, useEffect, useMemo, useCallback } from 'react'
 import { Canvas, useThree, useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { CerebroSphereWall } from './CerebroSphereWall'
 import { CurvedMediaPanel } from './CurvedMediaPanel'
-import { GalleryItem, GALLERY_DATA } from './galleryData'
+import {
+  GalleryItem,
+  GALLERY_DATA,
+  computePanelAzimuthDeg,
+  computeSphericalPosition,
+  getTierFactor,
+} from './galleryData'
 import { GalleryChamberParams, DEFAULT_GALLERY_CHAMBER_PARAMS } from './galleryTunerConfig'
 import { useTheme } from '@/context/ThemeContext'
+
+interface PanelDirectionEntry {
+  id: string
+  dir: THREE.Vector3
+}
 
 interface ChamberCameraControllerProps {
   isDimmed: boolean
@@ -14,6 +25,9 @@ interface ChamberCameraControllerProps {
   releaseVelocityRef: React.MutableRefObject<{ vx: number; vy: number }>
   wheelDeltaRef: React.MutableRefObject<{ x: number; y: number }>
   activeKeysRef: React.MutableRefObject<{ left: boolean; right: boolean; up: boolean; down: boolean }>
+  panelDirections: PanelDirectionEntry[]
+  selectedTarget: { id: string; azimuthDeg: number; elevationDeg: number } | null
+  onCenteredItemChange: (id: string | null) => void
   params: GalleryChamberParams
 }
 
@@ -21,6 +35,7 @@ const EPSILON = 0.0001
 const KEY_SPIN_BASE_RAD_PER_SEC = THREE.MathUtils.degToRad(95)
 const KEY_PITCH_BASE_RAD_PER_SEC = THREE.MathUtils.degToRad(55)
 const scratchLookTarget = new THREE.Vector3()
+const scratchGazeDir = new THREE.Vector3()
 
 const ChamberCameraController: React.FC<ChamberCameraControllerProps> = ({
   isDimmed,
@@ -29,6 +44,9 @@ const ChamberCameraController: React.FC<ChamberCameraControllerProps> = ({
   releaseVelocityRef,
   wheelDeltaRef,
   activeKeysRef,
+  panelDirections,
+  selectedTarget,
+  onCenteredItemChange,
   params,
 }) => {
   const { camera, viewport } = useThree()
@@ -39,6 +57,30 @@ const ChamberCameraController: React.FC<ChamberCameraControllerProps> = ({
   const targetPitch = useRef<number>(0)
   const velocityYaw = useRef<number>(0)
   const velocityPitch = useRef<number>(0)
+  const lastCenteredIdRef = useRef<string | null>(null)
+  const prevSelectedIdRef = useRef<string | null>(null)
+
+  // When cycling Prev/Next inside TheaterOverlay (selected ID changes while already dimmed),
+  // smoothly steer camera yaw/pitch toward the newly active panel so exit aligns with it.
+  useEffect(() => {
+    const nextId = selectedTarget?.id ?? null
+    const prevId = prevSelectedIdRef.current
+    prevSelectedIdRef.current = nextId
+
+    if (prevId && nextId && prevId !== nextId && selectedTarget) {
+      const targetYawRad = THREE.MathUtils.degToRad(selectedTarget.azimuthDeg)
+      const twoPi = Math.PI * 2
+      const diff = ((((targetYawRad - targetYaw.current) % twoPi) + Math.PI * 3) % twoPi) - Math.PI
+      targetYaw.current += diff
+
+      const maxPitch = THREE.MathUtils.degToRad(params.maxPitchDeg)
+      targetPitch.current = THREE.MathUtils.clamp(
+        THREE.MathUtils.degToRad(selectedTarget.elevationDeg),
+        -maxPitch,
+        maxPitch
+      )
+    }
+  }, [selectedTarget, params.maxPitchDeg])
 
   useFrame((_, delta) => {
     // 1. Process mouse drag or touch screen delta
@@ -138,6 +180,29 @@ const ChamberCameraController: React.FC<ChamberCameraControllerProps> = ({
     if (typeof camera.updateMatrixWorld === 'function') {
       camera.updateMatrixWorld()
     }
+
+    // 4. Identify the single center-most panel along the camera gaze vector (zero allocations)
+    if (!isDimmed && params.centerZoom && panelDirections.length > 0) {
+      scratchGazeDir.set(
+        cosPitch * Math.sin(yaw),
+        Math.sin(pitch),
+        -cosPitch * Math.cos(yaw)
+      )
+      let bestId: string | null = null
+      let bestDot = -Infinity
+      for (let i = 0; i < panelDirections.length; i++) {
+        const entry = panelDirections[i]
+        const dot = scratchGazeDir.dot(entry.dir)
+        if (dot > bestDot) {
+          bestDot = dot
+          bestId = entry.id
+        }
+      }
+      if (bestId !== lastCenteredIdRef.current) {
+        lastCenteredIdRef.current = bestId
+        onCenteredItemChange(bestId)
+      }
+    }
   })
 
   return null
@@ -188,6 +253,54 @@ export const CerebroChamber: React.FC<CerebroChamberProps> = ({
   isDimmedRef.current = isDimmed
   paramsRef.current = params
 
+  const [centeredId, setCenteredId] = useState<string | null>(() => items[0]?.id ?? null)
+  const [hoveredId, setHoveredId] = useState<string | null>(null)
+  const activeFocusId = hoveredId ?? (params.centerZoom ? centeredId : null)
+
+  const handleHoverChange = useCallback((id: string, hovered: boolean) => {
+    setHoveredId((prev) => (hovered ? id : prev === id ? null : prev))
+  }, [])
+
+  const panelDirections = useMemo<PanelDirectionEntry[]>(
+    () =>
+      items.map((item) => {
+        const totalInTier = item.totalInTier ?? 9
+        const indexInTier =
+          typeof item.indexInTier === 'number'
+            ? item.indexInTier
+            : (item.index - 1) % totalInTier
+        const azimuth = computePanelAzimuthDeg(indexInTier, totalInTier, params.arcDegrees)
+        const tierFactor = getTierFactor(item.tier, params.tierCount)
+        const clampedRatio = Math.max(
+          -0.95,
+          Math.min(0.95, (tierFactor * params.rowSeparation) / params.sphereRadius)
+        )
+        const elevation = THREE.MathUtils.radToDeg(Math.asin(clampedRatio))
+        return {
+          id: item.id,
+          dir: computeSphericalPosition(1, azimuth, elevation),
+        }
+      }),
+    [items, params.arcDegrees, params.tierCount, params.rowSeparation, params.sphereRadius]
+  )
+
+  const selectedTarget = useMemo(() => {
+    if (!currentSelected) return null
+    const totalInTier = currentSelected.totalInTier ?? 9
+    const indexInTier =
+      typeof currentSelected.indexInTier === 'number'
+        ? currentSelected.indexInTier
+        : (currentSelected.index - 1) % totalInTier
+    const azimuthDeg = computePanelAzimuthDeg(indexInTier, totalInTier, params.arcDegrees)
+    const tierFactor = getTierFactor(currentSelected.tier, params.tierCount)
+    const clampedRatio = Math.max(
+      -0.95,
+      Math.min(0.95, (tierFactor * params.rowSeparation) / params.sphereRadius)
+    )
+    const elevationDeg = THREE.MathUtils.radToDeg(Math.asin(clampedRatio))
+    return { id: currentSelected.id, azimuthDeg, elevationDeg }
+  }, [currentSelected, params.arcDegrees, params.tierCount, params.rowSeparation, params.sphereRadius])
+
   // Page visibility 0% GPU sleep management
   const [isTabVisible, setIsTabVisible] = useState(true)
 
@@ -199,13 +312,14 @@ export const CerebroChamber: React.FC<CerebroChamberProps> = ({
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
   }, [])
 
-  // Clear held keyboard spin keys whenever overlay dims the chamber
+  // Clear held keyboard spin keys and hover focus whenever overlay dims the chamber
   useEffect(() => {
     if (isDimmed) {
       activeKeysRef.current.left = false
       activeKeysRef.current.right = false
       activeKeysRef.current.up = false
       activeKeysRef.current.down = false
+      setHoveredId(null)
     }
   }, [isDimmed])
 
@@ -220,8 +334,9 @@ export const CerebroChamber: React.FC<CerebroChamberProps> = ({
       )
 
       // Drag threshold of 4px separates intentional pans from stationary clicks
-      if (totalDist > 4) {
+      if (totalDist > 4 && !isDraggingRef.current) {
         isDraggingRef.current = true
+        setHoveredId(null)
       }
 
       if (!isDraggingRef.current) return
@@ -418,6 +533,9 @@ export const CerebroChamber: React.FC<CerebroChamberProps> = ({
           releaseVelocityRef={releaseVelocityRef}
           wheelDeltaRef={wheelDeltaRef}
           activeKeysRef={activeKeysRef}
+          panelDirections={panelDirections}
+          selectedTarget={selectedTarget}
+          onCenteredItemChange={setCenteredId}
           params={params}
         />
 
@@ -440,6 +558,13 @@ export const CerebroChamber: React.FC<CerebroChamberProps> = ({
             video={item}
             isDimmed={isDimmed}
             isSelected={currentSelected?.id === item.id}
+            isFocused={!isDimmed && activeFocusId === item.id}
+            onHoverChange={handleHoverChange}
+            introCollapse={params.introCollapse}
+            scatterOnSelect={params.scatterOnSelect}
+            ambientFloat={params.ambientFloat}
+            focusReticles={params.focusReticles}
+            motionBlur={params.motionBlur}
             thumbnailScale={params.thumbnailScale}
             transitSpeed={params.transitSpeed}
             tierCount={params.tierCount}
@@ -450,6 +575,17 @@ export const CerebroChamber: React.FC<CerebroChamberProps> = ({
           />
         ))}
       </Canvas>
+      <div
+        data-testid="cerebro-vignette-overlay"
+        aria-hidden="true"
+        className={`pointer-events-none absolute inset-0 z-10 transition-opacity duration-300 ${
+          params.vignette && !isDimmed ? 'opacity-100' : 'opacity-0'
+        }`}
+        style={{
+          background:
+            'radial-gradient(ellipse 70% 68% at 50% 50%, rgba(12, 11, 16, 0) 42%, rgba(12, 11, 16, 0.55) 74%, rgba(12, 11, 16, 0.94) 100%)',
+        }}
+      />
     </div>
   )
 }

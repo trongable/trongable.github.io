@@ -5,6 +5,8 @@ export interface TunerContextValue {
   isTunerVisible: boolean
   setIsTunerVisible: React.Dispatch<React.SetStateAction<boolean>>
   toggleTuner: (visible?: boolean) => void
+  isTerminalOpen: boolean
+  setIsTerminalOpen: React.Dispatch<React.SetStateAction<boolean>>
   isStandAlone?: boolean
 }
 
@@ -12,6 +14,8 @@ const defaultTunerContextValue: TunerContextValue = {
   isTunerVisible: false,
   setIsTunerVisible: () => {},
   toggleTuner: () => {},
+  isTerminalOpen: false,
+  setIsTerminalOpen: () => {},
   isStandAlone: true,
 }
 
@@ -22,6 +26,7 @@ const LEGACY_STORAGE_KEY = 'antigravity_tuner_visible'
 
 export const TunerProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { queryParams } = useRouter()
+  const [isTerminalOpen, setIsTerminalOpen] = useState(false)
 
   const [isTunerVisible, setIsTunerVisibleState] = useState<boolean>(() => {
     try {
@@ -86,7 +91,9 @@ export const TunerProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, [isTunerVisible, toggleTuner, setIsTunerVisible])
 
   return (
-    <TunerContext.Provider value={{ isTunerVisible, setIsTunerVisible, toggleTuner }}>
+    <TunerContext.Provider
+      value={{ isTunerVisible, setIsTunerVisible, toggleTuner, isTerminalOpen, setIsTerminalOpen }}
+    >
       {children}
     </TunerContext.Provider>
   )

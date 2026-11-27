@@ -3,7 +3,7 @@ import { useTuner } from '@/context/TunerContext'
 import { useRouter } from '@/routes/Router'
 
 export const CyberTerminalLine: React.FC = () => {
-  const { setIsTunerVisible, toggleTuner } = useTuner()
+  const { setIsTunerVisible, toggleTuner, setIsTerminalOpen } = useTuner()
   const { navigate } = useRouter()
   const [buffer, setBuffer] = useState('')
   const bufferRef = useRef('')
@@ -11,6 +11,13 @@ export const CyberTerminalLine: React.FC = () => {
   const [isVisible, setIsVisible] = useState(false)
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const statusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const isTerminalShowing = isVisible || Boolean(statusMessage)
+
+  useEffect(() => {
+    setIsTerminalOpen(isTerminalShowing)
+    return () => setIsTerminalOpen(false)
+  }, [isTerminalShowing, setIsTerminalOpen])
 
   const resetIdleTimer = useCallback(() => {
     if (idleTimerRef.current) clearTimeout(idleTimerRef.current)
@@ -123,7 +130,7 @@ export const CyberTerminalLine: React.FC = () => {
     }
   }, [executeCommand, resetIdleTimer, statusMessage])
 
-  if (!isVisible && !statusMessage) return null
+  if (!isTerminalShowing) return null
 
   return (
     <aside
@@ -141,7 +148,7 @@ export const CyberTerminalLine: React.FC = () => {
       <div className="flex items-center gap-2 overflow-hidden">
         <span className="text-[var(--theme-highlight)] font-bold select-none">&gt;</span>
         {statusMessage ? (
-          <span className="text-[var(--theme-highlight)] tracking-wider font-semibold animate-in fade-in">
+          <span className="text-[var(--theme-highlight)] tracking-wider font-semibold">
             {statusMessage}
           </span>
         ) : (

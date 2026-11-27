@@ -34,6 +34,8 @@ describe('VideoTheaterOverlay Component', () => {
 
     expect(screen.getByTestId('video-theater-overlay')).toBeInTheDocument()
     expect(screen.getByText(mockVideo.title.toLowerCase())).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Return to chamber' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Close media player' })).not.toBeInTheDocument()
 
     // Verifies author name and cerebro references are not present in theater player
     expect(screen.queryByText(/cerebro/i)).not.toBeInTheDocument()
@@ -66,6 +68,22 @@ describe('VideoTheaterOverlay Component', () => {
     expect(img).toHaveAttribute('src', photoItem.imageUrl)
     expect(img).toHaveAttribute('decoding', 'async')
     expect(img).toHaveAttribute('loading', 'eager')
+
+    // Title is centered below the media
+    const titleWrapper = screen.getByTestId('theater-title-wrapper')
+    expect(titleWrapper).toHaveClass('text-center', 'sm:col-start-2', 'sm:justify-self-center')
+
+    // Photo frame locks aspect-matched bounds with crisp opaque thumbnail placeholder until HQ load finishes
+    const photoFrame = screen.getByTestId('theater-photo-frame')
+    expect(photoFrame.style.width).toBe(`min(90vw, ${(80 * photoItem.aspectRatio).toFixed(2)}vh)`)
+    expect(photoFrame.style.height).toBe(`min(80vh, ${(90 / photoItem.aspectRatio).toFixed(2)}vw)`)
+    const placeholder = screen.getByTestId('theater-thumbnail-placeholder')
+    expect(placeholder).toHaveClass('opacity-100')
+    expect(placeholder.className).not.toContain('blur-')
+    expect(img).toHaveClass('opacity-0')
+
+    fireEvent.load(img)
+    expect(img).toHaveClass('opacity-100')
   })
 
   it('pre-decodes adjacent items in the background when an item is active', async () => {

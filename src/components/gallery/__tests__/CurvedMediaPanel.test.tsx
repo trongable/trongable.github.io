@@ -1,9 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import * as THREE from 'three'
 import { render, screen, fireEvent, act } from '@testing-library/react'
 import { CurvedMediaPanel as CurvedVideoPanel } from '../CurvedMediaPanel'
 import { VIDEOS_DATA, GALLERY_DATA, GalleryItem } from '../galleryData'
+import { buildCurvedPanelGeometries, applyPanelCurvature, computePanelSurfaceBlur } from '../panelShader'
 import { ThemeProvider } from '@/context/ThemeContext'
-import { runFrames, clearFrameRegistry } from '@/testUtils/r3fTestUtils'
+import { runFrames, clearFrameRegistry, currentThreeState } from '@/testUtils/r3fTestUtils'
 import { isImageDecoded, clearImagePreloadCache } from '@/utils/imagePreload'
 
 describe('CurvedVideoPanel Component', () => {
@@ -334,5 +336,143 @@ describe('CurvedVideoPanel Component', () => {
     const spanA = (Math.asin(hw / rCornerA) * 180) / Math.PI * 2
     const stepA = 360 / 20
     expect(stepA - spanA).toBeGreaterThan(1.3)
+  })
+
+  it('renders orthogonal 90-degree corner reticles and animates intro collapse, scatter, and ambient float', () => {
+    const { rerender } = render(
+      <ThemeProvider>
+        <CurvedVideoPanel
+          video={mockVideo}
+          isFocused={true}
+          introCollapse={true}
+          scatterOnSelect={true}
+          ambientFloat={true}
+          focusReticles={true}
+          onSelect={vi.fn()}
+        />
+      </ThemeProvider>
+    )
+
+    expect(screen.getByTestId(`curved-panel-reticle-${mockVideo.id}`)).toBeInTheDocument()
+
+    // Advance frames for intro collapse + ambient float + focus reticles
+    act(() => {
+      runFrames(30, 0.016)
+    })
+
+    // When another item is selected, non-selected panel smoothly scatters outward rather than snapping off
+    rerender(
+      <ThemeProvider>
+        <CurvedVideoPanel
+          video={mockVideo}
+          isDimmed={true}
+          isSelected={false}
+          isFocused={false}
+          scatterOnSelect={true}
+          onSelect={vi.fn()}
+        />
+      </ThemeProvider>
+    )
+    act(() => {
+      runFrames(5, 0.016)
+    })
+    expect(screen.getByTestId(`curved-video-panel-${mockVideo.id}`)).toBeInTheDocument()
+  })
+
+  it('keeps crisp unattenuated borders on off-center panels and creates opposite-signed directional blur', () => {
+    // Center camera at origin looking toward -Z with 16:9 widescreen aspect
+    currentThreeState.camera.position.set(0, 0, 0)
+    currentThreeState.camera.aspect = 16 / 9
+    currentThreeState.camera.updateProjectionMatrix()
+    currentThreeState.camera.lookAt(0, 0, -5)
+    currentThreeState.camera.updateMatrixWorld()
+
+    // Upper-tier panel (~22 deg vertically, near top edge of 46 deg vertical FOV)
+    const upperEdgeVideo: GalleryItem = {
+      ...mockVideo,
+      id: 'vertical-edge-test',
+      tier: 'upper',
+      index: 1,
+      indexInTier: 0,
+      totalInTier: 1,
+      azimuthDeg: 0,
+      elevationDeg: 22,
+    }
+
+    const { container, unmount } = render(
+      <ThemeProvider>
+        <CurvedVideoPanel
+          video={upperEdgeVideo}
+          isFocused={false}
+          introCollapse={false}
+          motionBlur={true}
+          tierCount={3}
+          sphereRadius={5.5}
+          rowSeparation={2.05}
+          arcDegrees={0}
+          onSelect={vi.fn()}
+        />
+      </ThemeProvider>
+    )
+
+    act(() => {
+      runFrames(3, 0.016)
+    })
+
+    // Off-center panel borders remain crisp and unattenuated (vignette happens in screen space)
+    const borderMat = container.querySelector('lineloop linebasicmaterial') as unknown as {
+      opacity: number
+    }
+    expect(borderMat).toBeInTheDocument()
+    expect(borderMat.opacity).toBeGreaterThanOrEqual(0.39)
+
+    // Verify directional trailing blur flips sign for opposite pan directions
+    const out = { x: 0, y: 0 }
+    computePanelSurfaceBlur(new THREE.Vector3(-0.08, 0, 0), 0.016, 1.6, 0.9, 5.5, out)
+    expect(out.x).toBeGreaterThan(0.05)
+
+    computePanelSurfaceBlur(new THREE.Vector3(0.08, 0, 0), 0.016, 1.6, 0.9, 5.5, out)
+    expect(out.x).toBeLessThan(-0.05)
+
+    computePanelSurfaceBlur(new THREE.Vector3(0, -0.05, 0), 0.016, 1.6, 0.9, 5.5, out)
+    expect(out.y).toBeGreaterThan(0.05)
+
+    computePanelSurfaceBlur(new THREE.Vector3(0, 0, 0), 0.016, 1.6, 0.9, 5.5, out)
+    expect(out.x).toBe(0)
+    expect(out.y).toBe(0)
+
+    unmount()
+  })
+
+  it('flattens screen and border geometry curvature to planar during fly-in and restores curve on fly-out', () => {
+    const geos = buildCurvedPanelGeometries(1.6, 0.9, 5.5, 'photo')
+    const screenPos = geos.screenGeo.attributes.position
+    const borderPos = geos.borderGeo.attributes.position
+
+    // Initially curved along Rh = 5.5 (center x=0 has z=0, outer edges have z > 0)
+    const initialMaxScreenZ = Math.max(...Array.from({ length: screenPos.count }, (_, i) => screenPos.getZ(i)))
+    const initialMaxBorderZ = Math.max(...Array.from({ length: borderPos.count }, (_, i) => borderPos.getZ(i)))
+    expect(initialMaxScreenZ).toBeGreaterThan(0.05)
+    expect(initialMaxBorderZ).toBeGreaterThan(0.05)
+
+    // At curveFactor = 0 (fly-in arrived), every vertex is strictly planar (z = 0)
+    applyPanelCurvature(geos, 0)
+    for (let i = 0; i < screenPos.count; i++) {
+      expect(screenPos.getZ(i)).toBeCloseTo(0, 6)
+    }
+    for (let i = 0; i < borderPos.count; i++) {
+      expect(borderPos.getZ(i)).toBeCloseTo(0, 6)
+    }
+
+    // At curveFactor = 1 (fly-out restored), original cylindrical curvature returns identically
+    applyPanelCurvature(geos, 1)
+    const restoredMaxScreenZ = Math.max(...Array.from({ length: screenPos.count }, (_, i) => screenPos.getZ(i)))
+    const restoredMaxBorderZ = Math.max(...Array.from({ length: borderPos.count }, (_, i) => borderPos.getZ(i)))
+    expect(restoredMaxScreenZ).toBeCloseTo(initialMaxScreenZ, 6)
+    expect(restoredMaxBorderZ).toBeCloseTo(initialMaxBorderZ, 6)
+
+    geos.screenGeo.dispose()
+    geos.borderGeo.dispose()
+    geos.reticleGeo.dispose()
   })
 })

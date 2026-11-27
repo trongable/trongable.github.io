@@ -20,6 +20,7 @@ import {
   normalizeHex,
   getContrastRatio,
 } from '@/utils/colorUtils'
+import { useTuner } from '@/context/TunerContext'
 import { TunerProps, TunerTabId } from './tuner/tunerTypes'
 import { TunerGalleryTab } from './tuner/TunerGalleryTab'
 import { TunerGeometryTab } from './tuner/TunerGeometryTab'
@@ -74,6 +75,7 @@ export const Tuner: React.FC<TunerProps> = ({
   onResetVideoParams = () => {},
 }) => {
   const isEffectiveGallery = Boolean(isGalleryPage)
+  const { isTerminalOpen } = useTuner()
   const { containerStyle: ctxContainerStyle, setContainerStyle: ctxSetContainerStyle } =
     useAngelContainer()
   const activeAngelContainer = angelContainer ?? ctxContainerStyle
@@ -184,13 +186,17 @@ export const Tuner: React.FC<TunerProps> = ({
   return (
     <div
       data-testid="geometry-tuner"
-      className="fixed bottom-5 right-5 z-[60] flex flex-col items-end font-mono select-none"
+      className={`fixed right-5 z-[60] flex flex-col items-end font-mono select-none transition-[bottom] duration-150 ${
+        isTerminalOpen ? 'bottom-16' : 'bottom-5'
+      }`}
     >
       {/* Collapsible Tuning Drawer */}
       {isOpen && (
         <div
           data-testid="geometry-tuner-drawer"
-          className="mb-3 w-84 max-w-[calc(100vw-2.5rem)] rounded-xl border border-[var(--theme-primary)]/30 bg-[#1c1b22]/95 p-4 text-xs text-[var(--theme-primary)] shadow-2xl backdrop-blur-md transition-all max-h-[82vh] overflow-y-auto"
+          className={`mb-3 w-84 max-w-[calc(100vw-2.5rem)] rounded-xl border border-[var(--theme-primary)]/30 bg-[#1c1b22]/95 p-4 text-xs text-[var(--theme-primary)] shadow-2xl backdrop-blur-md transition-all overflow-y-auto ${
+            isTerminalOpen ? 'max-h-[calc(100dvh-9rem)]' : 'max-h-[82vh]'
+          }`}
         >
           {/* Header */}
           <div className="flex items-center justify-between border-b border-[var(--theme-primary)]/20 pb-2 mb-2.5">
