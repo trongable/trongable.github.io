@@ -308,4 +308,31 @@ describe('CurvedVideoPanel Component', () => {
     const hoveredCornerSpanDeg = (Math.asin((hw * 1.05) / Rcorner) * 180) / Math.PI * 2
     expect(centerStepDeg - hoveredCornerSpanDeg).toBeGreaterThan(2.0) // At least 2.0 deg (~14cm) clearance
   })
+
+  it('guarantees positive angular clearance in both 4-tier (Option B) and 3-tier (Option A) closed 360-degree 60-item rings', () => {
+    const panelWidth = 1.60
+    const panelHeight = 0.90
+    const hw = panelWidth / 2
+    const hh = panelHeight / 2
+
+    // Option B (4 tiers, 15 items/tier, R=5.5, arc=360, rowSeparation=1.55)
+    const rB = 5.5
+    const rowSepB = 1.55
+    const outerElevB = Math.asin((1.5 * rowSepB) / rB)
+    const cornerElevB = outerElevB + Math.asin(hh / rB)
+    const rCornerB = rB * Math.cos(cornerElevB)
+    const spanB = (Math.asin(hw / rCornerB) * 180) / Math.PI * 2
+    const stepB = 360 / 15
+    expect(stepB - spanB).toBeGreaterThan(4.5)
+
+    // Option A (3 tiers, 20 items/tier, R=6.0, arc=360, rowSeparation=1.80)
+    const rA = 6.0
+    const rowSepA = 1.80
+    const outerElevA = Math.asin(rowSepA / rA)
+    const cornerElevA = outerElevA + Math.asin(hh / rA)
+    const rCornerA = rA * Math.cos(cornerElevA)
+    const spanA = (Math.asin(hw / rCornerA) * 180) / Math.PI * 2
+    const stepA = 360 / 20
+    expect(stepA - spanA).toBeGreaterThan(1.3)
+  })
 })

@@ -1,49 +1,118 @@
 import * as THREE from 'three'
 import { GalleryItem, TierKind, RAW_GALLERY_DATA } from './galleryCatalog'
+import { DEFAULT_GALLERY_CHAMBER_PARAMS } from './galleryTunerConfig'
 
 /**
- * Distributes any number of gallery items evenly across the 3 spherical tiers
- * (upper, middle, lower), assigning extra items to the middle equator first
- * where circumference is largest.
+ * Returns the vertical row multiplier for a given tier in 3-tier or 4-tier layouts.
  */
-export function layoutGalleryTiers(items: GalleryItem[]): GalleryItem[] {
+export function tierFactorForTier(tier: TierKind): number {
+  switch (tier) {
+    case 'upper':
+      return 1
+    case 'upper-mid':
+      return 0.5
+    case 'middle':
+      return 0
+    case 'lower-mid':
+      return -0.5
+    case 'lower':
+      return -1
+  }
+}
+
+/**
+ * Computes the vertical row multiplier given both tier name and active tier count.
+ */
+export function getTierFactor(tier: TierKind, tierCount: 3 | 4): number {
+  if (tierCount === 4) {
+    if (tier === 'upper') return 1.5
+    if (tier === 'lower') return -1.5
+  }
+  return tierFactorForTier(tier)
+}
+
+/**
+ * Computes panel azimuth in degrees for a slot within a tier.
+ * When arcDegrees >= 360, distributes panels evenly around a closed 360° ring
+ * so the first and last panels never overlap at the ±180° seam.
+ */
+export function computePanelAzimuthDeg(
+  indexInTier: number,
+  totalInTier: number,
+  arcDegrees: number
+): number {
+  if (totalInTier <= 1) return 0
+  if (arcDegrees >= 360) {
+    return -180 + ((indexInTier + 0.5) / totalInTier) * 360
+  }
+  const stepRatio = Math.max(0, Math.min(1, indexInTier / (totalInTier - 1)))
+  return -arcDegrees / 2 + stepRatio * arcDegrees
+}
+
+/**
+ * Distributes any number of gallery items evenly across 3 or 4 spherical tiers,
+ * assigning extra items to the equatorial rows first where circumference is largest.
+ */
+export function layoutGalleryTiers(
+  items: GalleryItem[],
+  tierCount: 3 | 4 = DEFAULT_GALLERY_CHAMBER_PARAMS.tierCount,
+  arcDegrees: number = DEFAULT_GALLERY_CHAMBER_PARAMS.arcDegrees,
+  sphereRadius: number = DEFAULT_GALLERY_CHAMBER_PARAMS.sphereRadius,
+  rowSeparation: number = DEFAULT_GALLERY_CHAMBER_PARAMS.rowSeparation
+): GalleryItem[] {
   const n = items.length
-  const base = Math.floor(n / 3)
-  const rem = n % 3
-  const upperCount = base + (rem === 2 ? 1 : 0)
-  const middleCount = base + (rem >= 1 ? 1 : 0)
-  const lowerCount = n - upperCount - middleCount
+
+  let tiers: Array<{ name: TierKind; factor: number; count: number }>
+  if (tierCount === 4) {
+    const base = Math.floor(n / 4)
+    const rem = n % 4
+    // Extra items prioritize the two inner equatorial rows first, then upper
+    const upperCount = base + (rem >= 3 ? 1 : 0)
+    const upperMidCount = base + (rem >= 1 ? 1 : 0)
+    const lowerMidCount = base + (rem >= 2 ? 1 : 0)
+    const lowerCount = n - upperCount - upperMidCount - lowerMidCount
+    tiers = [
+      { name: 'upper', factor: 1.5, count: upperCount },
+      { name: 'upper-mid', factor: 0.5, count: upperMidCount },
+      { name: 'lower-mid', factor: -0.5, count: lowerMidCount },
+      { name: 'lower', factor: -1.5, count: lowerCount },
+    ]
+  } else {
+    const base = Math.floor(n / 3)
+    const rem = n % 3
+    const upperCount = base + (rem === 2 ? 1 : 0)
+    const middleCount = base + (rem >= 1 ? 1 : 0)
+    const lowerCount = n - upperCount - middleCount
+    tiers = [
+      { name: 'upper', factor: 1, count: upperCount },
+      { name: 'middle', factor: 0, count: middleCount },
+      { name: 'lower', factor: -1, count: lowerCount },
+    ]
+  }
 
   return items.map((item, idx) => {
-    let tier: TierKind = 'middle'
-    let elevationDeg = 0
-    let indexInTier = 0
-    let totalInTier = middleCount
-
-    if (idx < upperCount) {
-      tier = 'upper'
-      elevationDeg = 23.6
-      indexInTier = idx
-      totalInTier = upperCount
-    } else if (idx < upperCount + middleCount) {
-      tier = 'middle'
-      elevationDeg = 0
-      indexInTier = idx - upperCount
-      totalInTier = middleCount
-    } else {
-      tier = 'lower'
-      elevationDeg = -23.6
-      indexInTier = idx - upperCount - middleCount
-      totalInTier = lowerCount
+    let remaining = idx
+    let chosen = tiers[tiers.length - 1]
+    for (const t of tiers) {
+      if (remaining < t.count) {
+        chosen = t
+        break
+      }
+      remaining -= t.count
     }
 
-    const stepRatio = totalInTier > 1 ? indexInTier / (totalInTier - 1) : 0.5
-    const azimuthDeg = -110 + stepRatio * 220
+    const indexInTier = remaining
+    const totalInTier = chosen.count
+    const clampedRatio = Math.max(-0.95, Math.min(0.95, (chosen.factor * rowSeparation) / sphereRadius))
+    const elevationDeg =
+      Math.round(THREE.MathUtils.radToDeg(Math.asin(clampedRatio)) * 100) / 100
+
+    const azimuthDeg = computePanelAzimuthDeg(indexInTier, totalInTier, arcDegrees)
 
     return {
       ...item,
       index: idx + 1,
-      tier,
+      tier: chosen.name,
       indexInTier,
       totalInTier,
       azimuthDeg,
@@ -68,14 +137,20 @@ export const GALLERY_DATA: GalleryItem[] = layoutGalleryTiers(
   })
 )
 
-// Backward-compatible alias filtering strictly the 7 videos
+// Backward-compatible alias filtering strictly the videos
 export const VIDEOS_DATA: GalleryItem[] = GALLERY_DATA.filter((item) => item.type === 'video')
 
 /**
- * Randomizes gallery items across the 3 spherical tiers on page load.
+ * Randomizes gallery items across the spherical tiers on page load.
  * Uses Fisher-Yates shuffle and reassigns spatial coordinates (tier, azimuthDeg, elevationDeg).
  */
-export function randomizeGallery(items: GalleryItem[]): GalleryItem[] {
+export function randomizeGallery(
+  items: GalleryItem[],
+  tierCount: 3 | 4 = DEFAULT_GALLERY_CHAMBER_PARAMS.tierCount,
+  arcDegrees: number = DEFAULT_GALLERY_CHAMBER_PARAMS.arcDegrees,
+  sphereRadius: number = DEFAULT_GALLERY_CHAMBER_PARAMS.sphereRadius,
+  rowSeparation: number = DEFAULT_GALLERY_CHAMBER_PARAMS.rowSeparation
+): GalleryItem[] {
   const shuffled = [...items]
   for (let i = shuffled.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1))
@@ -84,7 +159,7 @@ export function randomizeGallery(items: GalleryItem[]): GalleryItem[] {
     shuffled[j] = temp
   }
 
-  return layoutGalleryTiers(shuffled)
+  return layoutGalleryTiers(shuffled, tierCount, arcDegrees, sphereRadius, rowSeparation)
 }
 
 /**

@@ -13,4 +13,7 @@ export {
   VIDEOS_DATA,
   randomizeGallery,
   computeSphericalPosition,
+  computePanelAzimuthDeg,
+  tierFactorForTier,
+  getTierFactor,
 } from './galleryLayout'

@@ -12,7 +12,7 @@ describe('CerebroChamber Component', () => {
     setMockThreeState({ pointer: { x: 0, y: 0 } })
   })
 
-  it('renders chamber container and all 7 video panels', () => {
+  it('renders chamber container and all 29 video panels', () => {
     render(
       <ThemeProvider>
         <CerebroChamber
@@ -379,5 +379,181 @@ describe('CerebroChamber Component', () => {
     })
 
     expect(screen.getByTestId('cerebro-chamber-container')).toBeInTheDocument()
+  })
+
+  it('allows unrestricted 360+ degree horizontal spin when maxYawDeg is 180 and clamps when below 180', () => {
+    const { unmount } = render(
+      <ThemeProvider>
+        <CerebroChamber
+          activeVideo={null}
+          params={{
+            ...DEFAULT_GALLERY_CHAMBER_PARAMS,
+            maxYawDeg: 180,
+            dragMultiplier: 4.0,
+          }}
+          onSelectVideo={vi.fn()}
+        />
+      </ThemeProvider>
+    )
+
+    const container = screen.getByTestId('cerebro-chamber-container')
+    fireEvent.pointerDown(container, { clientX: 600, clientY: 300 })
+    // Repeated horizontal drags past 180 deg should not clamp camera rotation
+    for (let i = 0; i < 6; i++) {
+      fireEvent.pointerMove(container, { clientX: 600 - (i + 1) * 400, clientY: 300 })
+    }
+    act(() => {
+      runFrames(5, 0.016)
+    })
+
+    // Camera quaternion should remain valid and rotated continuously without NaN
+    expect(Number.isFinite(currentThreeState.camera.rotation.y)).toBe(true)
+    fireEvent.pointerUp(container)
+    unmount()
+
+    // With freeSpin disabled and maxYawDeg = 45, dragging far keeps camera clamped within 45 deg
+    render(
+      <ThemeProvider>
+        <CerebroChamber
+          activeVideo={null}
+          params={{
+            ...DEFAULT_GALLERY_CHAMBER_PARAMS,
+            freeSpin: false,
+            maxYawDeg: 45,
+            dragMultiplier: 4.0,
+          }}
+          onSelectVideo={vi.fn()}
+        />
+      </ThemeProvider>
+    )
+
+    const containerClamped = screen.getByTestId('cerebro-chamber-container')
+    fireEvent.pointerDown(containerClamped, { clientX: 600, clientY: 300 })
+    fireEvent.pointerMove(containerClamped, { clientX: -1200, clientY: 300 })
+    act(() => {
+      runFrames(5, 0.016)
+    })
+    expect(Math.abs(currentThreeState.camera.rotation.y)).toBeLessThanOrEqual((45 * Math.PI) / 180 + 0.02)
+    fireEvent.pointerUp(containerClamped)
+  })
+
+  it('spins continuously with ArrowLeft/ArrowRight/A/D keys only when chamber is not dimmed', () => {
+    const { rerender } = render(
+      <ThemeProvider>
+        <CerebroChamber activeVideo={null} onSelectVideo={vi.fn()} />
+      </ThemeProvider>
+    )
+
+    act(() => {
+      runFrames(1, 0.016)
+    })
+    const startRotY = currentThreeState.camera.rotation.y
+
+    fireEvent.keyDown(window, { key: 'ArrowRight' })
+    act(() => {
+      runFrames(10, 0.016)
+    })
+    const afterRightRotY = currentThreeState.camera.rotation.y
+    expect(afterRightRotY).toBeLessThan(startRotY)
+
+    fireEvent.keyUp(window, { key: 'ArrowRight' })
+    fireEvent.keyDown(window, { key: 'a' })
+    act(() => {
+      runFrames(15, 0.016)
+    })
+    expect(currentThreeState.camera.rotation.y).toBeGreaterThan(afterRightRotY)
+    fireEvent.keyUp(window, { key: 'a' })
+
+    // Let camera damping settle before opening overlay
+    act(() => {
+      runFrames(45, 0.016)
+    })
+
+    // When dimmed (overlay open), keyboard spin keys do not pan chamber
+    rerender(
+      <ThemeProvider>
+        <CerebroChamber activeVideo={VIDEOS_DATA[0]} onSelectVideo={vi.fn()} />
+      </ThemeProvider>
+    )
+    act(() => {
+      runFrames(2, 0.016)
+    })
+    const dimmedRotY = currentThreeState.camera.rotation.y
+    fireEvent.keyDown(window, { key: 'd' })
+    act(() => {
+      runFrames(10, 0.016)
+    })
+    expect(currentThreeState.camera.rotation.y).toBeCloseTo(dimmedRotY, 3)
+    fireEvent.keyUp(window, { key: 'd' })
+  })
+
+  it('pans vertically with ArrowUp/ArrowDown/W/S keys only when chamber is not dimmed', () => {
+    const { rerender } = render(
+      <ThemeProvider>
+        <CerebroChamber activeVideo={null} onSelectVideo={vi.fn()} />
+      </ThemeProvider>
+    )
+
+    act(() => {
+      runFrames(1, 0.016)
+    })
+    const startPitch = currentThreeState.camera.rotation.x
+
+    fireEvent.keyDown(window, { key: 'ArrowUp' })
+    act(() => {
+      runFrames(10, 0.016)
+    })
+    const afterUpPitch = currentThreeState.camera.rotation.x
+    expect(afterUpPitch).toBeGreaterThan(startPitch)
+    fireEvent.keyUp(window, { key: 'ArrowUp' })
+
+    fireEvent.keyDown(window, { key: 's' })
+    act(() => {
+      runFrames(20, 0.016)
+    })
+    expect(currentThreeState.camera.rotation.x).toBeLessThan(afterUpPitch)
+    fireEvent.keyUp(window, { key: 's' })
+    act(() => {
+      runFrames(45, 0.016)
+    })
+
+    // When dimmed, W/S keys do not tilt camera
+    rerender(
+      <ThemeProvider>
+        <CerebroChamber activeVideo={VIDEOS_DATA[0]} onSelectVideo={vi.fn()} />
+      </ThemeProvider>
+    )
+    act(() => {
+      runFrames(2, 0.016)
+    })
+    const dimmedPitch = currentThreeState.camera.rotation.x
+    fireEvent.keyDown(window, { key: 'w' })
+    act(() => {
+      runFrames(10, 0.016)
+    })
+    expect(currentThreeState.camera.rotation.x).toBeCloseTo(dimmedPitch, 2)
+    fireEvent.keyUp(window, { key: 'w' })
+  })
+
+  it('calls preventDefault on horizontal wheel events when active to block Chrome back/forward nav gestures', () => {
+    const { rerender } = render(
+      <ThemeProvider>
+        <CerebroChamber activeVideo={null} onSelectVideo={vi.fn()} />
+      </ThemeProvider>
+    )
+
+    const container = screen.getByTestId('cerebro-chamber-container')
+    const activeEvent = new WheelEvent('wheel', { deltaX: 120, deltaY: 0, bubbles: true, cancelable: true })
+    container.dispatchEvent(activeEvent)
+    expect(activeEvent.defaultPrevented).toBe(true)
+
+    rerender(
+      <ThemeProvider>
+        <CerebroChamber activeVideo={VIDEOS_DATA[0]} onSelectVideo={vi.fn()} />
+      </ThemeProvider>
+    )
+    const dimmedEvent = new WheelEvent('wheel', { deltaX: 120, deltaY: 0, bubbles: true, cancelable: true })
+    container.dispatchEvent(dimmedEvent)
+    expect(dimmedEvent.defaultPrevented).toBe(false)
   })
 })

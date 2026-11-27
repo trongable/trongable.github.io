@@ -1,11 +1,16 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { useRouter } from '../routes/Router'
 import { useTuner } from '../context/TunerContext'
 import { useTheme } from '../context/ThemeContext'
 import { usePowerManager } from '../hooks/usePowerManager'
 import { CerebroChamber } from '@/components/gallery/CerebroChamber'
 import { GalleryTheaterOverlay } from '@/components/gallery/GalleryTheaterOverlay'
-import { GalleryItem, GALLERY_DATA, randomizeGallery } from '../components/gallery/galleryData'
+import {
+  GalleryItem,
+  GALLERY_DATA,
+  layoutGalleryTiers,
+  randomizeGallery,
+} from '../components/gallery/galleryData'
 import {
   GalleryChamberParams,
   DEFAULT_GALLERY_CHAMBER_PARAMS,
@@ -19,8 +24,8 @@ export const GalleryPage: React.FC = () => {
   const { currentTheme, setTheme, setCustomColor, isThemeLocked, setIsThemeLocked } = useTheme()
   const { isBattery, powerMode, setPowerMode, targetFps, targetDpr } = usePowerManager()
 
-  // Randomize gallery items on page load, or preserve canonical order if random=false is present
-  const [galleryItems] = useState<GalleryItem[]>(() => {
+  // Randomize gallery items once on page load, or preserve canonical order if random=false is present
+  const [baseGalleryItems] = useState<GalleryItem[]>(() => {
     if (typeof window !== 'undefined' && window.location.hash.includes('random=false')) {
       return GALLERY_DATA
     }
@@ -30,6 +35,24 @@ export const GalleryPage: React.FC = () => {
   const [selectedItem, setSelectedItem] = useState<GalleryItem | null>(null)
   const [activeItem, setActiveItem] = useState<GalleryItem | null>(null)
   const [galleryParams, setGalleryParams] = useState<GalleryChamberParams>(DEFAULT_GALLERY_CHAMBER_PARAMS)
+
+  const galleryItems = useMemo(
+    () =>
+      layoutGalleryTiers(
+        baseGalleryItems,
+        galleryParams.tierCount,
+        galleryParams.arcDegrees,
+        galleryParams.sphereRadius,
+        galleryParams.rowSeparation
+      ),
+    [
+      baseGalleryItems,
+      galleryParams.tierCount,
+      galleryParams.arcDegrees,
+      galleryParams.sphereRadius,
+      galleryParams.rowSeparation,
+    ]
+  )
   const [isAnimationPaused, setIsAnimationPaused] = useState(false)
   const transitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -86,7 +109,7 @@ export const GalleryPage: React.FC = () => {
   return (
     <main
       data-testid="gallery-page"
-      className="relative w-full h-full min-h-dvh bg-[#0c0b10] text-[var(--theme-primary)] flex flex-col overflow-hidden select-none lowercase"
+      className="relative w-full h-full min-h-dvh bg-[#0c0b10] text-[var(--theme-primary)] flex flex-col overflow-hidden overscroll-none select-none lowercase"
     >
       {/* Minimalist Return Home Link matching other shell pages */}
       <button

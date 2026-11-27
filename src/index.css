@@ -40,6 +40,8 @@
     min-height: 100dvh;
     overflow-x: hidden;
     overscroll-behavior: none;
+    overscroll-behavior-x: none;
+    overscroll-behavior-y: none;
     -webkit-overflow-scrolling: auto;
     background-color: #1c1b22;
     color: var(--theme-primary, #e2f872);

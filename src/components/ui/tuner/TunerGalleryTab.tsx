@@ -1,9 +1,16 @@
 import React from 'react'
 import {
   GalleryChamberParams,
+  GalleryLayoutMode,
   GALLERY_CHAMBER_PARAM_BOUNDS,
+  GALLERY_LAYOUT_PRESETS,
 } from '@/components/gallery/galleryTunerConfig'
-import { TunerSlider } from './TunerControls'
+import { TunerCheckbox, TunerSlider, TunerStyleGrid } from './TunerControls'
+
+const LAYOUT_OPTIONS: ReadonlyArray<{ id: GalleryLayoutMode; label: string }> = [
+  { id: '4-tier', label: '4-Tier (B)' },
+  { id: '3-tier', label: '3-Tier (A)' },
+]
 
 interface TunerGalleryTabProps {
   videoParams: GalleryChamberParams
@@ -22,8 +29,25 @@ export const TunerGalleryTab: React.FC<TunerGalleryTabProps> = ({
   onVideoParamChange,
   onResetVideoParams,
 }) => {
+  const activeLayoutMode: GalleryLayoutMode = videoParams.tierCount === 3 ? '3-tier' : '4-tier'
+
+  const handleSelectLayout = (mode: GalleryLayoutMode) => {
+    const preset = GALLERY_LAYOUT_PRESETS[mode]
+    ;(Object.keys(preset) as Array<keyof typeof preset>).forEach((key) => {
+      onVideoParamChange(key, preset[key])
+    })
+  }
+
   return (
     <div data-testid="gallery-chamber-tuner-tab" className="space-y-2.5">
+      <TunerStyleGrid
+        label="Chamber Layout"
+        options={LAYOUT_OPTIONS}
+        activeValue={activeLayoutMode}
+        onSelect={handleSelectLayout}
+        columns={3}
+      />
+
       <TunerSlider
         label="Sphere Radius"
         ariaLabel="Sphere Radius"
@@ -108,12 +132,19 @@ export const TunerGalleryTab: React.FC<TunerGalleryTabProps> = ({
         onChange={(v) => onVideoParamChange('flingInertia', v)}
       />
 
+      <TunerCheckbox
+        label="Free Spin (360°+)"
+        ariaLabel="Free Spin (360°+)"
+        checked={videoParams.freeSpin}
+        onChange={(checked) => onVideoParamChange('freeSpin', checked)}
+      />
+
       <div className="grid grid-cols-2 gap-2">
         <TunerSlider
           label="Max Yaw"
           ariaLabel="Max Yaw"
           labelClassName="opacity-80"
-          valueDisplay={`±${videoParams.maxYawDeg}°`}
+          valueDisplay={videoParams.freeSpin || videoParams.maxYawDeg >= 180 ? '∞ 360°+' : `±${videoParams.maxYawDeg}°`}
           min={GALLERY_CHAMBER_PARAM_BOUNDS.maxYawDeg.min}
           max={GALLERY_CHAMBER_PARAM_BOUNDS.maxYawDeg.max}
           step={GALLERY_CHAMBER_PARAM_BOUNDS.maxYawDeg.step}

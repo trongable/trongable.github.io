@@ -4,38 +4,60 @@ const VIDEOS = [
   {
     id: 'qopBymi9FYY',
     youtubeId: 'qopBymi9FYY',
-    title: 'Attack on Titan: Get Ready For This AMV',
+    title: 'attack on titan: get ready for this amv',
   },
   {
     id: 'q_25b9zlUa0',
     youtubeId: 'q_25b9zlUa0',
-    title: 'Halo 3/Reach :: Bells and Whistles Minitage',
+    title: 'halo 3/reach :: bells and whistles minitage',
   },
   {
     id: '5qR27jBSYaE',
     youtubeId: '5qR27jBSYaE',
-    title: 'Halo 3 :: Aspirations Trailer',
+    title: 'halo 3 :: aspirations trailer',
   },
   {
     id: '7ZCbvoHtwSY',
     youtubeId: '7ZCbvoHtwSY',
-    title: 'Halo 3 :: H3M1',
+    title: 'halo 3 :: h3m1',
   },
   {
     id: '_ZMbKpKUmsU',
     youtubeId: '_ZMbKpKUmsU',
-    title: 'Halo 3 :: Betatage',
+    title: 'halo 3 :: betatage',
   },
   {
     id: 'OPB3AVjlPyg',
     youtubeId: 'OPB3AVjlPyg',
-    title: 'Halo 4 :: Highlights',
+    title: 'halo 4 :: highlights',
   },
   {
     id: 'NXck93vKCpQ',
     youtubeId: 'NXck93vKCpQ',
-    title: 'FFA #5 - Round 1, Heat 1 (Trongavitus POV)',
+    title: 'ffa #5 - round 1, heat 1 (trongavitus pov)',
   },
+  { id: '1CorPsJtwM8', youtubeId: '1CorPsJtwM8', title: 'monarchs iii' },
+  { id: 'LrvfELsyZVY', youtubeId: 'LrvfELsyZVY', title: 'monarchs ii' },
+  { id: 'r6YJfytbRE8', youtubeId: 'r6YJfytbRE8', title: 'monarchs i' },
+  { id: 'Qv4f0Z9UyBc', youtubeId: 'Qv4f0Z9UyBc', title: 'corolla nc' },
+  { id: 'jbsUj8ZGJ0Q', youtubeId: 'jbsUj8ZGJ0Q', title: 'july 4th 2026' },
+  { id: 'FZkjZuTGTWk', youtubeId: 'FZkjZuTGTWk', title: 'baltimore md' },
+  { id: 'EJ9YCugHMfI', youtubeId: 'EJ9YCugHMfI', title: 'coopers rock state park' },
+  { id: 'AglZHPEcqnc', youtubeId: 'AglZHPEcqnc', title: 'arlington va' },
+  { id: 'ARlMMjH9S6U', youtubeId: 'ARlMMjH9S6U', title: 'pennsylvania' },
+  { id: 'JgRafkC2D9w', youtubeId: 'JgRafkC2D9w', title: 'arlington va' },
+  { id: 'wBb8EO6GWMQ', youtubeId: 'wBb8EO6GWMQ', title: 'trap pond state park' },
+  { id: '76yTpY6OEJA', youtubeId: '76yTpY6OEJA', title: 'arlington va' },
+  { id: 'I6nAwyrAr0s', youtubeId: 'I6nAwyrAr0s', title: 'coopers rock state park' },
+  { id: 'AqUk9zJXt_M', youtubeId: 'AqUk9zJXt_M', title: 'washington dc' },
+  { id: 'xZz_ZF7bIEs', youtubeId: 'xZz_ZF7bIEs', title: 'great falls va' },
+  { id: 'DD-5Qr_u_mE', youtubeId: 'DD-5Qr_u_mE', title: 'okaton sd' },
+  { id: '9k0ml1YD3I4', youtubeId: '9k0ml1YD3I4', title: 'badlands national park' },
+  { id: '5Htdp2kELys', youtubeId: '5Htdp2kELys', title: 'falls church va' },
+  { id: 'DjuyoTjaEBY', youtubeId: 'DjuyoTjaEBY', title: 'monarchs iv' },
+  { id: 'Rk2zJAotf2o', youtubeId: 'Rk2zJAotf2o', title: 'monarchs v' },
+  { id: 'QPG8lMWOphs', youtubeId: 'QPG8lMWOphs', title: 'brooklyn ny' },
+  { id: 'Vk0l7fatwbA', youtubeId: 'Vk0l7fatwbA', title: 'nyc ny' },
 ]
 
 const PHOTOS = [
@@ -59,10 +81,17 @@ const PHOTOS = [
   { id: 'photo-bison', title: 'custer state park' },
   { id: 'photo-vintage-toys', title: 'falls church va' },
   { id: 'photo-hogan', title: 'page az' },
-  { id: 'photo-monotype-monarch-pink', title: 'monarch print i' },
-  { id: 'photo-monotype-monarch-cyan', title: 'monarch print ii' },
-  { id: 'photo-monotype-monarch-coral', title: 'monarch print iii' },
-  { id: 'photo-monotype-monarch-wings', title: 'monarch print iv' },
+  { id: 'photo-monotype-monarch-pink', title: 'monarch screenprint i' },
+  { id: 'photo-monotype-monarch-cyan', title: 'monarch screenprint ii' },
+  { id: 'photo-monotype-monarch-coral', title: 'monarch screenprint iii' },
+  { id: 'photo-monotype-monarch-wings', title: 'monarch screenprint iv' },
+  { id: 'photo-acrylic-pour-emerald', title: 'acrylic pour i' },
+  { id: 'photo-acrylic-pour-coral', title: 'acrylic pour ii' },
+  { id: 'photo-acrylic-pour-jade', title: 'acrylic pour iii' },
+  { id: 'photo-sonny-screenprint-i', title: 'sonny screenprint i' },
+  { id: 'photo-pink-sunset-trees', title: 'arlington va' },
+  { id: 'photo-acrylic-pour-magenta', title: 'acrylic pour iv' },
+  { id: 'photo-antelope-canyon', title: 'antelope canyon' },
 ]
 
 test.describe('Gallery Page End-to-End Suite', () => {
@@ -100,7 +129,7 @@ test.describe('Gallery Page End-to-End Suite', () => {
     expect(box!.height).toBeGreaterThan(150)
   })
 
-  test('TC-02: Accessible navigation items exist for all 31 gallery items (7 videos + 24 photos)', async ({ page }) => {
+  test('TC-02: Accessible navigation items exist for all 60 gallery items (29 videos + 31 photos)', async ({ page }) => {
     await page.goto('/#/gallery')
 
     const nav = page.getByRole('navigation', { name: 'Available Gallery Items' })
@@ -251,8 +280,17 @@ test.describe('Gallery Page End-to-End Suite', () => {
     const drawer = page.locator('[data-testid="geometry-tuner-drawer"]')
     await expect(drawer).toBeVisible()
 
-    // Verify Gallery Chamber tab is selected
+    // Verify Gallery Chamber tab is selected and layout preset toggle works
     await expect(drawer.getByRole('button', { name: 'Gallery Chamber', exact: true })).toBeVisible()
+    await expect(drawer.getByRole('button', { name: '4-Tier (B)' })).toBeVisible()
+    await expect(drawer.getByRole('button', { name: '3-Tier (A)' })).toBeVisible()
+    await expect(drawer.getByLabel('Free Spin (360°+)')).toBeChecked()
+    await expect(drawer.locator('text=360°').first()).toBeVisible()
+    await drawer.getByRole('button', { name: '3-Tier (A)' }).click()
+    await expect(drawer.locator('text=6.0')).toBeVisible()
+    await drawer.getByRole('button', { name: '4-Tier (B)' }).click()
+    await expect(drawer.locator('text=5.5')).toBeVisible()
+
     await expect(drawer.locator('text=Sphere Radius')).toBeVisible()
     await expect(drawer.locator('text=Horizontal Wrap Arc')).toBeVisible()
     await expect(drawer.locator('text=Pan Sensitivity')).toBeVisible()
@@ -267,10 +305,10 @@ test.describe('Gallery Page End-to-End Suite', () => {
     const firstButtonCanonical = await navDeterministic.locator('button').first().textContent()
     expect(firstButtonCanonical).toBe('View zion national park')
 
-    // 2. Normal visit without random=false is randomized and contains all 31 items
+    // 2. Normal visit without random=false is randomized and contains all 60 items
     await page.goto('/#/gallery')
     const navRandom = page.getByRole('navigation', { name: 'Available Gallery Items' })
     const buttons = await navRandom.locator('button').all()
-    expect(buttons).toHaveLength(31)
+    expect(buttons).toHaveLength(60)
   })
 })

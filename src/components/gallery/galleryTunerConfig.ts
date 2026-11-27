@@ -1,4 +1,8 @@
+export type GalleryLayoutMode = '4-tier' | '3-tier'
+
 export interface GalleryChamberParams {
+  tierCount: 3 | 4
+  freeSpin: boolean
   sphereRadius: number
   thumbnailScale: number
   arcDegrees: number
@@ -16,16 +20,39 @@ export interface GalleryChamberParams {
 // Retain alias for backward compatibility
 export type VideoChamberParams = GalleryChamberParams
 
+export const GALLERY_LAYOUT_PRESETS: Record<
+  GalleryLayoutMode,
+  Pick<
+    GalleryChamberParams,
+    'tierCount' | 'freeSpin' | 'sphereRadius' | 'arcDegrees' | 'rowSeparation' | 'maxYawDeg' | 'thumbnailScale'
+  >
+> = {
+  '4-tier': {
+    tierCount: 4,
+    freeSpin: true,
+    sphereRadius: 5.5,
+    arcDegrees: 360,
+    rowSeparation: 1.55,
+    maxYawDeg: 180,
+    thumbnailScale: 1.0,
+  },
+  '3-tier': {
+    tierCount: 3,
+    freeSpin: true,
+    sphereRadius: 6.0,
+    arcDegrees: 360,
+    rowSeparation: 1.80,
+    maxYawDeg: 180,
+    thumbnailScale: 1.0,
+  },
+}
+
 export const DEFAULT_GALLERY_CHAMBER_PARAMS: GalleryChamberParams = {
-  sphereRadius: 4.5,
-  thumbnailScale: 1.0,
-  arcDegrees: 220,
-  rowSeparation: 1.80,
-  panSensitivity: 1.0,
-  dragMultiplier: 1.3,
-  flingInertia: 1.6,
-  maxYawDeg: 140,
-  maxPitchDeg: 32,
+  ...GALLERY_LAYOUT_PRESETS['4-tier'],
+  panSensitivity: 1.2,
+  dragMultiplier: 1.8,
+  flingInertia: 1.9,
+  maxPitchDeg: 36,
   transitSpeed: 16,
   dimIntensity: 0.90,
   particleCount: 120,
@@ -37,7 +64,7 @@ export const DEFAULT_VIDEO_CHAMBER_PARAMS = DEFAULT_GALLERY_CHAMBER_PARAMS
 export const GALLERY_CHAMBER_PARAM_BOUNDS = {
   sphereRadius: { min: 3.5, max: 7.0, step: 0.1 },
   thumbnailScale: { min: 0.7, max: 1.4, step: 0.05 },
-  arcDegrees: { min: 80, max: 280, step: 5 },
+  arcDegrees: { min: 80, max: 360, step: 5 },
   rowSeparation: { min: 0.6, max: 2.5, step: 0.05 },
   panSensitivity: { min: 0.5, max: 3.0, step: 0.1 },
   dragMultiplier: { min: 0.2, max: 3.0, step: 0.1 },

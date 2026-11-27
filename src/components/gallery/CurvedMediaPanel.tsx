@@ -3,7 +3,8 @@ import * as THREE from 'three'
 import { useFrame, useThree } from '@react-three/fiber'
 import { Text } from '@react-three/drei'
 import { useTheme } from '@/context/ThemeContext'
-import { GalleryItem, computeSphericalPosition } from './galleryData'
+import { GalleryItem, computeSphericalPosition, computePanelAzimuthDeg, getTierFactor } from './galleryData'
+import { DEFAULT_GALLERY_CHAMBER_PARAMS } from './galleryTunerConfig'
 import {
   SCREEN_VERTEX_SHADER,
   SCREEN_FRAGMENT_SHADER,
@@ -19,6 +20,7 @@ export interface CurvedMediaPanelProps {
   isSelected?: boolean
   thumbnailScale?: number
   transitSpeed?: number
+  tierCount?: 3 | 4
   sphereRadius?: number
   arcDegrees?: number
   rowSeparation?: number
@@ -31,11 +33,12 @@ export const CurvedMediaPanel: React.FC<CurvedMediaPanelProps> = ({
   video,
   isDimmed = false,
   isSelected = false,
-  thumbnailScale = 1.0,
-  transitSpeed = 16,
-  sphereRadius = 4.5,
-  arcDegrees = 200,
-  rowSeparation = 1.8,
+  thumbnailScale = DEFAULT_GALLERY_CHAMBER_PARAMS.thumbnailScale,
+  transitSpeed = DEFAULT_GALLERY_CHAMBER_PARAMS.transitSpeed,
+  tierCount = DEFAULT_GALLERY_CHAMBER_PARAMS.tierCount,
+  sphereRadius = DEFAULT_GALLERY_CHAMBER_PARAMS.sphereRadius,
+  arcDegrees = DEFAULT_GALLERY_CHAMBER_PARAMS.arcDegrees,
+  rowSeparation = DEFAULT_GALLERY_CHAMBER_PARAMS.rowSeparation,
   onSelect,
 }) => {
   const { currentTheme } = useTheme()
@@ -85,10 +88,9 @@ export const CurvedMediaPanel: React.FC<CurvedMediaPanelProps> = ({
         ? video.indexInTier
         : (video.index - 1) % totalInTier
 
-    const stepRatio = totalInTier > 1 ? Math.max(0, Math.min(1, indexInTier / (totalInTier - 1))) : 0.5
-    const azimuth = -arcDegrees / 2 + stepRatio * arcDegrees
+    const azimuth = computePanelAzimuthDeg(indexInTier, totalInTier, arcDegrees)
 
-    const tierFactor = video.tier === 'upper' ? 1 : video.tier === 'lower' ? -1 : 0
+    const tierFactor = getTierFactor(video.tier, tierCount)
     const clampedRatio = Math.max(-0.95, Math.min(0.95, (tierFactor * rowSeparation) / sphereRadius))
     const elevation = THREE.MathUtils.radToDeg(Math.asin(clampedRatio))
 
@@ -109,6 +111,7 @@ export const CurvedMediaPanel: React.FC<CurvedMediaPanelProps> = ({
     video.index,
     video.indexInTier,
     video.totalInTier,
+    tierCount,
     sphereRadius,
     arcDegrees,
     rowSeparation,

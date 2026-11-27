@@ -800,8 +800,22 @@ describe('Tuner Component', () => {
     // Open drawer
     fireEvent.click(screen.getByLabelText('Toggle parameter drawer'))
     expect(screen.getByRole('button', { name: 'Gallery Chamber' })).toBeInTheDocument()
+    expect(screen.getByText('Chamber Layout')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '4-Tier (B)' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '3-Tier (A)' })).toBeInTheDocument()
     expect(screen.getByText('Sphere Radius')).toBeInTheDocument()
     expect(screen.getByText('Thumbnail Scale')).toBeInTheDocument()
+    expect(screen.getByLabelText('Free Spin (360°+)')).toBeChecked()
+
+    // Toggle Free Spin checkbox
+    fireEvent.click(screen.getByLabelText('Free Spin (360°+)'))
+    expect(onVideoParamChange).toHaveBeenCalledWith('freeSpin', false)
+
+    // Toggle layout preset to 3-Tier (A)
+    fireEvent.click(screen.getByRole('button', { name: '3-Tier (A)' }))
+    expect(onVideoParamChange).toHaveBeenCalledWith('tierCount', 3)
+    expect(onVideoParamChange).toHaveBeenCalledWith('sphereRadius', 6.0)
+    expect(onVideoParamChange).toHaveBeenCalledWith('arcDegrees', 360)
 
     // Change sphere radius slider
     const radiusSlider = screen.getByLabelText('Sphere Radius')
