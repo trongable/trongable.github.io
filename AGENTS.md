@@ -15,6 +15,9 @@ npm run test:related -- <source-file>  # Tests related to modified source file
 # Tier 2 — Pre-completion gate (<4.5s, dot reporter, zero console spam)
 npm run verify:agent                   # Oxlint + TypeScript 7 + full Vitest suite
 
+# Pre-Push / CI Parity Gate (mirrors .github/workflows/deploy.yml)
+npm run verify:ci                      # lint + typecheck + test:coverage + build (auto-run by .githooks/pre-push on master)
+
 # Tier 3 — E2E WebGL verification (<4s single spec / ~20s full)
 npm run e2e:agent -- e2e/<spec>        # Targeted Desktop Chromium runner
 
@@ -27,6 +30,7 @@ npm run test:coverage  # Vitest with V8 coverage & threshold gates
 npm run test:e2e       # Full Playwright suite (Desktop + Mobile Chrome)
 npm run build          # Production bundle (tsc + vite)
 npm run preview        # Preview production build
+npm run prepare        # Configure git core.hooksPath to .githooks
 ```
 
 ---
@@ -58,7 +62,7 @@ npm run preview        # Preview production build
 ## Testing Conventions
 
 - **Unit & Component Tests**: Co-locate in `<feature>/__tests__/`. Add tests for every new feature, topology, or route.
-- **`vmThreads` Hygiene**: Because Vitest runs in `vmThreads`, always restore mocked globals, timers, and DOM state in `afterEach` and reuse existing R3F mock patterns in `vitest.setup.ts`.
+- **`vmThreads` Hygiene**: Because Vitest runs in `vmThreads`, always restore mocked globals, timers, and DOM state in `afterEach`, reuse existing R3F/Drei mocks in `vitest.setup.ts` via `vi.mocked(...).mockImplementation(...)` in `beforeEach`, and never reference top-level variables or `importOriginal` inside hoisted `vi.mock(...)` factories.
 - **Deterministic Playwright E2E**: Use URL state params (`?paused=true&geo=<mode>&yaw=0&pitch=0`) to freeze and position 3D scenes deterministically instead of adding arbitrary timeouts.
 
 ---

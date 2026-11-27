@@ -19,6 +19,8 @@
     "typecheck": "tsc --noEmit",
     "lint": "oxlint src",
     "verify:agent": "oxlint src && tsc --noEmit && vitest run --silent --reporter=dot",
+    "verify:ci": "npm run lint && npm run typecheck && npm run test:coverage && npm run build",
+    "prepare": "node -e \"const fs=require('fs'),{execSync}=require('child_process');if(fs.existsSync('.git'))execSync('git config core.hooksPath .githooks',{stdio:'inherit'})\"",
     "gallery:thumbnails": "python scripts/generate-gallery-thumbnails.py"
   },
   "repository": {

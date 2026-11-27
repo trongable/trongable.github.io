@@ -12,6 +12,11 @@ export default defineConfig({
   },
   test: {
     environment: 'jsdom',
+    server: {
+      deps: {
+        inline: ['three'],
+      },
+    },
     environmentMatchGlobs: [
       ['src/utils/**', 'node'],
       ['src/components/canvas/geometries/__tests__/geometryMath.test.ts', 'node'],
