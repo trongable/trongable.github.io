@@ -23,6 +23,8 @@ export interface CurvedMediaPanelProps {
   video: GalleryItem
   isDimmed?: boolean
   isSelected?: boolean
+  isOverlayActive?: boolean
+  isPaused?: boolean
   isFocused?: boolean
   onHoverChange?: (id: string, hovered: boolean) => void
   introCollapse?: boolean
@@ -32,7 +34,6 @@ export interface CurvedMediaPanelProps {
   motionBlur?: boolean
   thumbnailScale?: number
   transitSpeed?: number
-  tierCount?: 3 | 4
   sphereRadius?: number
   arcDegrees?: number
   rowSeparation?: number
@@ -45,6 +46,8 @@ export const CurvedMediaPanel: React.FC<CurvedMediaPanelProps> = ({
   video,
   isDimmed = false,
   isSelected = false,
+  isOverlayActive = false,
+  isPaused = false,
   isFocused,
   onHoverChange,
   introCollapse = DEFAULT_GALLERY_CHAMBER_PARAMS.introCollapse,
@@ -54,7 +57,6 @@ export const CurvedMediaPanel: React.FC<CurvedMediaPanelProps> = ({
   motionBlur = DEFAULT_GALLERY_CHAMBER_PARAMS.motionBlur,
   thumbnailScale = DEFAULT_GALLERY_CHAMBER_PARAMS.thumbnailScale,
   transitSpeed = DEFAULT_GALLERY_CHAMBER_PARAMS.transitSpeed,
-  tierCount = DEFAULT_GALLERY_CHAMBER_PARAMS.tierCount,
   sphereRadius = DEFAULT_GALLERY_CHAMBER_PARAMS.sphereRadius,
   arcDegrees = DEFAULT_GALLERY_CHAMBER_PARAMS.arcDegrees,
   rowSeparation = DEFAULT_GALLERY_CHAMBER_PARAMS.rowSeparation,
@@ -67,6 +69,7 @@ export const CurvedMediaPanel: React.FC<CurvedMediaPanelProps> = ({
   const highlightColorHex = currentTheme.highlight
 
   const groupRef = useRef<THREE.Group>(null)
+  const titleGroupRef = useRef<THREE.Group>(null)
   const meshRef = useRef<THREE.Mesh>(null)
   const backingMatRef = useRef<THREE.MeshBasicMaterial>(null)
   const borderMatRef = useRef<THREE.LineBasicMaterial>(null)
@@ -87,6 +90,7 @@ export const CurvedMediaPanel: React.FC<CurvedMediaPanelProps> = ({
       uMap: { value: null as THREE.Texture | null },
       uHasMap: { value: false },
       uOpacity: { value: 1.0 },
+      uBrightness: { value: 1.0 },
       uBlurVec: { value: new THREE.Vector2(0, 0) },
     }),
     []
@@ -104,7 +108,6 @@ export const CurvedMediaPanel: React.FC<CurvedMediaPanelProps> = ({
   const { initialPosition, initialQuaternion, Rh } = useMemo(() => {
     const { azimuthDeg, elevationDeg } = computePanelSphericalAngles(
       video,
-      tierCount,
       arcDegrees,
       sphereRadius,
       rowSeparation
@@ -123,7 +126,6 @@ export const CurvedMediaPanel: React.FC<CurvedMediaPanelProps> = ({
     }
   }, [
     video,
-    tierCount,
     sphereRadius,
     arcDegrees,
     rowSeparation,
@@ -263,12 +265,15 @@ export const CurvedMediaPanel: React.FC<CurvedMediaPanelProps> = ({
     itemType: video.type,
     panelWidth,
     panelHeight,
+    panelCurveRadius: Rh,
     sphereRadius,
     initialPosition,
     initialQuaternion,
     panelGeos,
     isDimmed,
     isSelected,
+    isOverlayActive,
+    isPaused,
     effectiveFocused,
     introCollapse,
     scatterOnSelect,
@@ -280,6 +285,7 @@ export const CurvedMediaPanel: React.FC<CurvedMediaPanelProps> = ({
     themeColorHex,
     highlightColorHex,
     groupRef,
+    titleGroupRef,
     backingMatRef,
     borderMatRef,
     reticleMatRef,
@@ -295,6 +301,7 @@ export const CurvedMediaPanel: React.FC<CurvedMediaPanelProps> = ({
       ref={groupRef}
       position={mountPosition}
       quaternion={initialQuaternion}
+      renderOrder={1}
       visible={scatterOnSelect ? true : !isDimmed || isSelected}
       data-testid={`curved-video-panel-${video.id}`}
     >
@@ -384,7 +391,7 @@ export const CurvedMediaPanel: React.FC<CurvedMediaPanelProps> = ({
         </group>
       )}
 
-      <group position={[0, -panelHeight / 2 - 0.10, 0]} raycast={() => null}>
+      <group ref={titleGroupRef} position={[0, -panelHeight / 2 - 0.10, 0]} raycast={() => null}>
         <Text
           ref={textRef}
           font="/fonts/Newsreader-Italic.ttf"

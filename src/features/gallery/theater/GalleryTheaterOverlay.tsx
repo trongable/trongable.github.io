@@ -1,5 +1,6 @@
 import React, { useEffect, useCallback, useState } from 'react'
 import { GalleryItem, GALLERY_DATA } from '@/features/gallery/data/galleryData'
+import { useTuner } from '@/features/tuner/TunerContext'
 import { ArrowLeft, ArrowRight } from 'lucide-react'
 import { preloadAndDecodeImage, isImageDecoded } from '@/utils/imagePreload'
 
@@ -22,6 +23,7 @@ export const GalleryTheaterOverlay: React.FC<GalleryTheaterOverlayProps> = ({
   onSelectVideo,
   onSelectItem,
 }) => {
+  const { isTunerVisible, isTerminalOpen } = useTuner()
   const currentItem = activeItem ?? activeVideo ?? null
   const handleSelect = onSelectItem ?? onSelectVideo ?? (() => { })
 
@@ -122,6 +124,16 @@ export const GalleryTheaterOverlay: React.FC<GalleryTheaterOverlayProps> = ({
     height: `min(80vh, ${(90 / aspect).toFixed(2)}vw)`,
   }
   const chromeVisibleClass = hasEntered && !isExiting ? 'opacity-100' : 'opacity-0'
+  const mobileBottomPaddingClass = isTunerVisible
+    ? isTerminalOpen
+      ? 'pb-28 sm:pb-3 md:pb-6'
+      : 'pb-16 sm:pb-3 md:pb-6'
+    : 'pb-3 md:pb-6'
+  const navLiftClass = isTunerVisible
+    ? isTerminalOpen
+      ? 'sm:-translate-y-[92px]'
+      : 'sm:-translate-y-12'
+    : ''
 
   return (
     <div
@@ -200,7 +212,9 @@ export const GalleryTheaterOverlay: React.FC<GalleryTheaterOverlayProps> = ({
 
       {/* Bottom HUD Bar: Centered Title & Right-Aligned Prev/Next Controls */}
       <div
-        className={`absolute inset-x-0 bottom-0 p-3 md:p-6 z-20 transition-opacity duration-200 ${chromeVisibleClass}`}
+        className={`absolute inset-x-0 bottom-0 px-3 pt-3 md:px-6 md:pt-6 ${mobileBottomPaddingClass} z-20 transition-opacity duration-200 ${
+          isExiting ? 'opacity-0' : 'opacity-100'
+        }`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="w-full max-w-[90vw] mx-auto grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr] items-center gap-3 text-xs font-mono tracking-wider text-[var(--theme-primary)]">
@@ -215,7 +229,10 @@ export const GalleryTheaterOverlay: React.FC<GalleryTheaterOverlayProps> = ({
             </span>
           </div>
 
-          <div className="flex items-center justify-center sm:justify-end gap-2 sm:col-start-3 sm:justify-self-end">
+          <div
+            data-testid="theater-nav-controls"
+            className={`flex items-center justify-center sm:justify-end gap-2 sm:col-start-3 sm:justify-self-end transition-[transform,opacity] duration-200 ${chromeVisibleClass} ${navLiftClass}`}
+          >
             <button
               onClick={handlePrev}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded border border-[var(--theme-primary)]/30 bg-[#14131a]/80 hover:bg-[var(--theme-primary)]/15 hover:border-[var(--theme-highlight)] text-[var(--theme-primary)] hover:text-[var(--theme-highlight)] transition-colors cursor-pointer"

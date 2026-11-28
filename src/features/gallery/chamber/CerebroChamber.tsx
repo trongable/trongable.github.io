@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect, useMemo, useCallback } from 'react'
 import { Canvas } from '@react-three/fiber'
 import * as THREE from 'three'
 import { CerebroSphereWall } from '@/features/gallery/chamber/CerebroSphereWall'
+import { CerebroGlitchStorm } from '@/features/gallery/chamber/CerebroGlitchStorm'
 import { CurvedMediaPanel } from '@/features/gallery/chamber/CurvedMediaPanel'
 import {
   ChamberCameraController,
@@ -20,6 +21,7 @@ import {
   DEFAULT_GALLERY_CHAMBER_PARAMS,
 } from '@/features/gallery/data/galleryTunerConfig'
 import { useTheme } from '@/context/ThemeContext'
+import { triggerSelectionHaptic } from '@/utils/haptics'
 
 export interface CerebroChamberProps {
   activeVideo?: GalleryItem | null
@@ -28,6 +30,10 @@ export interface CerebroChamberProps {
   selectedItem?: GalleryItem | null
   items?: GalleryItem[]
   params?: GalleryChamberParams
+  isPaused?: boolean
+  isGlitching?: boolean
+  glitchDuration?: number
+  glitchImageRate?: number
   onSelectVideo?: (item: GalleryItem) => void
   onSelectItem?: (item: GalleryItem) => void
 }
@@ -39,6 +45,10 @@ export const CerebroChamber: React.FC<CerebroChamberProps> = ({
   selectedItem,
   items = GALLERY_DATA,
   params = DEFAULT_GALLERY_CHAMBER_PARAMS,
+  isPaused = false,
+  isGlitching = false,
+  glitchDuration = 360,
+  glitchImageRate = 1.0,
   onSelectVideo,
   onSelectItem,
 }) => {
@@ -47,13 +57,33 @@ export const CerebroChamber: React.FC<CerebroChamberProps> = ({
   const effectiveSelected = selectedItem ?? selectedVideo ?? null
   const currentSelected = effectiveSelected ?? effectiveActive
   const isDimmed = Boolean(currentSelected)
+  const isOverlayActive = Boolean(effectiveActive)
 
   const handleSelect = onSelectItem ?? onSelectVideo ?? (() => {})
   const containerRef = useRef<HTMLDivElement>(null)
 
-  const [centeredId, setCenteredId] = useState<string | null>(() => items[0]?.id ?? null)
+  const [centeredId, setCenteredId] = useState<string | null>(null)
   const [hoveredId, setHoveredId] = useState<string | null>(null)
   const activeFocusId = hoveredId ?? (params.centerZoom ? centeredId : null)
+  const effectiveReticleId = !isDimmed && params.focusReticles ? activeFocusId : null
+  const hasSettledInitialReticleRef = useRef(false)
+  const prevReticleIdRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    if (isDimmed) return
+    if (!hasSettledInitialReticleRef.current && hoveredId === null) {
+      if (effectiveReticleId !== null) {
+        hasSettledInitialReticleRef.current = true
+        prevReticleIdRef.current = effectiveReticleId
+      }
+      return
+    }
+    hasSettledInitialReticleRef.current = true
+    if (effectiveReticleId && effectiveReticleId !== prevReticleIdRef.current) {
+      triggerSelectionHaptic()
+    }
+    prevReticleIdRef.current = effectiveReticleId
+  }, [effectiveReticleId, isDimmed, hoveredId])
 
   const clearHover = useCallback(() => setHoveredId(null), [])
   const handleHoverChange = useCallback((id: string, hovered: boolean) => {
@@ -79,7 +109,6 @@ export const CerebroChamber: React.FC<CerebroChamberProps> = ({
       items.map((item) => {
         const { azimuthDeg, elevationDeg } = computePanelSphericalAngles(
           item,
-          params.tierCount,
           params.arcDegrees,
           params.sphereRadius,
           params.rowSeparation
@@ -89,20 +118,19 @@ export const CerebroChamber: React.FC<CerebroChamberProps> = ({
           dir: computeSphericalPosition(1, azimuthDeg, elevationDeg),
         }
       }),
-    [items, params.arcDegrees, params.tierCount, params.rowSeparation, params.sphereRadius]
+    [items, params.arcDegrees, params.rowSeparation, params.sphereRadius]
   )
 
   const selectedTarget = useMemo(() => {
     if (!currentSelected) return null
     const { azimuthDeg, elevationDeg } = computePanelSphericalAngles(
       currentSelected,
-      params.tierCount,
       params.arcDegrees,
       params.sphereRadius,
       params.rowSeparation
     )
     return { id: currentSelected.id, azimuthDeg, elevationDeg }
-  }, [currentSelected, params.arcDegrees, params.tierCount, params.rowSeparation, params.sphereRadius])
+  }, [currentSelected, params.arcDegrees, params.rowSeparation, params.sphereRadius])
 
   // Page visibility 0% GPU sleep management
   const [isTabVisible, setIsTabVisible] = useState(true)
@@ -143,6 +171,7 @@ export const CerebroChamber: React.FC<CerebroChamberProps> = ({
 
         <ChamberCameraController
           isDimmed={isDimmed}
+          isPaused={isPaused}
           isDraggingRef={isDraggingRef}
           dragDeltaRef={dragDeltaRef}
           releaseVelocityRef={releaseVelocityRef}
@@ -165,7 +194,7 @@ export const CerebroChamber: React.FC<CerebroChamberProps> = ({
         <CerebroSphereWall
           radius={params.sphereRadius + 0.3}
           isDimmed={isDimmed}
-          dimIntensity={params.dimIntensity}
+          isPaused={isPaused}
           particleCount={params.particleCount}
         />
 
@@ -175,6 +204,8 @@ export const CerebroChamber: React.FC<CerebroChamberProps> = ({
             video={item}
             isDimmed={isDimmed}
             isSelected={currentSelected?.id === item.id}
+            isOverlayActive={isOverlayActive}
+            isPaused={isPaused}
             isFocused={!isDimmed && activeFocusId === item.id}
             onHoverChange={handleHoverChange}
             introCollapse={params.introCollapse}
@@ -184,13 +215,21 @@ export const CerebroChamber: React.FC<CerebroChamberProps> = ({
             motionBlur={params.motionBlur}
             thumbnailScale={params.thumbnailScale}
             transitSpeed={params.transitSpeed}
-            tierCount={params.tierCount}
             sphereRadius={params.sphereRadius}
             arcDegrees={params.arcDegrees}
             rowSeparation={params.rowSeparation}
             onSelect={handleSelect}
           />
         ))}
+
+        <CerebroGlitchStorm
+          isActive={isGlitching && !isDimmed}
+          isPaused={isPaused}
+          duration={glitchDuration}
+          primaryColor={currentTheme.primary}
+          imageProbability={glitchImageRate}
+          sphereRadius={params.sphereRadius}
+        />
       </Canvas>
       <div
         data-testid="cerebro-vignette-overlay"

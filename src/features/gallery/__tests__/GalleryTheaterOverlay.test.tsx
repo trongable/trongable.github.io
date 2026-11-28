@@ -2,6 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { GalleryTheaterOverlay as VideoTheaterOverlay } from '@/features/gallery/theater/GalleryTheaterOverlay'
 import { GALLERY_DATA, VIDEOS_DATA } from '@/features/gallery/data/galleryData'
+import { TunerProvider } from '@/features/tuner/TunerContext'
+import { RouterProvider } from '@/routes/Router'
 import { isImageDecoded, clearImagePreloadCache } from '@/utils/imagePreload'
 
 describe('VideoTheaterOverlay Component', () => {
@@ -200,5 +202,28 @@ describe('VideoTheaterOverlay Component', () => {
 
     fireEvent.keyDown(window, { key: 'ArrowRight' })
     expect(handleSelectVideo).toHaveBeenCalledWith(nextItem)
+  })
+
+  it('lifts prev/next above Tuner pill when Tuner is visible', () => {
+    window.localStorage.setItem('trongngyn_tuner_visible', 'true')
+    render(
+      <RouterProvider>
+        <TunerProvider>
+          <VideoTheaterOverlay
+            activeVideo={mockVideo}
+            onClose={vi.fn()}
+            onSelectVideo={vi.fn()}
+          />
+        </TunerProvider>
+      </RouterProvider>
+    )
+
+    const overlay = screen.getByTestId('video-theater-overlay')
+    expect(overlay).toHaveClass('bg-[#0a090e]/95')
+
+    const navControls = screen.getByTestId('theater-nav-controls')
+    expect(navControls).toHaveClass('sm:-translate-y-12')
+
+    window.localStorage.removeItem('trongngyn_tuner_visible')
   })
 })

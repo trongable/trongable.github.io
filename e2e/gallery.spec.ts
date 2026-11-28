@@ -289,10 +289,11 @@ test.describe('Gallery Page End-to-End Suite', () => {
     const drawer = page.locator('[data-testid="geometry-tuner-drawer"]')
     await expect(drawer).toBeVisible()
 
-    // Verify Gallery Chamber tab is selected and layout preset toggle works
+    // Verify Gallery Chamber tab is selected and layout/dim customization are removed
     await expect(drawer.getByRole('button', { name: 'Gallery Chamber', exact: true })).toBeVisible()
-    await expect(drawer.getByRole('button', { name: '4-Tier (B)' })).toBeVisible()
-    await expect(drawer.getByRole('button', { name: '3-Tier (A)' })).toBeVisible()
+    await expect(drawer.getByText('Chamber Layout')).not.toBeVisible()
+    await expect(drawer.getByRole('button', { name: '3-Tier (A)' })).not.toBeVisible()
+    await expect(drawer.getByLabel('Dim Intensity')).not.toBeVisible()
     await expect(drawer.getByLabel('Free Spin (360°+)')).toBeChecked()
     await expect(drawer.getByLabel('Intro Collapse')).toBeChecked()
     await expect(drawer.getByLabel('Scatter on Select')).toBeChecked()
@@ -302,9 +303,6 @@ test.describe('Gallery Page End-to-End Suite', () => {
     await expect(drawer.getByLabel('Corner Reticles')).toBeChecked()
     await expect(drawer.getByLabel('Motion Blur')).not.toBeChecked()
     await expect(drawer.locator('text=360°').first()).toBeVisible()
-    await drawer.getByRole('button', { name: '3-Tier (A)' }).click()
-    await expect(drawer.locator('text=6.0')).toBeVisible()
-    await drawer.getByRole('button', { name: '4-Tier (B)' }).click()
     await expect(drawer.locator('text=5.5')).toBeVisible()
 
     await expect(drawer.locator('text=Sphere Radius')).toBeVisible()
@@ -341,8 +339,8 @@ test.describe('Gallery Page End-to-End Suite', () => {
     const terminal = page.locator('[data-testid="cyber-terminal-line"]')
     await expect(terminal).toBeVisible()
 
-    // Wait for bottom-5 -> bottom-16 CSS transition (150ms) to settle
-    await page.waitForTimeout(220)
+    // Wait for 320ms CRT scanline sweep + 180ms vertical snap (500ms total) to settle
+    await page.waitForTimeout(560)
 
     const [raisedTunerBox, terminalBox] = await Promise.all([tuner.boundingBox(), terminal.boundingBox()])
     expect(raisedTunerBox).not.toBeNull()
@@ -358,5 +356,38 @@ test.describe('Gallery Page End-to-End Suite', () => {
     await page.waitForTimeout(220)
     const restoredBox = await tuner.boundingBox()
     expect(restoredBox!.y).toBeCloseTo(beforeBox!.y, 0)
+  })
+
+  test('TC-12: Expanded Tuner gear uses high-contrast dark gray and prev/next sit above Tuner pill', async ({ page }) => {
+    await page.goto('/#/gallery?tuner=true')
+
+    const toggleBtn = page.getByLabel('Toggle parameter drawer')
+    await toggleBtn.click()
+    await expect(page.locator('[data-testid="geometry-tuner-drawer"]')).toBeVisible()
+
+    await expect(toggleBtn).toHaveCSS('color', 'rgb(28, 27, 34)')
+
+    // Close drawer so only the expand pill remains visible, then open full-size theater view
+    await toggleBtn.click()
+    await expect(page.locator('[data-testid="geometry-tuner-drawer"]')).not.toBeVisible()
+
+    const firstPhotoBtn = page.locator(`[data-testid="gallery-nav-btn-${PHOTOS[0].id}"]`)
+    await firstPhotoBtn.dispatchEvent('click')
+
+    const overlay = page.locator('[data-testid="video-theater-overlay"]')
+    await expect(overlay).toBeVisible({ timeout: 4000 })
+
+    const navControls = overlay.locator('[data-testid="theater-nav-controls"]')
+    const tuner = page.locator('[data-testid="geometry-tuner"]')
+    await page.waitForTimeout(250)
+
+    const [navBox, tunerBox] = await Promise.all([navControls.boundingBox(), tuner.boundingBox()])
+    expect(navBox).not.toBeNull()
+    expect(tunerBox).not.toBeNull()
+    expect(navBox!.y + navBox!.height).toBeLessThanOrEqual(tunerBox!.y + 2)
+
+    // Clicking next button succeeds cleanly without being intercepted by the Tuner pill
+    await overlay.getByRole('button', { name: 'Next item' }).click()
+    await expect(overlay).toBeVisible()
   })
 })

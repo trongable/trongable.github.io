@@ -70,8 +70,10 @@ export const TunerHudPill: React.FC<TunerHudPillProps> = ({
       <button
         type="button"
         onClick={onToggleOpen}
-        className={`flex h-7 w-7 items-center justify-center rounded-full border border-[var(--theme-primary)]/30 text-[var(--theme-primary)] hover:text-[var(--theme-highlight)] hover:border-[var(--theme-primary)] cursor-pointer transition-colors ${
-          isOpen ? 'bg-[var(--theme-primary)] text-[#1c1b22] font-bold' : ''
+        className={`flex h-7 w-7 items-center justify-center rounded-full border cursor-pointer transition-colors ${
+          isOpen
+            ? 'bg-[var(--theme-primary)] text-[#1c1b22] hover:text-[#1c1b22] border-[var(--theme-primary)] font-bold'
+            : 'border-[var(--theme-primary)]/30 text-[var(--theme-primary)] hover:text-[var(--theme-highlight)] hover:border-[var(--theme-primary)]'
         }`}
         title="Tune live parameters"
         aria-label="Toggle parameter drawer"

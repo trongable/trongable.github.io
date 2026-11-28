@@ -10,17 +10,22 @@ import {
 import type { MediaKind } from '@/features/gallery/data/galleryData'
 import { isReducedMotionEnabled } from '@/utils/mediaQueries'
 
+const INTRO_DURATION_SEC = 0.40
+
 interface UsePanelMotionOptions {
   itemIndex: number
   itemType: MediaKind
   panelWidth: number
   panelHeight: number
+  panelCurveRadius: number
   sphereRadius: number
   initialPosition: THREE.Vector3
   initialQuaternion: THREE.Quaternion
   panelGeos: CurvedPanelGeometries
   isDimmed: boolean
   isSelected: boolean
+  isOverlayActive: boolean
+  isPaused: boolean
   effectiveFocused: boolean
   introCollapse: boolean
   scatterOnSelect: boolean
@@ -32,6 +37,7 @@ interface UsePanelMotionOptions {
   themeColorHex: string
   highlightColorHex: string
   groupRef: React.RefObject<THREE.Group | null>
+  titleGroupRef: React.RefObject<THREE.Group | null>
   backingMatRef: React.RefObject<THREE.MeshBasicMaterial | null>
   borderMatRef: React.RefObject<THREE.LineBasicMaterial | null>
   reticleMatRef: React.RefObject<THREE.LineBasicMaterial | null>
@@ -44,26 +50,30 @@ interface UsePanelMotionOptions {
     uMap: { value: THREE.Texture | null }
     uHasMap: { value: boolean }
     uOpacity: { value: number }
+    uBrightness: { value: number }
     uBlurVec: { value: THREE.Vector2 }
   }
 }
 
 /**
  * Zero-allocation `useFrame` animation driver for `CurvedMediaPanel`:
- * handles intro collapse, radial scatter, ambient float, focus zoom, fly-to-center transit,
- * directional surface motion blur, and orthogonal focus reticle opacity.
+ * handles snappy intro collapse, radial scatter fade-to-darkness, ambient float, focus zoom,
+ * fly-to-center transit, seamless 3D-to-2D title flight, directional motion blur, and focus reticles.
  */
 export function usePanelMotion({
   itemIndex,
   itemType,
   panelWidth,
   panelHeight,
+  panelCurveRadius,
   sphereRadius,
   initialPosition,
   initialQuaternion,
   panelGeos,
   isDimmed,
   isSelected,
+  isOverlayActive,
+  isPaused,
   effectiveFocused,
   introCollapse,
   scatterOnSelect,
@@ -75,6 +85,7 @@ export function usePanelMotion({
   themeColorHex,
   highlightColorHex,
   groupRef,
+  titleGroupRef,
   backingMatRef,
   borderMatRef,
   reticleMatRef,
@@ -89,10 +100,12 @@ export function usePanelMotion({
   const lastCurveFactorRef = useRef(1.0)
   const reducedMotionRef = useRef(isReducedMotionEnabled())
   const introExpand = useRef(reducedMotionRef.current || !introCollapse ? 0.0 : 1.0)
+  const introElapsedRef = useRef(0)
   const scatterExpand = useRef(0.0)
   const reticleOpacity = useRef(0)
   const hasPrevLocalRef = useRef(false)
   const smoothBlurRef = useRef({ x: 0, y: 0 })
+  const ambientClockRef = useRef(0)
 
   // Scratch vectors and colors (Zero-allocation in useFrame)
   const scratchCenterPos = useRef(new THREE.Vector3()).current
@@ -103,14 +116,15 @@ export function usePanelMotion({
   const scratchInvCamQuat = useRef(new THREE.Quaternion()).current
   const scratchInvPanelQuat = useRef(new THREE.Quaternion()).current
   const scratchThemeColor = useRef(new THREE.Color()).current
+  const scratchHighlightColor = useRef(new THREE.Color()).current
   const scratchTargetBlur = useRef({ x: 0, y: 0 }).current
 
   useEffect(() => {
     lastCurveFactorRef.current = 1.0
   }, [panelGeos])
 
-  useFrame(({ camera, viewport, clock }, delta) => {
-    if (!groupRef.current) return
+  useFrame(({ camera, viewport }, delta) => {
+    if (!groupRef.current || isPaused) return
 
     const reducedMotion = reducedMotionRef.current
     const targetFlight = isSelected ? 1.0 : 0.0
@@ -129,11 +143,16 @@ export function usePanelMotion({
       lastCurveFactorRef.current = curveFactor
     }
 
-    // 1. Unified radial expansion (4.5x in deep space -> 1.0x resting sphere)
+    // 1. Snappy time-based radial contraction (4.5x in deep space -> 1.0x resting sphere in 0.40s)
     if (!introCollapse || reducedMotion || isSelected) {
       introExpand.current = 0.0
     } else if (introExpand.current > 0.001) {
-      introExpand.current = THREE.MathUtils.damp(introExpand.current, 0.0, 6.0, delta)
+      introElapsedRef.current = Math.min(
+        INTRO_DURATION_SEC,
+        introElapsedRef.current + Math.min(delta, 0.05)
+      )
+      const t = introElapsedRef.current / INTRO_DURATION_SEC
+      introExpand.current = t >= 1 ? 0.0 : Math.pow(1 - t, 1.35)
     }
 
     // 2. Radial scatter progress for non-selected panels when another item is selected
@@ -141,7 +160,7 @@ export function usePanelMotion({
     scatterExpand.current = THREE.MathUtils.damp(scatterExpand.current, shouldScatter ? 1.0 : 0.0, 6.0, delta)
     const ep = Math.max(introExpand.current, scatterExpand.current)
 
-    // 3. Visibility management (keep scattering panels visible until faded out)
+    // 3. Visibility management (keep scattering panels visible until faded into darkness)
     if (!scatterOnSelect || reducedMotion) {
       groupRef.current.visible = !isDimmed || isSelected
     } else if (isDimmed && !isSelected) {
@@ -155,8 +174,8 @@ export function usePanelMotion({
     scratchScatterPos.copy(initialPosition).multiplyScalar(radialMult)
 
     if (ambientFloat && !isSelected && !reducedMotion && ep < 0.5) {
-      const elapsed = clock?.elapsedTime ?? 0
-      scratchScatterPos.y += Math.sin(elapsed * 1.1 + itemIndex * 0.7) * 0.015 * (1.0 - ep)
+      ambientClockRef.current += delta
+      scratchScatterPos.y += Math.sin(ambientClockRef.current * 1.1 + itemIndex * 0.7) * 0.015 * (1.0 - ep)
     }
 
     if (groupRef.current.position && groupRef.current.quaternion && groupRef.current.scale) {
@@ -204,9 +223,18 @@ export function usePanelMotion({
       }
     }
 
-    // 5. Unified radial opacity + per-panel directional motion blur
-    const radialOpacity = 1.0 - THREE.MathUtils.smoothstep(ep, 0.60, 1.0)
-    const panelOpacity = isSelected ? 1.0 : !scatterOnSelect && isDimmed ? 0.0 : radialOpacity
+    // 5. Intro fade-in, scatter fade-into-darkness, and directional motion blur
+    const introOpacity = 1.0 - THREE.MathUtils.smoothstep(introExpand.current, 0.72, 1.0)
+    const scatterFade =
+      isDimmed && !isSelected && scatterOnSelect && !reducedMotion
+        ? 1.0 - THREE.MathUtils.smoothstep(scatterExpand.current, 0.05, 0.85)
+        : 1.0
+    const panelBrightness = isSelected ? 1.0 : scatterFade
+    const panelOpacity = isSelected
+      ? 1.0
+      : !scatterOnSelect && isDimmed
+      ? 0.0
+      : Math.min(introOpacity, scatterFade)
 
     scratchInvCamQuat.copy(camera.quaternion).invert()
     scratchLocalDir.copy(initialPosition).normalize().applyQuaternion(scratchInvCamQuat)
@@ -241,11 +269,15 @@ export function usePanelMotion({
     const blurY = smoothBlurRef.current.y
 
     screenUniforms.uOpacity.value = panelOpacity
+    screenUniforms.uBrightness.value = panelBrightness
     screenUniforms.uBlurVec.value.set(blurX, blurY)
     if (screenMatRef.current) {
       if (screenMatRef.current.uniforms) {
         if (screenMatRef.current.uniforms.uOpacity) {
           screenMatRef.current.uniforms.uOpacity.value = panelOpacity
+        }
+        if (screenMatRef.current.uniforms.uBrightness) {
+          screenMatRef.current.uniforms.uBrightness.value = panelBrightness
         }
         if (screenMatRef.current.uniforms.uBlurVec) {
           screenMatRef.current.uniforms.uBlurVec.value.set(blurX, blurY)
@@ -291,10 +323,62 @@ export function usePanelMotion({
       }
     }
 
-    if (textRef.current && typeof textRef.current.fillOpacity === 'number') {
-      const textBaseOpacity = isHighlighted ? 1.0 : 0.75
-      const textDimFactor = isSelected ? Math.max(0, 1.0 - fp * 2) : panelOpacity
-      textRef.current.fillOpacity = textBaseOpacity * textDimFactor
+    // 7. Seamless 3D-to-2D title flight: un-curve, match 2D HUD position/scale, and hand off cleanly
+    const persCamForTitle = camera as THREE.PerspectiveCamera
+    const titleFovRad = THREE.MathUtils.degToRad(persCamForTitle.fov || 46)
+    const titleFrustumH = 2 * 2.15 * Math.tan(titleFovRad / 2)
+    const restingTitleY = -panelHeight / 2 - 0.10
+
+    if (titleGroupRef.current?.position && titleGroupRef.current?.scale) {
+      if (fp > 0.001) {
+        const titleItemAspect = panelWidth / panelHeight
+        const titleCamAspect = persCamForTitle.aspect || (viewport ? viewport.aspect : 16 / 9)
+        const titleFrustumW = titleFrustumH * titleCamAspect
+        const maxTitleW = 0.90 * titleFrustumW
+        const maxTitleH = 0.80 * titleFrustumH
+        let titleTargetH = maxTitleW / titleItemAspect
+        if (titleTargetH > maxTitleH) titleTargetH = maxTitleH
+        const safeFullScale = Math.max(0.01, titleTargetH / panelHeight)
+
+        const winW = typeof window !== 'undefined' && window.innerWidth ? window.innerWidth : 1280
+        const winH = typeof window !== 'undefined' && window.innerHeight ? window.innerHeight : 800
+        const pxToWorld = titleFrustumH / winH
+        const isMd = winW >= 768
+        const isSm = winW >= 640
+        const targetFontPx = isMd ? 18 : 16
+        const bottomPadPx = isMd ? 24 : 12
+        const bottomOffsetPx = isSm ? bottomPadPx + 15 : bottomPadPx + 54
+        const camTargetY = -titleFrustumH / 2 + (bottomOffsetPx + targetFontPx * 0.65) * pxToWorld
+        const localTargetY = camTargetY / safeFullScale
+        const localTargetScale = (targetFontPx * pxToWorld) / (0.082 * safeFullScale)
+
+        titleGroupRef.current.position.set(0, THREE.MathUtils.lerp(restingTitleY, localTargetY, fp), 0)
+        const ts = THREE.MathUtils.lerp(1.0, localTargetScale, fp)
+        titleGroupRef.current.scale.set(ts, ts, ts)
+      } else {
+        titleGroupRef.current.position.set(0, restingTitleY, 0)
+        titleGroupRef.current.scale.set(1, 1, 1)
+      }
+    }
+
+    if (textRef.current) {
+      if ('curveRadius' in textRef.current) {
+        textRef.current.curveRadius =
+          curveFactor <= 0.001 ? 0 : panelCurveRadius / Math.max(0.05, curveFactor)
+      }
+      textRef.current.visible = !(isSelected && isOverlayActive)
+      if (fp > 0.001) {
+        scratchThemeColor.set(isHighlighted ? highlightColorHex : themeColorHex)
+        scratchHighlightColor.set(highlightColorHex)
+        scratchThemeColor.lerp(scratchHighlightColor, fp)
+        textRef.current.color = scratchThemeColor
+      }
+      if (typeof textRef.current.fillOpacity === 'number') {
+        const textBaseOpacity = isHighlighted ? 1.0 : 0.75
+        textRef.current.fillOpacity = isSelected
+          ? THREE.MathUtils.lerp(textBaseOpacity, 1.0, fp)
+          : textBaseOpacity * panelOpacity
+      }
     }
   })
 

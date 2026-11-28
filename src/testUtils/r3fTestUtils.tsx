@@ -95,6 +95,16 @@ export function installThreeElementMock() {
     configurable: true,
   })
 
+  Object.defineProperty(proto, 'quaternion', {
+    get() {
+      if (!this._mockQuaternion) {
+        this._mockQuaternion = new THREE.Quaternion()
+      }
+      return this._mockQuaternion
+    },
+    configurable: true,
+  })
+
   Object.defineProperty(proto, 'scale', {
     get() {
       if (!this._mockScale) {

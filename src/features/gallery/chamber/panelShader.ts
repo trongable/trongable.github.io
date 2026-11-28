@@ -19,6 +19,7 @@ export const SCREEN_FRAGMENT_SHADER = `
 uniform sampler2D uMap;
 uniform bool uHasMap;
 uniform float uOpacity;
+uniform float uBrightness;
 uniform vec2 uBlurVec;
 varying vec2 vUv;
 void main() {
@@ -40,7 +41,7 @@ void main() {
     }
     texel = sum / totalWeight;
   }
-  gl_FragColor = vec4(texel.rgb, texel.a * uOpacity);
+  gl_FragColor = vec4(texel.rgb * uBrightness, texel.a * uOpacity);
 }
 `
 

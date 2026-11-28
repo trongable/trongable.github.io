@@ -3,7 +3,7 @@ import * as THREE from 'three'
 import { render, screen, fireEvent, act } from '@testing-library/react'
 import { CurvedMediaPanel as CurvedVideoPanel } from '@/features/gallery/chamber/CurvedMediaPanel'
 import { VIDEOS_DATA, GALLERY_DATA, GalleryItem } from '@/features/gallery/data/galleryData'
-import { buildCurvedPanelGeometries, applyPanelCurvature, computePanelSurfaceBlur } from '@/features/gallery/chamber/panelShader'
+import { buildCurvedPanelGeometries, applyPanelCurvature, computePanelSurfaceBlur, SCREEN_FRAGMENT_SHADER } from '@/features/gallery/chamber/panelShader'
 import { ThemeProvider } from '@/context/ThemeContext'
 import { runFrames, clearFrameRegistry, currentThreeState } from '@/testUtils/r3fTestUtils'
 import { isImageDecoded, clearImagePreloadCache } from '@/utils/imagePreload'
@@ -311,13 +311,13 @@ describe('CurvedVideoPanel Component', () => {
     expect(centerStepDeg - hoveredCornerSpanDeg).toBeGreaterThan(2.0) // At least 2.0 deg (~14cm) clearance
   })
 
-  it('guarantees positive angular clearance in both 4-tier (Option B) and 3-tier (Option A) closed 360-degree 60-item rings', () => {
+  it('guarantees positive angular clearance in the 4-tier closed 360-degree 60-item ring', () => {
     const panelWidth = 1.60
     const panelHeight = 0.90
     const hw = panelWidth / 2
     const hh = panelHeight / 2
 
-    // Option B (4 tiers, 15 items/tier, R=5.5, arc=360, rowSeparation=1.55)
+    // 4 tiers, 15 items/tier, R=5.5, arc=360, rowSeparation=1.55
     const rB = 5.5
     const rowSepB = 1.55
     const outerElevB = Math.asin((1.5 * rowSepB) / rB)
@@ -326,16 +326,6 @@ describe('CurvedVideoPanel Component', () => {
     const spanB = (Math.asin(hw / rCornerB) * 180) / Math.PI * 2
     const stepB = 360 / 15
     expect(stepB - spanB).toBeGreaterThan(4.5)
-
-    // Option A (3 tiers, 20 items/tier, R=6.0, arc=360, rowSeparation=1.80)
-    const rA = 6.0
-    const rowSepA = 1.80
-    const outerElevA = Math.asin(rowSepA / rA)
-    const cornerElevA = outerElevA + Math.asin(hh / rA)
-    const rCornerA = rA * Math.cos(cornerElevA)
-    const spanA = (Math.asin(hw / rCornerA) * 180) / Math.PI * 2
-    const stepA = 360 / 20
-    expect(stepA - spanA).toBeGreaterThan(1.3)
   })
 
   it('renders orthogonal 90-degree corner reticles and animates intro collapse, scatter, and ambient float', () => {
@@ -406,7 +396,6 @@ describe('CurvedVideoPanel Component', () => {
           isFocused={false}
           introCollapse={false}
           motionBlur={true}
-          tierCount={3}
           sphereRadius={5.5}
           rowSeparation={2.05}
           arcDegrees={0}
@@ -474,5 +463,147 @@ describe('CurvedVideoPanel Component', () => {
     geos.screenGeo.dispose()
     geos.borderGeo.dispose()
     geos.reticleGeo.dispose()
+  })
+
+  it('completes snappy intro fly-in within 0.40s and keeps 3D title visible during flight until overlay mounts', () => {
+    const { rerender } = render(
+      <ThemeProvider>
+        <CurvedVideoPanel
+          video={mockVideo}
+          introCollapse={true}
+          isSelected={false}
+          isOverlayActive={false}
+          onSelect={vi.fn()}
+        />
+      </ThemeProvider>
+    )
+
+    const panelGroup = screen.getByTestId(`curved-video-panel-${mockVideo.id}`) as unknown as THREE.Group
+    const titleEl = screen.getByTestId('badge-text') as unknown as { fillOpacity: number; visible?: boolean }
+
+    // Advance 26 frames (~0.416s > 0.40s): panel settles cleanly onto sphere radius
+    act(() => {
+      runFrames(26, 0.016)
+    })
+    const settledDist = panelGroup.position.length()
+    expect(settledDist).toBeLessThan(6.0)
+
+    // Start selection flight: 3D title remains visible (fillOpacity -> 1.0) instead of fading out
+    rerender(
+      <ThemeProvider>
+        <CurvedVideoPanel
+          video={mockVideo}
+          introCollapse={true}
+          isSelected={true}
+          isOverlayActive={false}
+          onSelect={vi.fn()}
+        />
+      </ThemeProvider>
+    )
+
+    act(() => {
+      runFrames(12, 0.016)
+    })
+    expect(titleEl.fillOpacity).toBeGreaterThan(0.7)
+    expect(titleEl.visible).toBe(true)
+
+    // Once theater overlay mounts, 3D title hands off and hides immediately
+    rerender(
+      <ThemeProvider>
+        <CurvedVideoPanel
+          video={mockVideo}
+          introCollapse={true}
+          isSelected={true}
+          isOverlayActive={true}
+          onSelect={vi.fn()}
+        />
+      </ThemeProvider>
+    )
+    act(() => {
+      runFrames(1, 0.016)
+    })
+    expect(titleEl.visible).toBe(false)
+  })
+
+  it('darkens scattering non-selected panels into blackness and freezes motion when isPaused is true', () => {
+    const { container, rerender } = render(
+      <ThemeProvider>
+        <CurvedVideoPanel
+          video={mockVideo}
+          introCollapse={false}
+          scatterOnSelect={true}
+          isDimmed={false}
+          isSelected={false}
+          isPaused={false}
+          onSelect={vi.fn()}
+        />
+      </ThemeProvider>
+    )
+
+    expect(SCREEN_FRAGMENT_SHADER).toContain('uniform float uBrightness')
+    expect(SCREEN_FRAGMENT_SHADER).toContain('texel.rgb * uBrightness')
+
+    const shaderMat = container.querySelector('shadermaterial') as unknown as {
+      uniforms: {
+        uBrightness: { value: number }
+        uOpacity: { value: number }
+        uBlurVec: { value: THREE.Vector2 }
+      }
+    }
+    shaderMat.uniforms = {
+      uBrightness: { value: 1.0 },
+      uOpacity: { value: 1.0 },
+      uBlurVec: { value: new THREE.Vector2(0, 0) },
+    }
+    const panelGroup = screen.getByTestId(`curved-video-panel-${mockVideo.id}`) as unknown as THREE.Group
+
+    act(() => {
+      runFrames(3, 0.016)
+    })
+    expect(shaderMat.uniforms.uBrightness.value).toBeCloseTo(1.0, 2)
+
+    // When another item is selected, non-selected panel scatters outward and fades into darkness
+    clearFrameRegistry()
+    rerender(
+      <ThemeProvider>
+        <CurvedVideoPanel
+          video={mockVideo}
+          introCollapse={false}
+          scatterOnSelect={true}
+          isDimmed={true}
+          isSelected={false}
+          isPaused={false}
+          onSelect={vi.fn()}
+        />
+      </ThemeProvider>
+    )
+    act(() => {
+      runFrames(15, 0.016)
+    })
+    expect(shaderMat.uniforms.uBrightness.value).toBeLessThan(0.5)
+    expect(shaderMat.uniforms.uOpacity.value).toBeLessThan(0.5)
+
+    // When paused, panel position and brightness freeze
+    const posBeforePause = panelGroup.position.clone()
+    const brightnessBeforePause = shaderMat.uniforms.uBrightness.value
+    clearFrameRegistry()
+    rerender(
+      <ThemeProvider>
+        <CurvedVideoPanel
+          video={mockVideo}
+          introCollapse={false}
+          scatterOnSelect={true}
+          isDimmed={true}
+          isSelected={false}
+          isPaused={true}
+          onSelect={vi.fn()}
+        />
+      </ThemeProvider>
+    )
+    act(() => {
+      runFrames(15, 0.016)
+    })
+    expect(panelGroup.position.distanceTo(posBeforePause)).toBeCloseTo(0, 6)
+    expect(shaderMat.uniforms.uBrightness.value).toBeCloseTo(brightnessBeforePause, 6)
   })
 })

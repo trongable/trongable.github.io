@@ -10,6 +10,7 @@ export interface PanelDirectionEntry {
 
 interface ChamberCameraControllerProps {
   isDimmed: boolean
+  isPaused?: boolean
   isDraggingRef: React.MutableRefObject<boolean>
   dragDeltaRef: React.MutableRefObject<{ x: number; y: number }>
   releaseVelocityRef: React.MutableRefObject<{ vx: number; vy: number }>
@@ -33,6 +34,7 @@ const scratchGazeDir = new THREE.Vector3()
  */
 export const ChamberCameraController: React.FC<ChamberCameraControllerProps> = ({
   isDimmed,
+  isPaused = false,
   isDraggingRef,
   dragDeltaRef,
   releaseVelocityRef,
@@ -93,7 +95,7 @@ export const ChamberCameraController: React.FC<ChamberCameraControllerProps> = (
         releaseVelocityRef.current.vy = 0
       }
 
-      if (isDimmed || params.flingInertia <= 0) {
+      if (isDimmed || isPaused || params.flingInertia <= 0) {
         velocityYaw.current = 0
         velocityPitch.current = 0
       }

@@ -135,7 +135,7 @@ export const CyberTerminalLine: React.FC = () => {
   return (
     <aside
       data-testid="cyber-terminal-line"
-      className="fixed bottom-3 left-4 right-4 md:left-8 md:right-8 z-[75] flex items-center justify-between px-3.5 py-2 rounded-lg border border-[var(--theme-primary)]/40 bg-[#0c0b10]/95 backdrop-blur-md font-mono text-xs text-[var(--theme-primary)] shadow-2xl transition-all duration-150 select-none pointer-events-auto"
+      className="fixed bottom-3 left-4 right-4 md:left-8 md:right-8 z-[75] flex items-center justify-between px-3.5 py-2 rounded-lg border border-[var(--theme-primary)]/40 bg-[#0c0b10]/95 backdrop-blur-md font-mono text-xs text-[var(--theme-primary)] shadow-2xl terminal-enter select-none pointer-events-auto"
       onClick={(e) => {
         // Prevent clicking the terminal from triggering underlying canvas/page clicks
         e.stopPropagation()
@@ -145,7 +145,7 @@ export const CyberTerminalLine: React.FC = () => {
       }}
       aria-live="polite"
     >
-      <div className="flex items-center gap-2 overflow-hidden">
+      <div className="flex items-center gap-2 overflow-hidden terminal-content-enter">
         <span className="text-[var(--theme-highlight)] font-bold select-none">&gt;</span>
         {statusMessage ? (
           <span className="text-[var(--theme-highlight)] tracking-wider font-semibold">
@@ -159,7 +159,7 @@ export const CyberTerminalLine: React.FC = () => {
         )}
       </div>
 
-      <div className="flex items-center gap-3 text-[10px] text-[var(--theme-primary)]/40 tracking-widest hidden sm:flex">
+      <div className="flex items-center gap-3 text-[10px] text-[var(--theme-primary)]/40 tracking-widest hidden sm:flex terminal-content-enter">
         <span>[esc to close]</span>
       </div>
     </aside>

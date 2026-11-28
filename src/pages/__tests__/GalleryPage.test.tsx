@@ -167,4 +167,19 @@ describe('GalleryPage Component', () => {
     expect(screen.getByTestId('video-theater-overlay')).toBeInTheDocument()
     expect(screen.getByAltText(photoItem.title)).toBeInTheDocument()
   })
+
+  it('freezes gallery animations and effects when paused via query param or Tuner pause button', () => {
+    window.location.hash = '#/gallery?tuner=true&paused=true'
+
+    render(
+      <RouterProvider>
+        <ThemeProvider>
+          <GalleryPage />
+        </ThemeProvider>
+      </RouterProvider>
+    )
+
+    const page = screen.getByTestId('gallery-page')
+    expect(page).toHaveAttribute('data-effects-paused', 'true')
+  })
 })

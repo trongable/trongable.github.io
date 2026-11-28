@@ -1,16 +1,9 @@
 import React from 'react'
 import {
   GalleryChamberParams,
-  GalleryLayoutMode,
   GALLERY_CHAMBER_PARAM_BOUNDS,
-  GALLERY_LAYOUT_PRESETS,
 } from '@/features/gallery/data/galleryTunerConfig'
-import { TunerCheckbox, TunerSlider, TunerStyleGrid } from '@/features/tuner/TunerControls'
-
-const LAYOUT_OPTIONS: ReadonlyArray<{ id: GalleryLayoutMode; label: string }> = [
-  { id: '4-tier', label: '4-Tier (B)' },
-  { id: '3-tier', label: '3-Tier (A)' },
-]
+import { TunerCheckbox, TunerSlider } from '@/features/tuner/TunerControls'
 
 interface TunerGalleryTabProps {
   videoParams: GalleryChamberParams
@@ -29,25 +22,8 @@ export const TunerGalleryTab: React.FC<TunerGalleryTabProps> = ({
   onVideoParamChange,
   onResetVideoParams,
 }) => {
-  const activeLayoutMode: GalleryLayoutMode = videoParams.tierCount === 3 ? '3-tier' : '4-tier'
-
-  const handleSelectLayout = (mode: GalleryLayoutMode) => {
-    const preset = GALLERY_LAYOUT_PRESETS[mode]
-    ;(Object.keys(preset) as Array<keyof typeof preset>).forEach((key) => {
-      onVideoParamChange(key, preset[key])
-    })
-  }
-
   return (
     <div data-testid="gallery-chamber-tuner-tab" className="space-y-2.5">
-      <TunerStyleGrid
-        label="Chamber Layout"
-        options={LAYOUT_OPTIONS}
-        activeValue={activeLayoutMode}
-        onSelect={handleSelectLayout}
-        columns={3}
-      />
-
       <TunerSlider
         label="Sphere Radius"
         ariaLabel="Sphere Radius"
@@ -222,18 +198,6 @@ export const TunerGalleryTab: React.FC<TunerGalleryTabProps> = ({
         step={GALLERY_CHAMBER_PARAM_BOUNDS.transitSpeed.step}
         value={videoParams.transitSpeed}
         onChange={(v) => onVideoParamChange('transitSpeed', v)}
-      />
-
-      <TunerSlider
-        label="Dim Intensity"
-        ariaLabel="Dim Intensity"
-        labelClassName="opacity-80"
-        valueDisplay={`${(videoParams.dimIntensity * 100).toFixed(0)}%`}
-        min={GALLERY_CHAMBER_PARAM_BOUNDS.dimIntensity.min}
-        max={GALLERY_CHAMBER_PARAM_BOUNDS.dimIntensity.max}
-        step={GALLERY_CHAMBER_PARAM_BOUNDS.dimIntensity.step}
-        value={videoParams.dimIntensity}
-        onChange={(v) => onVideoParamChange('dimIntensity', v)}
       />
 
       <TunerSlider

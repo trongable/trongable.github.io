@@ -7,14 +7,16 @@ import { CEREBRO_RADIUS } from '@/features/gallery/data/galleryData'
 interface CerebroSphereWallProps {
   radius?: number
   isDimmed?: boolean
-  dimIntensity?: number
+  isPaused?: boolean
   particleCount?: number
 }
+
+const WALL_DIM_INTENSITY = 0.90
 
 export const CerebroSphereWall: React.FC<CerebroSphereWallProps> = ({
   radius = CEREBRO_RADIUS + 0.3,
   isDimmed = false,
-  dimIntensity = 0.90,
+  isPaused = false,
   particleCount = 120,
 }) => {
   const { currentTheme } = useTheme()
@@ -115,9 +117,10 @@ export const CerebroSphereWall: React.FC<CerebroSphereWallProps> = ({
   }, [latitudeGeometries, meridianGeometry, particleGeo, latMat, merMat, partMat])
 
   useFrame((_, delta) => {
+    if (isPaused) return
     dimProgress.current = THREE.MathUtils.damp(dimProgress.current, isDimmed ? 1.0 : 0.0, 7, delta)
     const dp = dimProgress.current
-    const dimFactor = Math.max(0.01, 1 - dp * dimIntensity)
+    const dimFactor = Math.max(0.01, 1 - dp * WALL_DIM_INTENSITY)
 
     latMat.opacity = 0.18 * dimFactor
     merMat.opacity = 0.135 * dimFactor
@@ -140,7 +143,7 @@ export const CerebroSphereWall: React.FC<CerebroSphereWallProps> = ({
   })
 
   return (
-    <group data-testid="cerebro-sphere-wall">
+    <group data-testid="cerebro-sphere-wall" renderOrder={0}>
       <mesh>
         <sphereGeometry args={[radius * 1.05, 32, 24]} />
         <meshBasicMaterial

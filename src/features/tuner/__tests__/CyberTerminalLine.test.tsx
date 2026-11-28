@@ -42,6 +42,7 @@ describe('CyberTerminalLine Component', () => {
 
     const terminal = screen.getByTestId('cyber-terminal-line')
     expect(terminal).toBeInTheDocument()
+    expect(terminal).toHaveClass('terminal-enter')
     expect(terminal).toHaveTextContent('test')
   })
 
@@ -138,18 +139,18 @@ describe('CyberTerminalLine Component', () => {
     )
 
     const tuner = screen.getByTestId('geometry-tuner')
-    expect(tuner).toHaveClass('bottom-5', 'z-[60]')
+    expect(tuner).toHaveClass('bottom-5', 'delay-0', 'z-[60]')
     expect(tuner).not.toHaveClass('bottom-16')
 
-    // Opening terminal via typing moves Tuner upward along Y axis while keeping z-[60]
+    // Opening terminal via typing moves Tuner upward along Y axis in sync with vertical expansion
     fireEvent.keyDown(window, { key: 't' })
-    expect(screen.getByTestId('cyber-terminal-line')).toBeInTheDocument()
-    expect(tuner).toHaveClass('bottom-16', 'z-[60]')
+    expect(screen.getByTestId('cyber-terminal-line')).toHaveClass('terminal-enter')
+    expect(tuner).toHaveClass('bottom-16', 'delay-[320ms]', 'z-[60]')
     expect(tuner).not.toHaveClass('bottom-5')
 
     // Dismissing terminal with Escape restores Tuner back to bottom-5
     fireEvent.keyDown(window, { key: 'Escape' })
     expect(screen.queryByTestId('cyber-terminal-line')).not.toBeInTheDocument()
-    expect(tuner).toHaveClass('bottom-5', 'z-[60]')
+    expect(tuner).toHaveClass('bottom-5', 'delay-0', 'z-[60]')
   })
 })

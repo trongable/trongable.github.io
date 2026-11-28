@@ -49,12 +49,16 @@ describe('Tuner Component', () => {
 
     const gearButton = screen.getByLabelText('Toggle parameter drawer')
     expect(screen.queryByTestId('geometry-tuner-drawer')).not.toBeInTheDocument()
+    expect(gearButton).toHaveClass('text-[var(--theme-primary)]')
 
     fireEvent.click(gearButton)
     expect(screen.getByTestId('geometry-tuner-drawer')).toBeInTheDocument()
+    expect(gearButton).toHaveClass('bg-[var(--theme-primary)]', 'text-[#1c1b22]')
+    expect(gearButton).not.toHaveClass('text-[var(--theme-primary)]')
 
     fireEvent.click(gearButton)
     expect(screen.queryByTestId('geometry-tuner-drawer')).not.toBeInTheDocument()
+    expect(gearButton).toHaveClass('text-[var(--theme-primary)]')
   })
 
   it('switches between 3D Topologies and VFX & Glitch tabs', () => {
@@ -800,11 +804,13 @@ describe('Tuner Component', () => {
     // Open drawer
     fireEvent.click(screen.getByLabelText('Toggle parameter drawer'))
     expect(screen.getByRole('button', { name: 'Gallery Chamber' })).toBeInTheDocument()
-    expect(screen.getByText('Chamber Layout')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '4-Tier (B)' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '3-Tier (A)' })).toBeInTheDocument()
+    expect(screen.queryByText('Chamber Layout')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '3-Tier (A)' })).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Dim Intensity')).not.toBeInTheDocument()
     expect(screen.getByText('Sphere Radius')).toBeInTheDocument()
     expect(screen.getByText('Thumbnail Scale')).toBeInTheDocument()
+    expect(screen.getByLabelText('Pan Sensitivity')).toHaveValue('1')
+    expect(screen.getByLabelText('Drag Multiplier')).toHaveValue('1.2')
     expect(screen.getByLabelText('Free Spin (360°+)')).toBeChecked()
     expect(screen.getByLabelText('Intro Collapse')).toBeChecked()
     expect(screen.getByLabelText('Scatter on Select')).toBeChecked()
@@ -819,12 +825,6 @@ describe('Tuner Component', () => {
     expect(onVideoParamChange).toHaveBeenCalledWith('freeSpin', false)
     fireEvent.click(screen.getByLabelText('Ambient Float'))
     expect(onVideoParamChange).toHaveBeenCalledWith('ambientFloat', false)
-
-    // Toggle layout preset to 3-Tier (A)
-    fireEvent.click(screen.getByRole('button', { name: '3-Tier (A)' }))
-    expect(onVideoParamChange).toHaveBeenCalledWith('tierCount', 3)
-    expect(onVideoParamChange).toHaveBeenCalledWith('sphereRadius', 6.0)
-    expect(onVideoParamChange).toHaveBeenCalledWith('arcDegrees', 360)
 
     // Change sphere radius slider
     const radiusSlider = screen.getByLabelText('Sphere Radius')

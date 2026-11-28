@@ -1,7 +1,4 @@
-export type GalleryLayoutMode = '4-tier' | '3-tier'
-
 export interface GalleryChamberParams {
-  tierCount: 3 | 4
   freeSpin: boolean
   introCollapse: boolean
   scatterOnSelect: boolean
@@ -20,42 +17,19 @@ export interface GalleryChamberParams {
   maxYawDeg: number
   maxPitchDeg: number
   transitSpeed: number
-  dimIntensity: number
   particleCount: number
 }
 
 // Retain alias for backward compatibility
 export type VideoChamberParams = GalleryChamberParams
 
-export const GALLERY_LAYOUT_PRESETS: Record<
-  GalleryLayoutMode,
-  Pick<
-    GalleryChamberParams,
-    'tierCount' | 'freeSpin' | 'sphereRadius' | 'arcDegrees' | 'rowSeparation' | 'maxYawDeg' | 'thumbnailScale'
-  >
-> = {
-  '4-tier': {
-    tierCount: 4,
-    freeSpin: true,
-    sphereRadius: 5.5,
-    arcDegrees: 360,
-    rowSeparation: 1.55,
-    maxYawDeg: 180,
-    thumbnailScale: 1.0,
-  },
-  '3-tier': {
-    tierCount: 3,
-    freeSpin: true,
-    sphereRadius: 6.0,
-    arcDegrees: 360,
-    rowSeparation: 1.80,
-    maxYawDeg: 180,
-    thumbnailScale: 1.0,
-  },
-}
-
 export const DEFAULT_GALLERY_CHAMBER_PARAMS: GalleryChamberParams = {
-  ...GALLERY_LAYOUT_PRESETS['4-tier'],
+  freeSpin: true,
+  sphereRadius: 5.5,
+  arcDegrees: 360,
+  rowSeparation: 1.55,
+  maxYawDeg: 180,
+  thumbnailScale: 1.0,
   introCollapse: true,
   scatterOnSelect: true,
   centerZoom: true,
@@ -63,12 +37,11 @@ export const DEFAULT_GALLERY_CHAMBER_PARAMS: GalleryChamberParams = {
   ambientFloat: true,
   focusReticles: true,
   motionBlur: false,
-  panSensitivity: 1.2,
-  dragMultiplier: 1.8,
+  panSensitivity: 1.0,
+  dragMultiplier: 1.2,
   flingInertia: 1.9,
   maxPitchDeg: 36,
   transitSpeed: 16,
-  dimIntensity: 0.90,
   particleCount: 120,
 }
 
@@ -86,7 +59,6 @@ export const GALLERY_CHAMBER_PARAM_BOUNDS = {
   maxYawDeg: { min: 30, max: 180, step: 1 },
   maxPitchDeg: { min: 0, max: 45, step: 1 },
   transitSpeed: { min: 4, max: 24, step: 1 },
-  dimIntensity: { min: 0.50, max: 1.0, step: 0.05 },
   particleCount: { min: 0, max: 300, step: 10 },
 }
 

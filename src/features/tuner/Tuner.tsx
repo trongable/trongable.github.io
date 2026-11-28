@@ -188,8 +188,10 @@ export const Tuner: React.FC<TunerProps> = ({
   return (
     <div
       data-testid="geometry-tuner"
-      className={`fixed right-5 z-[60] flex flex-col items-end font-mono select-none transition-[bottom] duration-150 ${
-        isTerminalOpen ? 'bottom-16' : 'bottom-5'
+      className={`fixed right-5 z-[60] flex flex-col items-end font-mono select-none transition-[bottom] motion-reduce:transition-none ${
+        isTerminalOpen
+          ? 'bottom-16 duration-[180ms] delay-[320ms] ease-[cubic-bezier(0.22,1,0.36,1)]'
+          : 'bottom-5 duration-150 delay-0 ease-out'
       }`}
     >
       {/* Collapsible Tuning Drawer */}

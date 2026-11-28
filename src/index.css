@@ -157,3 +157,45 @@
 [data-effects-paused="true"] *::after {
   animation-play-state: paused !important;
 }
+
+@keyframes terminal-expand {
+  0% {
+    transform: scale(0.006, 0.045);
+    box-shadow: 0 0 18px var(--theme-highlight), 0 0 32px var(--theme-primary);
+  }
+  64% {
+    transform: scale(1, 0.045);
+    box-shadow: 0 0 14px var(--theme-highlight), 0 0 24px var(--theme-primary);
+  }
+  100% {
+    transform: scale(1, 1);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  }
+}
+
+@keyframes terminal-content-fade {
+  0%,
+  65% {
+    opacity: 0;
+  }
+  88%,
+  100% {
+    opacity: 1;
+  }
+}
+
+.terminal-enter {
+  transform-origin: center bottom;
+  animation: terminal-expand 500ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.terminal-content-enter {
+  animation: terminal-content-fade 500ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .terminal-enter,
+  .terminal-content-enter {
+    animation: none;
+  }
+}

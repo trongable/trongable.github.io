@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import * as THREE from 'three'
 import { render, screen, fireEvent, act } from '@testing-library/react'
 import { CerebroChamber } from '@/features/gallery/chamber/CerebroChamber'
 import { VIDEOS_DATA } from '@/features/gallery/data/galleryData'
@@ -614,5 +615,117 @@ describe('CerebroChamber Component', () => {
       </ThemeProvider>
     )
     expect(screen.getByTestId('cerebro-vignette-overlay')).toHaveClass('opacity-0')
+  })
+
+  it('triggers haptic feedback when reticle switches to a new thumbnail after initial mount', () => {
+    const vibrateMock = vi.fn().mockReturnValue(true)
+    Object.defineProperty(navigator, 'vibrate', {
+      value: vibrateMock,
+      configurable: true,
+      writable: true,
+    })
+
+    try {
+      render(
+        <ThemeProvider>
+          <CerebroChamber activeVideo={null} onSelectVideo={vi.fn()} />
+        </ThemeProvider>
+      )
+
+      // Initial frame establishes center-gaze reticle without firing haptics
+      act(() => {
+        runFrames(2, 0.016)
+      })
+      expect(vibrateMock).not.toHaveBeenCalled()
+
+      // Hovering a different panel triggers a subtle haptic tick
+      const firstMesh = screen.getByTestId(`curved-video-mesh-${VIDEOS_DATA[0].id}`)
+      fireEvent.pointerOver(firstMesh)
+      expect(vibrateMock).toHaveBeenCalledWith(10)
+      const countAfterFirstHover = vibrateMock.mock.calls.length
+
+      // Hovering a second distinct panel triggers another tick
+      const secondMesh = screen.getByTestId(`curved-video-mesh-${VIDEOS_DATA[1].id}`)
+      fireEvent.pointerOver(secondMesh)
+      expect(vibrateMock.mock.calls.length).toBeGreaterThan(countAfterFirstHover)
+    } finally {
+      Reflect.deleteProperty(navigator, 'vibrate')
+    }
+  })
+
+  it('renders chained 3-cell curved glitch storm on r = sphereRadius + 0.15 behind panels and pauses during full-size view or isPaused', () => {
+    const { rerender } = render(
+      <ThemeProvider>
+        <CerebroChamber
+          activeItem={null}
+          isGlitching={true}
+          isPaused={false}
+          onSelectItem={vi.fn()}
+        />
+      </ThemeProvider>
+    )
+
+    const storm = screen.getByTestId('cerebro-glitch-storm') as unknown as HTMLElement & {
+      visible: boolean
+    }
+    const wall = screen.getByTestId('cerebro-sphere-wall')
+    const panel = screen.getByTestId(`curved-video-panel-${VIDEOS_DATA[0].id}`)
+
+    expect(wall).toHaveAttribute('renderorder', '0')
+    expect(panel).toHaveAttribute('renderorder', '1')
+    expect(storm).toHaveAttribute('renderorder', '2')
+    expect(storm.visible).toBe(true)
+
+    const expectedStormRadius = DEFAULT_GALLERY_CHAMBER_PARAMS.sphereRadius + 0.15
+    const cell0 = screen.getByTestId('cerebro-glitch-storm-cell-0') as unknown as THREE.Mesh
+    const cell1 = screen.getByTestId('cerebro-glitch-storm-cell-1') as unknown as THREE.Mesh
+    const cell2 = screen.getByTestId('cerebro-glitch-storm-cell-2') as unknown as THREE.Mesh
+    expect(cell0).toHaveAttribute('renderorder', '2')
+    expect(cell1).toHaveAttribute('renderorder', '2')
+    expect(cell2).toHaveAttribute('renderorder', '2')
+
+    // Every cell conforms strictly to sphere surface radius R = sphereRadius + 0.15
+    const posAttr = cell0.geometry?.attributes?.position
+    if (posAttr && typeof posAttr.getX === 'function') {
+      for (let i = 0; i < posAttr.count; i++) {
+        const r = Math.hypot(posAttr.getX(i), posAttr.getY(i), posAttr.getZ(i))
+        expect(r).toBeCloseTo(expectedStormRadius, 3)
+      }
+    }
+
+    // Stays stationary in world space when camera pans
+    const initialQuat = cell0.quaternion.clone()
+    fireEvent.keyDown(window, { key: 'ArrowRight' })
+    act(() => {
+      runFrames(10, 0.016)
+    })
+    fireEvent.keyUp(window, { key: 'ArrowRight' })
+    expect(cell0.quaternion.angleTo(initialQuat)).toBeCloseTo(0, 5)
+
+    // Full-size selection pauses/hides the background glitch storm
+    rerender(
+      <ThemeProvider>
+        <CerebroChamber
+          activeItem={VIDEOS_DATA[0]}
+          isGlitching={true}
+          isPaused={false}
+          onSelectItem={vi.fn()}
+        />
+      </ThemeProvider>
+    )
+    expect(storm.visible).toBe(false)
+
+    // Explicit pause also hides/pauses the background glitch storm
+    rerender(
+      <ThemeProvider>
+        <CerebroChamber
+          activeItem={null}
+          isGlitching={true}
+          isPaused={true}
+          onSelectItem={vi.fn()}
+        />
+      </ThemeProvider>
+    )
+    expect(storm.visible).toBe(false)
   })
 })

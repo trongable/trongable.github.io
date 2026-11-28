@@ -16,13 +16,16 @@ import {
   DEFAULT_GALLERY_CHAMBER_PARAMS,
 } from '@/features/gallery/data/galleryTunerConfig'
 import { Tuner } from '@/features/tuner/Tuner'
+import { useGlitchScheduler } from '@/features/effects/useGlitchScheduler'
 import { preloadAndDecodeImage } from '@/utils/imagePreload'
 
 export const GalleryPage: React.FC = () => {
   const { navigate, queryParams } = useRouter()
   const { isTunerVisible, setIsTunerVisible } = useTuner()
-  const { currentTheme, setTheme, setCustomColor, isThemeLocked, setIsThemeLocked } = useTheme()
-  const { isBattery, powerMode, setPowerMode, targetFps, targetDpr } = usePowerManager()
+  const { currentTheme, randomizeTheme, setTheme, setCustomColor, isThemeLocked, setIsThemeLocked } =
+    useTheme()
+  const { isDocumentVisible, isBattery, powerMode, setPowerMode, targetFps, targetDpr } =
+    usePowerManager()
 
   // Randomize gallery items once on page load, or preserve canonical order if random=false is present
   const [baseGalleryItems] = useState<GalleryItem[]>(() => {
@@ -40,21 +43,39 @@ export const GalleryPage: React.FC = () => {
     () =>
       layoutGalleryTiers(
         baseGalleryItems,
-        galleryParams.tierCount,
         galleryParams.arcDegrees,
         galleryParams.sphereRadius,
         galleryParams.rowSeparation
       ),
     [
       baseGalleryItems,
-      galleryParams.tierCount,
       galleryParams.arcDegrees,
       galleryParams.sphereRadius,
       galleryParams.rowSeparation,
     ]
   )
-  const [isAnimationPaused, setIsAnimationPaused] = useState(false)
+  const isPauseParam =
+    queryParams?.paused === 'true' ||
+    queryParams?.paused === '1' ||
+    queryParams?.pause === 'true' ||
+    queryParams?.pause === '1'
+  const [isAnimationPaused, setIsAnimationPaused] = useState<boolean>(() => isPauseParam)
   const transitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const {
+    isGlitching,
+    glitchDuration,
+    glitchInterval,
+    setGlitchInterval,
+    glitchImageRate,
+    setGlitchImageRate,
+    handleTriggerGlitchBurst,
+  } = useGlitchScheduler({
+    isDocumentVisible,
+    isAnimationPaused: isAnimationPaused || Boolean(selectedItem),
+    isThemeLocked,
+    randomizeTheme,
+  })
 
   // Sync with URL query parameter ?item=<id> or ?v=<id> if present on initial load
   useEffect(() => {
@@ -109,6 +130,7 @@ export const GalleryPage: React.FC = () => {
   return (
     <main
       data-testid="gallery-page"
+      data-effects-paused={isAnimationPaused ? 'true' : undefined}
       className="relative w-full h-full min-h-dvh bg-[#0c0b10] text-[var(--theme-primary)] flex flex-col overflow-hidden overscroll-none select-none lowercase"
     >
       {/* Minimalist Return Home Link matching other shell pages */}
@@ -127,6 +149,10 @@ export const GalleryPage: React.FC = () => {
           activeItem={activeItem}
           selectedItem={selectedItem}
           params={galleryParams}
+          isPaused={isAnimationPaused}
+          isGlitching={isGlitching}
+          glitchDuration={glitchDuration}
+          glitchImageRate={glitchImageRate}
           onSelectItem={handleSelectItem}
         />
       </div>
@@ -169,6 +195,11 @@ export const GalleryPage: React.FC = () => {
           onCustomColorChange={setCustomColor}
           isThemeLocked={isThemeLocked}
           onToggleThemeLock={setIsThemeLocked}
+          glitchInterval={glitchInterval}
+          onGlitchIntervalChange={setGlitchInterval}
+          imageRate={glitchImageRate}
+          onImageRateChange={setGlitchImageRate}
+          onTriggerGlitch={handleTriggerGlitchBurst}
           powerMode={powerMode}
           onPowerModeChange={setPowerMode}
           isBattery={isBattery}

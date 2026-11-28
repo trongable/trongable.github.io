@@ -117,19 +117,22 @@ describe('galleryData module', () => {
     lower.forEach((v) => expect(v.elevationDeg).toBeLessThan(-15))
   })
 
-  it('supports Option A 3-tier layout partitioning (20 upper, 20 middle, 20 lower)', () => {
-    const threeTier = layoutGalleryTiers(GALLERY_DATA, 3, 340, 6.0, 1.8)
-    const upper = threeTier.filter((v) => v.tier === 'upper')
-    const middle = threeTier.filter((v) => v.tier === 'middle')
-    const lower = threeTier.filter((v) => v.tier === 'lower')
+  it('partitions custom subsets cleanly across the 4-tier spherical layout', () => {
+    const fourTier = layoutGalleryTiers(GALLERY_DATA.slice(0, 40), 340, 6.0, 1.8)
+    const upper = fourTier.filter((v) => v.tier === 'upper')
+    const upperMid = fourTier.filter((v) => v.tier === 'upper-mid')
+    const lowerMid = fourTier.filter((v) => v.tier === 'lower-mid')
+    const lower = fourTier.filter((v) => v.tier === 'lower')
 
-    expect(upper).toHaveLength(20)
-    expect(middle).toHaveLength(20)
-    expect(lower).toHaveLength(20)
+    expect(upper).toHaveLength(10)
+    expect(upperMid).toHaveLength(10)
+    expect(lowerMid).toHaveLength(10)
+    expect(lower).toHaveLength(10)
 
-    upper.forEach((v) => expect(v.elevationDeg).toBeGreaterThan(0))
-    middle.forEach((v) => expect(v.elevationDeg).toBe(0))
-    lower.forEach((v) => expect(v.elevationDeg).toBeLessThan(0))
+    upper.forEach((v) => expect(v.elevationDeg).toBeGreaterThan(15))
+    upperMid.forEach((v) => expect(v.elevationDeg).toBeGreaterThan(0))
+    lowerMid.forEach((v) => expect(v.elevationDeg).toBeLessThan(0))
+    lower.forEach((v) => expect(v.elevationDeg).toBeLessThan(-15))
   })
 
   it('computes distinct non-overlapping spherical positions on radius R', () => {
